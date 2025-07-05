@@ -1,14 +1,32 @@
 cmake_minimum_required(VERSION 3.10)
-project (exe)
 
-set(CMAKE_VERBOSE_MAKEFILE OFF)
-enable_language(Fortran CXX)
+# -------- Compiler overrides (for macOS) --------
+# if (UNIX AND APPLE)
+#     set(CMAKE_CXX_COMPILER "/opt/homebrew/bin/g++-14")
+#     set(CMAKE_C_COMPILER   "/opt/homebrew/bin/gcc-14")
+# endif ()
 
-find_package(Threads REQUIRED)
+# -------- Say my name! --------
+set(lib "cantIF")
 
-set(canteraDIR /home/marcogrossi/Codici/cantera)
+project (cantIF LANGUAGES CXX Fortran)
 
-include_directories(${canteraDIR}/build/src/fortran)
-link_directories(${canteraDIR}/build/lib)
+set(CMAKE_VERBOSE_MAKEFILE FALSE)
 
-add_subdirectory(src/test)
+# -------- Git submodules --------
+# ORION
+add_subdirectory("lib/ORION")
+
+# OSlo
+add_subdirectory("lib/OSlo")
+
+# Cantera
+set(canteraDIR "~/Codici/cantera/")
+link_directories("${canteraDIR}/build/lib")
+
+# -------- Fortran directories --------
+include(GNUInstallDirs)
+set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
+
+# -------- Compile  --------
+add_subdirectory(src)

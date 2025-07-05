@@ -1,0 +1,6 @@
+[submodule "lib/ORION"]
+	path = lib/ORION
+	url = git@github.com:MarcoGrossi92/ORION.git
+[submodule "lib/OSlo"]
+	path = lib/OSlo
+	url = git@github.com:MarcoGrossi92/OSlo.git

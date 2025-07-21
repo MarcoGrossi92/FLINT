@@ -13,7 +13,6 @@ using std::endl;
 std::vector<std::pair<double, double>> simulateReactorTemperature(ReactorNet& sim, ThermoPhase& gas, int nsteps, double dt)
 {
     std::vector<std::pair<double, double>> timeTemp;
-    auto t0 = std::chrono::high_resolution_clock::now();
 
     for (int i = 0; i <= nsteps; i++) {
         double tm = i * dt;
@@ -21,11 +20,6 @@ std::vector<std::pair<double, double>> simulateReactorTemperature(ReactorNet& si
         double T = gas.temperature();
         timeTemp.emplace_back(tm, T);
     }
-
-    auto t1 = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed = t1 - t0;
-
-    std::cout << "* Cantera-CXX time = " << elapsed.count() << std::endl;
 
     return timeTemp;
 }
@@ -49,7 +43,13 @@ int main()
         double dt = 8.e-3 / nsteps;
 
         // Run the simulation
+        auto t0 = std::chrono::high_resolution_clock::now();
         auto timeTemp1 = simulateReactorTemperature(sim, gas, nsteps, dt);
+        auto t1 = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = t1 - t0;
+        std::cout << "* Cantera-CXX time = "
+          << std::scientific << elapsed.count()
+          << std::endl;
 
         // Write results for first simulation
         std::ofstream outFile("WD-batch-CXX.dat");
@@ -77,7 +77,13 @@ int main()
         double dt2 = 0.02 / nsteps2;
 
         // Run the simulation
+        t0 = std::chrono::high_resolution_clock::now();
         auto timeTemp2 = simulateReactorTemperature(sim2, gas2, nsteps2, dt2);
+        t1 = std::chrono::high_resolution_clock::now();
+        elapsed = t1 - t0;
+        std::cout << "* Cantera-CXX time = "
+          << std::scientific << elapsed.count()
+          << std::endl;
 
         // Write results for second simulation
         std::ofstream outFile2("Troyes-batch-CXX.dat");
@@ -105,7 +111,13 @@ int main()
         double dt3 = 0.02 / nsteps3;
 
         // Run the simulation
+        t0 = std::chrono::high_resolution_clock::now();
         auto timeTemp3 = simulateReactorTemperature(sim3, gas3, nsteps3, dt3);
+        t1 = std::chrono::high_resolution_clock::now();
+        elapsed = t1 - t0;
+        std::cout << "* Cantera-CXX time = "
+          << std::scientific << elapsed.count()
+          << std::endl;
 
         // Write results for second simulation
         std::ofstream outFile3("Ecker-batch-CXX.dat");
@@ -134,7 +146,13 @@ int main()
         double dt4 = 0.02 / nsteps4;
 
         // Run the simulation
+        t0 = std::chrono::high_resolution_clock::now();
         auto timeTemp4 = simulateReactorTemperature(sim4, gas4, nsteps4, dt4);
+        t1 = std::chrono::high_resolution_clock::now();
+        elapsed = t1 - t0;
+        std::cout << "* Cantera-CXX time = "
+          << std::scientific << elapsed.count()
+          << std::endl;
 
         // Write results for second simulation
         std::ofstream outFile4("Cross-batch-CXX.dat");

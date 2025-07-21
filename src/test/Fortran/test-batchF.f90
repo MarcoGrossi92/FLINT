@@ -21,7 +21,9 @@ program test
 
   open(unit=10, file='comp-batch-general.dat', status='replace', form='formatted')
   open(unit=20, file='comp-batch-explicit.dat', status='replace', form='formatted')
+# if defined (CANTERA)
   open(unit=30, file='comp-batch-cantera.dat', status='replace', form='formatted')
+# endif
 
   !-------------------------------------------------------------------------------------------------
   ! WD
@@ -29,10 +31,14 @@ program test
 
   call Read_IdealGas_Properties('WD')
   err = read_chemistry_file( folder='WD', mech_name=mech_name )
+# if defined (CANTERA)
   call load_phase(gas, 'WD/WD.yaml')
+# endif
 
   open(200, file='WD-batch-explicit.dat', status='replace', form='formatted')
+# if defined (CANTERA)
   open(300, file='WD-batch-cantera.dat', status='replace', form='formatted')
+# endif
 
   tlim = 0.01
   pin = 1.0d+5
@@ -58,6 +64,7 @@ program test
   call setup_odesolver(N=neq,solver=solver,RT=RT,AT=AT,iopt=iopt)
 
   !! Cantera
+# if defined (CANTERA)
   call initialize
   call cpu_time(time1)
   do n = 1, nstep
@@ -70,6 +77,7 @@ program test
 
   write(*,*) 'WD Cantera time =', time2-time1
   write(30,*) nsc, time2-time1
+# endif
 
   !! Native with coded mechanism
   call Assign_Mechanism(mech_name)
@@ -86,7 +94,10 @@ program test
   write(*,*) 'WD explicit time =', time2-time1
   write(20,*) nsc, time2-time1
 
-  close(300); close(200)
+  close(200)
+# if defined (CANTERA)
+  close(300)
+# endif
 
   deallocate(Y); deallocate(sp_Y)
   deallocate(AT); deallocate(RT)
@@ -101,11 +112,15 @@ program test
 
   call Read_IdealGas_Properties('Troyes')
   err = read_chemistry_file( folder='Troyes', mech_name=mech_name )
+# if defined (CANTERA)
   call load_phase(gas, 'Troyes/troyes.yaml')
+# endif
 
   open(100, file='Troyes-batch-general.dat', status='replace', form='formatted')
   open(200, file='Troyes-batch-explicit.dat', status='replace', form='formatted')
+# if defined (CANTERA)
   open(300, file='Troyes-batch-cantera.dat', status='replace', form='formatted')
+# endif
 
   tlim = 0.02
   pin = 1.0d+5
@@ -132,6 +147,7 @@ program test
   call setup_odesolver(N=neq,solver=solver,RT=RT,AT=AT,iopt=iopt)
 
   !! Cantera
+# if defined (CANTERA)
   call initialize
   call cpu_time(time1)
   do n = 1, nstep
@@ -144,6 +160,7 @@ program test
 
   write(*,*) 'Troyes Cantera time =', time2-time1
   write(30,*) nsc, time2-time1
+# endif
 
   !! Native with coded mechanism
   call Assign_Mechanism(mech_name)
@@ -175,7 +192,10 @@ program test
   write(*,*) 'Troyes general time =', time2-time1
   write(10,*) nsc, time2-time1
 
-  close(100); close(200); close(300)
+  close(100); close(200)
+# if defined (CANTERA)
+  close(300)
+# endif
 
   deallocate(Y); deallocate(sp_Y)
   deallocate(AT); deallocate(RT)
@@ -190,11 +210,15 @@ program test
 
   call Read_IdealGas_Properties('Ecker')
   err = read_chemistry_file( folder='Ecker', mech_name=mech_name )
+# if defined (CANTERA)
   call load_phase(gas, 'Ecker/ecker.yaml')
+# endif
 
   open(100, file='Ecker-batch-general.dat', status='replace', form='formatted')
   open(200, file='Ecker-batch-explicit.dat', status='replace', form='formatted')
+# if defined (CANTERA)
   open(300, file='Ecker-batch-cantera.dat', status='replace', form='formatted')
+# endif
 
   tlim = 0.02
   pin = 1.0d+5
@@ -221,6 +245,7 @@ program test
   call setup_odesolver(N=neq,solver=solver,RT=RT,AT=AT,iopt=iopt)
 
   !! Cantera
+# if defined (CANTERA)
   call initialize
   call cpu_time(time1)
   do n = 1, nstep
@@ -233,6 +258,7 @@ program test
 
   write(*,*) 'Ecker Cantera time =', time2-time1
   write(30,*) nsc, time2-time1
+# endif
 
   !! Native with coded mechanism
   call Assign_Mechanism(mech_name)
@@ -264,7 +290,10 @@ program test
   write(*,*) 'Ecker general time =', time2-time1
   write(10,*) nsc, time2-time1
 
-  close(100); close(200); close(300)
+  close(100); close(200)
+# if defined (CANTERA)
+  close(300)
+# endif
 
   deallocate(Y); deallocate(sp_Y)
   deallocate(AT); deallocate(RT)
@@ -279,11 +308,15 @@ program test
 
   call Read_IdealGas_Properties('Cross')
   err = read_chemistry_file( folder='Cross', mech_name=mech_name )
+# if defined (CANTERA)
   call load_phase(gas, 'Cross/cross.yaml')
+# endif
 
   open(100, file='Cross-batch-general.dat', status='replace', form='formatted')
   open(200, file='Cross-batch-explicit.dat', status='replace', form='formatted')
+# if defined (CANTERA)
   open(300, file='Cross-batch-cantera.dat', status='replace', form='formatted')
+# endif
 
   tlim = 0.02
   pin = 1.0d+5
@@ -310,6 +343,7 @@ program test
   call setup_odesolver(N=neq,solver=solver,RT=RT,AT=AT,iopt=iopt)
 
   !! Cantera
+# if defined (CANTERA)
   call initialize
   call cpu_time(time1)
   do n = 1, nstep
@@ -322,6 +356,7 @@ program test
 
   write(*,*) 'Cross Cantera time =', time2-time1
   write(30,*) nsc, time2-time1
+# endif
 
   !! Native with coded mechanism
   call Assign_Mechanism(mech_name)
@@ -353,7 +388,10 @@ program test
   write(*,*) 'Cross general time =', time2-time1
   write(10,*) nsc, time2-time1
 
-  close(100); close(200); close(300)
+  close(100); close(200)
+# if defined (CANTERA)
+  close(300)
+# endif
 
   deallocate(Y); deallocate(sp_Y)
   deallocate(AT); deallocate(RT)

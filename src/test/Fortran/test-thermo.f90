@@ -15,10 +15,14 @@
 program test
   use U_Lib_Thermodynamic
   use U_IO_Table
+# if defined (CANTERA)
   use cantera
   use U_cantera_load
+# endif
   implicit none
+# if defined (CANTERA)
   type(phase_t) :: gas
+# endif
   real(8) :: rhoi(9), T, rho, R
   real(8) :: cp_native, cp_cantera
   real(8) :: lam_cantera, lam_native, mi_native, nu_cantera
@@ -26,7 +30,9 @@ program test
   integer :: i, j
 
   call Read_IdealGas_Properties()
+# if defined (CANTERA)
   call load_phase(gas, 'WD.yaml')
+# endif
 
   rhoi = 0.d0
   rhoi(1) = 0.25d0 ! CH4
@@ -46,6 +52,8 @@ program test
 
   write(*,*) time2-time1
 
+# if defined (CANTERA)
+
   call setState_TRY(gas, T, rho, rhoi)
 
   call cpu_time(time1)
@@ -61,5 +69,7 @@ program test
   write(*,*) time2-time1
 
   write(*,*) abs(cp_cantera-cp_native)/cp_cantera*100d0
+
+# endif
 
 end program test

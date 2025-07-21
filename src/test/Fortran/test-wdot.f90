@@ -6,8 +6,10 @@ program test
   use U_Lib_Chemistry_data
   use U_Lib_Chemistry_rhs, only: gas
   use U_Lib_Chemistry_wdot
+# if defined (CANTERA)
   use cantera
   use U_cantera_load
+# endif
   implicit none
   integer, parameter :: Tend=2000, Tstart=100
   real(8) :: T, rho, R
@@ -23,7 +25,9 @@ program test
 
   call Read_IdealGas_Properties('WD')
   err = read_chemistry_file( folder='WD', mech_name=mech_name )
+# if defined(CANTERA)
   call load_phase(gas, 'WD/WD.yaml')
+# endif()
   call Assign_Mechanism(mech_name)
 
   allocate(rhoi(1:nsc))
@@ -48,6 +52,8 @@ program test
 
   write(*,*) 'WD native time =', time2-time1
 
+# if defined(CANTERA)
+
   call setState_TRY(gas, T, rho, rhoi)
 
   call cpu_time(time1)
@@ -64,16 +70,20 @@ program test
 
   write(*,*) 'WD Cantera time =', time2-time1
 
+# endif
+
   open(100, file='WD-wdot-native.dat', status='replace', form='formatted')
   do i = Tstart, Tend
     write(100,*) dble(i), (wdot_native(j,i),j=1,nsc)
   enddo
   close(100)
+# if defined(CANTERA)
   open(200, file='WD-wdot-cantera.dat', status='replace', form='formatted')
   do i = Tstart, Tend
     write(200,*) dble(i), (wdot_cantera(j,i),j=1,nsc)
   enddo
   close(200)
+# endif
 
   deallocate(wdot_cantera); deallocate(wdot_native)
   deallocate(droic)
@@ -89,7 +99,9 @@ program test
 
   call Read_IdealGas_Properties('Troyes')
   err = read_chemistry_file( folder='Troyes', mech_name=mech_name )
+# if defined (CANTERA)
   call load_phase(gas, 'Troyes/troyes.yaml')
+# endif
   call Assign_Mechanism(mech_name)
 
   allocate(rhoi(1:nsc))
@@ -117,6 +129,8 @@ program test
 
   write(*,*) 'Troyes native time =', time2-time1
 
+# if defined (CANTERA)
+
   call setState_TRY(gas, T, rho, rhoi)
 
   call cpu_time(time1)
@@ -133,16 +147,20 @@ program test
 
   write(*,*) 'Troyes Cantera time =', time2-time1
 
+# endif
+
   open(100, file='Troyes-wdot-native.dat', status='replace', form='formatted')
   do i = Tstart, Tend
     write(100,*) dble(i), (wdot_native(j,i),j=1,nsc)
   enddo
   close(100)
+# if defined (CANTERA)
   open(200, file='Troyes-wdot-cantera.dat', status='replace', form='formatted')
   do i = Tstart, Tend
     write(200,*) dble(i), (wdot_cantera(j,i),j=1,nsc)
   enddo
   close(200)
+# endif
 
   deallocate(wdot_cantera); deallocate(wdot_native)
   deallocate(droic)
@@ -158,7 +176,9 @@ program test
 
   call Read_IdealGas_Properties('Ecker')
   err = read_chemistry_file( folder='Ecker', mech_name=mech_name )
+# if defined (CANTERA)
   call load_phase(gas, 'Ecker/ecker.yaml')
+# endif
   call Assign_Mechanism(mech_name)
 
   allocate(rhoi(1:nsc))
@@ -186,6 +206,8 @@ program test
 
   write(*,*) 'Ecker native time =', time2-time1
 
+# if defined (CANTERA)
+
   call setState_TRY(gas, T, rho, rhoi)
 
   call cpu_time(time1)
@@ -202,16 +224,20 @@ program test
 
   write(*,*) 'Ecker Cantera time =', time2-time1
 
+# endif
+
   open(100, file='Ecker-wdot-native.dat', status='replace', form='formatted')
   do i = Tstart, Tend
     write(100,*) dble(i), (wdot_native(j,i),j=1,nsc)
   enddo
   close(100)
+# if defined (CANTERA)
   open(200, file='Ecker-wdot-cantera.dat', status='replace', form='formatted')
   do i = Tstart, Tend
     write(200,*) dble(i), (wdot_cantera(j,i),j=1,nsc)
   enddo
   close(200)
+# endif
 
   deallocate(wdot_cantera); deallocate(wdot_native)
   deallocate(droic)
@@ -227,7 +253,9 @@ program test
 
   call Read_IdealGas_Properties('Cross')
   err = read_chemistry_file( folder='Cross', mech_name=mech_name )
+# if defined (CANTERA)
   call load_phase(gas, 'Cross/cross.yaml')
+# endif
   call Assign_Mechanism(mech_name)
 
   allocate(rhoi(1:nsc))
@@ -250,6 +278,8 @@ program test
 
   write(*,*) 'Cross native time =', time2-time1
 
+# if defined (CANTERA)
+
   call setState_TRY(gas, T, rho, rhoi)
 
   call cpu_time(time1)
@@ -266,16 +296,20 @@ program test
 
   write(*,*) 'Cross Cantera time =', time2-time1
 
+# endif
+
   open(100, file='Cross-wdot-native.dat', status='replace', form='formatted')
   do i = Tstart, Tend
     write(100,*) dble(i), (wdot_native(j,i),j=1,nsc)
   enddo
   close(100)
+# if defined (CANTERA)
   open(200, file='Cross-wdot-cantera.dat', status='replace', form='formatted')
   do i = Tstart, Tend
     write(200,*) dble(i), (wdot_cantera(j,i),j=1,nsc)
   enddo
   close(200)
+# endif
 
   deallocate(wdot_cantera); deallocate(wdot_native)
   deallocate(droic)

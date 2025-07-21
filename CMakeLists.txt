@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.23)
 
 # -------- Compiler overrides (for macOS) --------
-if (UNIX AND APPLE)
-    set(CMAKE_CXX_COMPILER "/opt/homebrew/bin/g++-14")
-    set(CMAKE_C_COMPILER   "/opt/homebrew/bin/gcc-14")
-endif ()
+# if (UNIX AND APPLE)
+#     set(CMAKE_CXX_COMPILER "/opt/homebrew/bin/g++-14")
+#     set(CMAKE_C_COMPILER   "/opt/homebrew/bin/gcc-14")
+# endif ()
 
 # -------- Say my name! --------
 set(lib "cantIF")

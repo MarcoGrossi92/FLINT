@@ -1,4 +1,18 @@
-program testN0
+!> \brief Test program to compare native and Cantera thermodynamic property calculations.
+!>
+!> This program benchmarks and compares the computation of specific heat at constant pressure (cp)
+!> using both a native implementation and the Cantera library for a given gas mixture.
+!>
+!> - Reads ideal gas properties and loads a phase from 'WD.yaml' using Cantera.
+!> - Initializes species mass fractions for CH4, O2, CO2, and CO.
+!> - Computes mixture density and gas constant.
+!> - Benchmarks the native cp calculation over a range of temperatures.
+!> - Benchmarks the Cantera cp calculation over the same temperature range.
+!> - Outputs the elapsed time for each method and the relative difference in cp values.
+!>
+!> \author Marco Grossi
+!> \date 2025
+program test
   use U_Lib_Thermodynamic
   use U_IO_Table
   use cantera
@@ -48,4 +62,4 @@ program testN0
 
   write(*,*) abs(cp_cantera-cp_native)/cp_cantera*100d0
 
-end program testN0
+end program test

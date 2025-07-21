@@ -1,0 +1,316 @@
+#!MC 1410
+$!VarSet |LFDSFN1| = '"WD-batch-cantera.dat" "WD-batch-explicit.dat"'
+$!VarSet |LFDSVL1| = '"V1" "V2" "V3"'
+$!VarSet |LFDSFN2| = '"WD_reference.dat"'
+$!VarSet |LFDSVL2| = '"V1";"Time, s" "V2" "V3";"Temperature, K"'
+$!SetStyleBase Factory
+$!GlobalPaper 
+  PaperSizeInfo
+    {
+    Letter
+      {
+      Width = 8.5
+      Height = 11
+      LeftHardClipOffset = 0.125
+      RightHardClipOffset = 0.125
+      TopHardClipOffset = 0.125
+      BottomHardClipOffset = 0.125
+      }
+    }
+$!Page 
+  Name = 'Untitled'
+  PaperAttributes
+    {
+    BackgroundColor = White
+    IsTransparent = Yes
+    OrientPortrait = No
+    ShowGrid = Yes
+    ShowRuler = No
+    ShowPaper = No
+    PaperSize = Letter
+    RulerSpacing = OneInch
+    PaperGridSpacing = HalfInch
+    RegionInWorkArea
+      {
+      X1 = 1
+      Y1 = 0.25
+      X2 = 10
+      Y2 = 8.25
+      }
+    }
+### Frame Number 1 ###
+$!ReadDataSet  '|LFDSFN1|'
+  InitialPlotType = XYLine
+  IncludeText = No
+  IncludeGeom = No
+  ResetStyle = No
+  AssignStrandIDs = Yes
+  VarLoadMode = ByName
+  VarNameList = '|LFDSVL1|'
+$!RemoveVar |LFDSVL1|
+$!RemoveVar |LFDSFN1|
+$!RenameDataSetZone 
+  Zone = 1
+  Name = 'cantera'
+$!RenameDataSetZone 
+  Zone = 2
+  Name = 'MOSE'
+$!RenameDataSetZone 
+  Zone = 1
+  Name = 'MOSE+cantera'
+$!RenameDataSetZone 
+  Zone = 2
+  Name = 'MOSE+MOSE'
+$!RenameDataSetZone 
+  Zone = 1
+  Name = 'MOSE ft cantera'
+$!RenameDataSetZone 
+  Zone = 2
+  Name = 'MOSE'
+$!ReadDataSet  '|LFDSFN2|'
+  InitialPlotType = XYLine
+  IncludeText = No
+  IncludeGeom = No
+  ReadDataOption = Append
+  ResetStyle = No
+  AssignStrandIDs = Yes
+  VarLoadMode = ByName
+  VarNameList = '|LFDSVL2|'
+$!RemoveVar |LFDSVL2|
+$!RemoveVar |LFDSFN2|
+$!RenameDataSetZone 
+  Zone = 3
+  Name = 'Cantera'
+$!RenameDataSetZone 
+  Zone = 1
+  Name = 'mezzosangue'
+$!RenameDataSetZone 
+  Zone = 3
+  Name = 'Ref - Cantera'
+$!RenameDataSetZone 
+  Zone = 1
+  Name = 'Cantera'
+$!RenameDataSetZone 
+  Zone = 2
+  Name = 'Native'
+$!FrameLayout 
+  ShowBorder = No
+  ShowHeader = No
+  HeaderColor = Red
+  XYPos
+    {
+    X = 0.4983
+    Y = 0.9153
+    }
+  Width = 9.3163
+  Height = 6.3095
+$!ThreeDAxis 
+  AspectRatioLimit = 25
+  BoxAspectRatioLimit = 25
+$!PlotType  = XYLine
+$!FrameName  = 'Frame 001'
+$!GlobalTime 
+  SolutionTime = 0
+$!DeleteLineMaps 
+$!ActiveLineMaps  =  [1-3]
+$!GlobalLinePlot 
+  DataLabels
+    {
+    DistanceSkip = 5
+    }
+  Legend
+    {
+    Show = Yes
+    Box
+      {
+      BoxType = Filled
+      Margin = 5
+      }
+    XYPos
+      {
+      X = 45.328
+      Y = 85.007
+      }
+    }
+$!LineMap  [1]
+  Name = '&ZN&'
+  Assign
+    {
+    Zone = 2
+    XAxisVar = 1
+    YAxisVar = 3
+    }
+  Lines
+    {
+    Color = Green
+    LineThickness = 0.4
+    }
+  Symbols
+    {
+    Show = No
+    SymbolShape
+      {
+      GeomShape = Diamond
+      }
+    Color = Green
+    FillMode = UseLineColor
+    FillColor = Green
+    Size = 1.5
+    LineThickness = 0.3
+    SkipMode = ByFrameUnits
+    Skipping = 3
+    }
+  BarCharts
+    {
+    Color = Green
+    FillColor = Green
+    }
+  ErrorBars
+    {
+    Color = Green
+    }
+$!LineMap  [2]
+  Name = '&ZN&'
+  Assign
+    {
+    Zone = 1
+    XAxisVar = 1
+    YAxisVar = 3
+    }
+  Lines
+    {
+    Color = Red
+    LineThickness = 0.4
+    }
+  Symbols
+    {
+    Show = No
+    Color = Red
+    FillMode = UseLineColor
+    FillColor = Red
+    Size = 1.5
+    LineThickness = 0.3
+    SkipMode = ByFrameUnits
+    Skipping = 3
+    }
+  BarCharts
+    {
+    Color = Red
+    FillColor = Red
+    }
+  ErrorBars
+    {
+    Color = Red
+    }
+$!LineMap  [3]
+  Name = '&ZN&'
+  Assign
+    {
+    Zone = 3
+    XAxisVar = 1
+    YAxisVar = 3
+    }
+  Lines
+    {
+    Show = No
+    Color = Black
+    LineThickness = 0.4
+    }
+  Symbols
+    {
+    SymbolShape
+      {
+      GeomShape = Circle
+      }
+    Color = Black
+    FillMode = UseLineColor
+    FillColor = Blue
+    Size = 1.25
+    LineThickness = 0.3
+    SkipMode = ByFrameUnits
+    Skipping = 3
+    }
+  BarCharts
+    {
+    Color = Blue
+    FillColor = Blue
+    }
+  ErrorBars
+    {
+    Color = Blue
+    }
+$!XYLineAxis 
+  DepXToYRatio = 1
+  ViewportPosition
+    {
+    Y1 = 15
+    Y2 = 95
+    }
+  ViewportTopSnapTarget = 95
+$!XYLineAxis 
+  XDetail 1
+    {
+    CoordScale = Linear
+    RangeMin = 0
+    RangeMax = 0.010000000000000000208
+    GRSpacing = 0.001
+    Ticks
+      {
+      TickDirection = Out
+      }
+    TickLabel
+      {
+      Offset = 2.5
+      }
+    Gridlines
+      {
+      Show = Yes
+      Color = Custom2
+      }
+    MinorGridlines
+      {
+      Color = Custom2
+      }
+    Title
+      {
+      TitleMode = UseText
+      Text = 'Time, s'
+      Offset = 6
+      }
+    }
+$!XYLineAxis 
+  YDetail 1
+    {
+    CoordScale = Linear
+    RangeMin = 500
+    RangeMax = 6500
+    GRSpacing = 500
+    Ticks
+      {
+      TickDirection = Out
+      }
+    TickLabel
+      {
+      Offset = 1.5
+      }
+    Gridlines
+      {
+      Show = Yes
+      Color = Custom2
+      }
+    MinorGridlines
+      {
+      Color = Custom2
+      }
+    Title
+      {
+      TitleMode = UseText
+      Text = 'Temperature, K'
+      Offset = 8
+      }
+    }
+$!LinePlotLayers 
+  ShowSymbols = Yes
+$!FrameControl ActivateByNumber
+  Frame = 1
+$!SetStyleBase Config

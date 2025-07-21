@@ -31,6 +31,8 @@ contains
     use singh_mod
     use troyes_mod
     use ciottoli20_mod
+    use ecker_mod
+    use cross_mod
     implicit none
     character(*), intent(in) :: mad_world
 
@@ -53,10 +55,14 @@ contains
       chemistry_source => Frolov
     case('Nassini')
       chemistry_source => Nassini_4
-    case('ciottoli20')
+    case('Ciottoli20')
       chemistry_source => ciottoli20
     case('Troyes')
       chemistry_source => troyes
+    case('Ecker')
+      chemistry_source => ecker
+    case('Cross')
+      chemistry_source => cross
     case default
       write(*,*) "[WARNING] Explicit procedure for "//trim(mad_world)//" not found, defaulting to the general procedure"
       chemistry_source => general

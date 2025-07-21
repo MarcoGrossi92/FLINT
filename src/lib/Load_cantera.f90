@@ -1,4 +1,4 @@
-
+# if defined (CANTERA)
 module U_cantera_load
   use cantera
   implicit none
@@ -18,3 +18,4 @@ contains
   end subroutine load_phase
 
 end module U_cantera_load
+# endif

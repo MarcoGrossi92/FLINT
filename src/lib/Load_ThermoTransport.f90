@@ -4,23 +4,33 @@ module U_IO_Table
 
 contains
 
-  subroutine Read_IdealGas_Properties()
+  subroutine Read_IdealGas_Properties(folder)
     use strings, only: parse
     use Lib_Tecplot
     use Lib_ORION_data
     implicit none
+    character(len=*), intent(in), optional :: folder
     ! Local
     integer           :: ios_trans, ios, i, unitfile, start
     character(256)    :: wholestring, args(2)
     character(512)    :: wmfile, thermofile, transfile
     type(ORION_data)  :: orion
 
-    wmfile = 'INPUT/'//trim(U_phase_prefix)//'phase.txt'
-    thermofile = 'INPUT/'//trim(U_phase_prefix)//'thermo.dat'
-    transfile = 'INPUT/'//trim(U_phase_prefix)//'transport.dat'
+    if (present(folder)) then
+      wmfile = trim(folder)//'/'//trim(U_phase_prefix)//'phase.txt'
+      thermofile = trim(folder)//'/'//trim(U_phase_prefix)//'thermo.dat'
+      transfile = trim(folder)//'/'//trim(U_phase_prefix)//'transport.dat'
+    else
+      wmfile = 'INPUT/'//trim(U_phase_prefix)//'phase.txt'
+      thermofile = 'INPUT/'//trim(U_phase_prefix)//'thermo.dat'
+      transfile = 'INPUT/'//trim(U_phase_prefix)//'transport.dat'
+    endif
 
     open(newunit=unitFile,file=trim(wmfile),status='old',iostat=ios)
-    if (ios/=0) return
+    if (ios/=0) then
+      write(*,*) '[ERROR] phase.txt type file not found'
+      stop
+    endif
     ios = 0; nsc = -1
     read(unitFile,*)
     do while(ios==0)
@@ -41,7 +51,10 @@ contains
     Ri_tab = Runiv/wm_tab
 
     ios = tec_read_points_multivars(orion,4,trim(thermofile))
-    if (ios/=0) return
+    if (ios/=0) then
+      write(*,*) '[ERROR] Reading thermo file'
+      return
+    endif
     Tmin = nint(orion%block(1)%mesh(1,1,1,1))
     Tmax = Tmin + orion%block(1)%Ni - 1
     start = Tmin

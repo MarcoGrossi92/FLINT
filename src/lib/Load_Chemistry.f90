@@ -4,13 +4,13 @@ module U_IO_chemistry
 
 contains
 
-  function read_chemistry_file( file1, file2, mech_name ) result(ios)
+  function read_chemistry_file( folder, mech_name ) result(ios)
     use Lib_ORION_Data
     use Lib_Tecplot
-    use U_Lib_ChemMech, only: kf_tab, kb_tab, ni1_tab, ni2_tab, epsch_tab, nrc
-    use U_Lib_Thermodynamic, only: nsc
+    use U_Lib_Chemistry_data
+    use U_Lib_Thermodynamic, only: nsc, U_phase_prefix
     implicit none
-    character(len=*), intent(in), optional :: file1, file2
+    character(len=*), intent(in), optional :: folder
     character(len=*), intent(out), optional :: mech_name
     integer :: idum, unitfile
     type(ORION_data)  :: orion
@@ -18,12 +18,15 @@ contains
     integer :: Ti1, Ti2
     character(len=16):: chardum
 
-    if (present(file1)) then
-      ios = tec_read_points_multivars(orion,2,trim(file1))
+    if (present(folder)) then
+      ios = tec_read_points_multivars(orion,2,trim(folder)//'/'//trim(U_phase_prefix)//'chemistry-rate.dat')
     else
-      ios = tec_read_points_multivars(orion,2,trim('INPUT/chemistry-rate.dat'))
+      ios = tec_read_points_multivars(orion,2,trim('INPUT/')//trim(U_phase_prefix)//'chemistry-rate.dat')
     endif
-    if (ios/=0) return
+    if (ios/=0) then
+      write(*,*) '[WARNING] chemistry files not found'
+      return
+    endif
     Ti1 = nint(orion%block(1)%mesh(1,1,1,1))
     Ti2 = Ti1 + orion%block(1)%Ni - 1
     nrc = size(orion%block)
@@ -34,10 +37,10 @@ contains
       kb_tab(Ti1:Ti2,i) = orion%block(i)%vars(2,1:orion%block(1)%Ni,1,1)
     enddo
 
-    if (present(file2)) then
-      open(newunit=unitfile,file=file2,form='formatted',status='old',action='read')
+    if (present(folder)) then
+      open(newunit=unitfile,file=trim(folder)//'/'//trim(U_phase_prefix)//'chemistry-stoich.txt',form='formatted',status='old',action='read')
     else
-      open(newunit=unitfile,file='INPUT/chemistry-stoich.txt',form='formatted',status='old',action='read')
+      open(newunit=unitfile,file='INPUT/'//trim(U_phase_prefix)//'chemistry-stoich.txt',form='formatted',status='old',action='read')
     endif
     read(unitfile,*) mech_name
     allocate(ni1_tab(1:nsc+1,1:nrc))

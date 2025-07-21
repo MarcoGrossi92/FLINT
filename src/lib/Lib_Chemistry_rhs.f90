@@ -1,12 +1,14 @@
-module U_Lib_Chemistry
+module U_Lib_Chemistry_rhs
   use OSLo
-  use U_Lib_ChemMech
+  use U_Lib_Chemistry_wdot
+# if defined (CANTERA)
   use cantera
-
+# endif
   implicit none
   logical :: reactive
-
+# if defined(CANTERA)
   type(phase_t) :: gas
+# endif
 
 contains
     
@@ -43,7 +45,7 @@ contains
 
   end subroutine rhs_native
 
-
+# if defined (CANTERA)
   subroutine rhs_cantera ( nz, time, Z, F )
     use U_Lib_Thermodynamic
     use cantera
@@ -79,6 +81,6 @@ contains
     F(nz) = -eiroi / rho_cv
 
   end subroutine rhs_cantera
-  
+# endif
 
-end module U_Lib_Chemistry
+end module U_Lib_Chemistry_rhs

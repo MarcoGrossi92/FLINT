@@ -1,10 +1,10 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.23)
 
 # -------- Compiler overrides (for macOS) --------
-# if (UNIX AND APPLE)
-#     set(CMAKE_CXX_COMPILER "/opt/homebrew/bin/g++-14")
-#     set(CMAKE_C_COMPILER   "/opt/homebrew/bin/gcc-14")
-# endif ()
+if (UNIX AND APPLE)
+    set(CMAKE_CXX_COMPILER "/opt/homebrew/bin/g++-14")
+    set(CMAKE_C_COMPILER   "/opt/homebrew/bin/gcc-14")
+endif ()
 
 # -------- Say my name! --------
 set(lib "cantIF")
@@ -21,8 +21,11 @@ add_subdirectory("lib/ORION")
 add_subdirectory("lib/OSlo")
 
 # Cantera
-set(canteraDIR "~/Codici/cantera/")
-link_directories("${canteraDIR}/build/lib")
+OPTION(USE_CANTERA "Use Canera" ON)
+if (USE_CANTERA)
+  set(canteraDIR "~/Codici/cantera/")
+  link_directories("${canteraDIR}/build/lib")
+endif(USE_CANTERA)
 
 # -------- Fortran directories --------
 include(GNUInstallDirs)

@@ -5,4 +5,5 @@ include_directories("${canteraDIR}/build/src/fortran/")
 
 add_subdirectory("lib")
 #add_subdirectory("app")
-add_subdirectory("test/cantIF")
+add_subdirectory("test/Fortran")
+add_subdirectory("test/CXX")

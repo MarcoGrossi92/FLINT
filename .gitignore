@@ -1,5 +1,7 @@
-*build
+build
 bin
 
-*-wdot-*
-*-batch-*
+OUTPUT
+wdot-*
+batch-*
+comp-*

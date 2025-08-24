@@ -3,14 +3,13 @@ module coronetti_mod
 contains
   ! Coronetti for butadiene combustion (DOI:10.2514/1.B34760)
   ! Order of species: O2, C4H6, H2O, CO, CO2, H2, O, H, OH
-  subroutine Coronetti(roi,temp,omegadot,rotot)
+  subroutine Coronetti(roi,temp,omegadot)
     use U_Lib_Thermodynamic
     use U_Lib_Chemistry_data
     implicit none
-    real(8), intent(in) :: roi(nsc)
+    real(8), intent(inout) :: roi(nsc)
     real(8), intent(in) :: temp 
     real(8), intent(out) :: omegadot(nsc)
-    real(8), intent(in) :: rotot
     ! Local
     integer :: is, T_i, Tint(2)
     real(8) :: coi(nsc+1), Tdiff
@@ -19,6 +18,7 @@ contains
     real(8), parameter :: limitH2 = 1d-10, limitO2 = 1d-10, sigma = 23d0, tau = 17d0
 
     do is = 1, nsc
+      roi(is) = max(roi(is), 0.d0)
       coi(is)=roi(is)/Wm_tab(is)  ! kmol/m^3
     enddo
     

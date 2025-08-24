@@ -4,14 +4,13 @@ contains
 
   ! Singh (1994) global mechanism for ethylene combustion.
   ! 10 reversible reactions for 9 species.
-  subroutine Singh(roi,temp,omegadot,rotot)
+  subroutine Singh(roi,temp,omegadot)
     use U_Lib_Thermodynamic
     use U_Lib_Chemistry_data
     implicit none
-    real(8), intent(in) :: roi(nsc)
+    real(8), intent(inout) :: roi(nsc)
     real(8), intent(in) :: temp 
     real(8), intent(out) :: omegadot(nsc)
-    real(8), intent(in) :: rotot
     ! Local
     integer :: is, T_i, Tint(2)
     real(8) :: coi(nsc+1), Tdiff
@@ -97,14 +96,13 @@ contains
 
 
   ! Singh (1994) + paraffin cracking
-  subroutine Singh_WC32(roi,temp,omegadot,rotot)
+  subroutine Singh_WC32(roi,temp,omegadot)
     use U_Lib_Thermodynamic
     use U_Lib_Chemistry_data
     implicit none
-    real(8), intent(in) :: roi(nsc)
+    real(8), intent(inout) :: roi(nsc)
     real(8), intent(in) :: temp 
     real(8), intent(out) :: omegadot(nsc)
-    real(8), intent(in) :: rotot
     ! Local
     integer :: is, T_i, Tint(2)
     integer, parameter :: iH=1, iC2H4=2, iOH=3, iCO=4, iCO2=5

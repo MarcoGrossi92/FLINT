@@ -3,15 +3,14 @@ module globH2_mod
 contains
 
   ! Frolov: hydrogen/air with 3 species, one reaction 
-  subroutine Frolov(roi,temp,omegadot,rotot)
+  subroutine Frolov(roi,temp,omegadot)
     use U_Lib_Thermodynamic
     use U_Lib_Chemistry_data
     implicit none
     integer :: is, T_i, Tint(2)
-    real(8), intent(in)    :: roi(nsc)
+    real(8), intent(inout)    :: roi(nsc)
     real(8), intent(in)    :: temp 
     real(8), intent(out)   :: omegadot(nsc)
-    real(8), intent(in)    :: rotot
     ! Local
     real(8) :: coi(nsc+1), Tdiff
     real(8) :: p
@@ -44,15 +43,14 @@ contains
 
 
   ! Nassini 
-  subroutine Nassini_4(roi,temp,omegadot,rotot)
+  subroutine Nassini_4(roi,temp,omegadot)
     use U_Lib_Thermodynamic
     use U_Lib_Chemistry_data
     implicit none
     integer :: is, T_i, Tint(2)
-    real(8), intent(in) :: roi(nsc)
+    real(8), intent(inout) :: roi(nsc)
     real(8), intent(in)    :: temp 
     real(8), intent(out)   :: omegadot(nsc)
-    real(8), intent(in)    :: rotot
     ! Local
     real(8) :: coi(nsc+1), Tdiff
     real(8) :: prod1

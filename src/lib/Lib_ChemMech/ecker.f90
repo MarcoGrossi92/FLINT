@@ -1,21 +1,20 @@
 module ecker_mod
   implicit none
 contains  
-  subroutine ecker(roi,temp,omegadot,rotot)
+  subroutine ecker(roi,temp,omegadot)
     use U_Lib_Thermodynamic
     use U_Lib_Chemistry_data
     implicit none
-    real(8), intent(in)  :: roi(nsc)
-    real(8), intent(in)  :: temp
-    real(8), intent(out) :: omegadot(nsc) 
-    real(8), intent(in)  :: rotot
+    real(8), intent(inout)  :: roi(nsc)
+    real(8), intent(in)     :: temp
+    real(8), intent(out)    :: omegadot(nsc) 
 
-    real(8) :: coi(nsc+1), Tdiff 
+    real(8) :: coi(nsc+1), Tdiff
     real(8) :: M !< Third body
     integer :: is, T_i, Tint(2)
     real(8) :: prodf(1:28), prodb(1:28)
 
-    do is = 1, nsc 
+    do is = 1, nsc
     coi(is)=roi(is)/Wm_tab(is) ! kmol/m^3
     enddo 
     T_i = int(temp) 

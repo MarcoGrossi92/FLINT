@@ -3,25 +3,22 @@
   module WD_mod
     implicit none
     contains
-  subroutine WD(roi,temp,omegadot,rotot)
+  subroutine WD(roi,temp,omegadot)
     use U_Lib_Thermodynamic
     use U_Lib_Chemistry_data
     implicit none
-    real(8), intent(in) :: roi(nsc)
+    real(8), intent(inout) :: roi(nsc)
     real(8), intent(in)    :: temp 
     real(8), intent(out)   :: omegadot(nsc)
-    real(8), intent(in)    :: rotot
     ! Local
     integer :: is, T_i, Tint(2)
     real(8) :: coi(nsc+1), Tdiff
     real(8) :: prod1,prod2,prod3,prod4,prod5,prod6
 
-   do is = 1, nsc
-     coi(is)=roi(is)/Wm_tab(is)  ! kmol/m^3
-     ! Loop done in order to avoid numerical issues in omegadot evaluation
-     ! Very low coi could produce finite prods
-     if (coi(is).lt.0d0) coi(is) = 0.0d0
-   enddo
+    do is = 1, nsc
+      roi(is) = max(roi(is), 0.d0)
+      coi(is)=roi(is)/Wm_tab(is)  ! kmol/m^3
+    enddo
 
     T_i = int(temp)
     Tdiff  = temp-T_i

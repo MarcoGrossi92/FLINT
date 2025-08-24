@@ -31,7 +31,7 @@ program test
 
   call Read_IdealGas_Properties()
 # if defined (CANTERA)
-  call load_phase(gas, 'WD.yaml')
+  call load_phase(gas, 'WD/INPUT/WD.yaml')
 # endif
 
   rhoi = 0.d0

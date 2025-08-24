@@ -6,8 +6,8 @@
 // This file is part of Cantera. See License.txt in the top-level directory or
 // at https://cantera.org/license.txt for license and copyright information.
 
-#ifndef CT_EXAMPLE_UTILS_H
-#define CT_EXAMPLE_UTILS_H
+#ifndef CT_UTILS_H
+#define CT_UTILS_H
 
 #include "cantera/base/Array.h"
 #include <fstream>

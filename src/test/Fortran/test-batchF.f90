@@ -5,10 +5,10 @@ program test
   use U_IO_Table
   use U_Lib_Chemistry_data
   use U_Lib_Chemistry_wdot
-  use U_Lib_Chemistry_rhs, only: rhs_cantera, rhs_native, gas
+  use U_Lib_Chemistry_rhs
   use U_IO_chemistry
   implicit none
-  real(8)                    :: R, Tout, pout, pin, Tin
+  real(8)                    :: R, Tout, pin, Tin, rho
   real(8), allocatable       :: sp_Y(:)
   real(8), allocatable       :: Y(:)
   real(8), allocatable       :: RT(:), AT(:)
@@ -17,33 +17,35 @@ program test
   character(32)              :: solver, mech_name
   integer                    :: iopt(3)
 
-  solver = 'dvodef90'
+  solver = 'cvode'
+  nstep = 1000
+  iopt = 0
+  iopt(1) = 1000000
 
   open(unit=10, file='comp-batch-general.dat', status='replace', form='formatted')
   open(unit=20, file='comp-batch-explicit.dat', status='replace', form='formatted')
 # if defined (CANTERA)
-  open(unit=30, file='comp-batch-cantera.dat', status='replace', form='formatted')
+  open(unit=30, file='comp-batch-canteraFor.dat', status='replace', form='formatted')
 # endif
 
   !-------------------------------------------------------------------------------------------------
   ! WD
   !-------------------------------------------------------------------------------------------------
 
-  call Read_IdealGas_Properties('WD')
-  err = read_chemistry_file( folder='WD', mech_name=mech_name )
+  call Read_IdealGas_Properties('WD/INPUT')
+  err = read_chemistry_file( folder='WD/INPUT', mech_name=mech_name )
 # if defined (CANTERA)
-  call load_phase(gas, 'WD/WD.yaml')
+  call load_phase(gas, 'WD/INPUT/WD.yaml')
 # endif
 
-  open(200, file='WD-batch-explicit.dat', status='replace', form='formatted')
+  open(200, file='WD/OUTPUT/batch-explicit.dat', status='replace', form='formatted')
 # if defined (CANTERA)
-  open(300, file='WD-batch-cantera.dat', status='replace', form='formatted')
+  open(300, file='WD/OUTPUT/batch-cantera.dat', status='replace', form='formatted')
 # endif
 
-  tlim = 0.01
+  tlim = 8.d-3
   pin = 1.0d+5
   Tin = 1000
-  nstep = 1000
   dt = tlim/nstep
 
   neq = nsc + 1
@@ -54,9 +56,7 @@ program test
   sp_Y(1) = 0.2
   sp_Y(2) = 0.8
 
-  iopt = 0
   allocate(RT(neq),AT(neq))
-  iopt(1)=100000
   RT(1:nsc)=1d-7
   RT(neq)=1d-7
   AT(1:nsc)=1d-7
@@ -76,7 +76,7 @@ program test
   call cpu_time(time2)
 
   write(*,*) 'WD Cantera time =', time2-time1
-  write(30,*) nsc, time2-time1
+  write(30,*) 'WD', time2-time1
 # endif
 
   !! Native with coded mechanism
@@ -92,7 +92,7 @@ program test
   call cpu_time(time2)
 
   write(*,*) 'WD explicit time =', time2-time1
-  write(20,*) nsc, time2-time1
+  write(20,*) 'WD', time2-time1
 
   close(200)
 # if defined (CANTERA)
@@ -103,29 +103,27 @@ program test
   deallocate(AT); deallocate(RT)
   deallocate(wm_tab); deallocate(Ri_tab)
   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
-  deallocate(mi_tab); deallocate(k_tab)
-  deallocate(kf_tab); deallocate(kb_tab); deallocate(ni1_tab); deallocate(ni2_tab); deallocate(epsch_tab)
+  call free_chemistry_data()
 
   !-------------------------------------------------------------------------------------------------
   ! Troyes
   !-------------------------------------------------------------------------------------------------
 
-  call Read_IdealGas_Properties('Troyes')
-  err = read_chemistry_file( folder='Troyes', mech_name=mech_name )
+  call Read_IdealGas_Properties('Troyes/INPUT')
+  err = read_chemistry_file( folder='Troyes/INPUT', mech_name=mech_name )
 # if defined (CANTERA)
-  call load_phase(gas, 'Troyes/troyes.yaml')
+  call load_phase(gas, 'Troyes/INPUT/troyes.yaml')
 # endif
 
-  open(100, file='Troyes-batch-general.dat', status='replace', form='formatted')
-  open(200, file='Troyes-batch-explicit.dat', status='replace', form='formatted')
+  open(100, file='Troyes/OUTPUT/batch-general.dat', status='replace', form='formatted')
+  open(200, file='Troyes/OUTPUT/batch-explicit.dat', status='replace', form='formatted')
 # if defined (CANTERA)
-  open(300, file='Troyes-batch-cantera.dat', status='replace', form='formatted')
+  open(300, file='Troyes/OUTPUT/batch-cantera.dat', status='replace', form='formatted')
 # endif
 
-  tlim = 0.02
+  tlim = 5d-3
   pin = 1.0d+5
   Tin = 1000
-  nstep = 1000
   dt = tlim/nstep
 
   neq = nsc + 1
@@ -137,9 +135,7 @@ program test
   sp_Y(10) = 0.18796
   sp_Y(12) = 0.80670
 
-  iopt = 0
   allocate(RT(neq),AT(neq))
-  iopt(1)=100000
   RT(1:nsc)=1d-7
   RT(neq)=1d-7
   AT(1:nsc)=1d-7
@@ -159,7 +155,7 @@ program test
   call cpu_time(time2)
 
   write(*,*) 'Troyes Cantera time =', time2-time1
-  write(30,*) nsc, time2-time1
+  write(30,*) 'Troyes', time2-time1
 # endif
 
   !! Native with coded mechanism
@@ -170,12 +166,12 @@ program test
     timein = timeout; timeout = timeout+dt
     call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
     Tout = y(neq)
-    write(100,*) timeout, Tout
+    write(200,*) timeout, Tout
   enddo
   call cpu_time(time2)
 
   write(*,*) 'Troyes explicit time =', time2-time1
-  write(20,*) nsc, time2-time1
+  write(20,*) 'Troyes', time2-time1
 
   !! Native without coded mechanism
   call Assign_Mechanism('nemo')
@@ -185,12 +181,12 @@ program test
     timein = timeout; timeout = timeout+dt
     call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
     Tout = y(neq)
-    write(200,*) timeout, Tout
+    write(100,*) timeout, Tout
   enddo
   call cpu_time(time2)
 
   write(*,*) 'Troyes general time =', time2-time1
-  write(10,*) nsc, time2-time1
+  write(10,*) 'Troyes', time2-time1
 
   close(100); close(200)
 # if defined (CANTERA)
@@ -201,29 +197,27 @@ program test
   deallocate(AT); deallocate(RT)
   deallocate(wm_tab); deallocate(Ri_tab)
   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
-  deallocate(mi_tab); deallocate(k_tab)
-  deallocate(kf_tab); deallocate(kb_tab); deallocate(ni1_tab); deallocate(ni2_tab); deallocate(epsch_tab)
+  call free_chemistry_data()
 
   !-------------------------------------------------------------------------------------------------
   ! Ecker
   !-------------------------------------------------------------------------------------------------
 
-  call Read_IdealGas_Properties('Ecker')
-  err = read_chemistry_file( folder='Ecker', mech_name=mech_name )
+  call Read_IdealGas_Properties('Ecker/INPUT')
+  err = read_chemistry_file( folder='Ecker/INPUT', mech_name=mech_name )
 # if defined (CANTERA)
-  call load_phase(gas, 'Ecker/ecker.yaml')
+  call load_phase(gas, 'Ecker/INPUT/ecker.yaml')
 # endif
 
-  open(100, file='Ecker-batch-general.dat', status='replace', form='formatted')
-  open(200, file='Ecker-batch-explicit.dat', status='replace', form='formatted')
+  open(100, file='Ecker/OUTPUT/batch-general.dat', status='replace', form='formatted')
+  open(200, file='Ecker/OUTPUT/batch-explicit.dat', status='replace', form='formatted')
 # if defined (CANTERA)
-  open(300, file='Ecker-batch-cantera.dat', status='replace', form='formatted')
+  open(300, file='Ecker/OUTPUT/batch-cantera.dat', status='replace', form='formatted')
 # endif
 
-  tlim = 0.02
+  tlim = 2d-2
   pin = 1.0d+5
-  Tin = 1000
-  nstep = 1000
+  Tin = 1000d0
   dt = tlim/nstep
 
   neq = nsc + 1
@@ -235,9 +229,7 @@ program test
   sp_Y(1) = 0.00534534d0
   sp_Y(14) = 0.8066661d0
 
-  iopt = 0
   allocate(RT(neq),AT(neq))
-  iopt(1)=100000
   RT(1:nsc)=1d-7
   RT(neq)=1d-7
   AT(1:nsc)=1d-7
@@ -257,7 +249,7 @@ program test
   call cpu_time(time2)
 
   write(*,*) 'Ecker Cantera time =', time2-time1
-  write(30,*) nsc, time2-time1
+  write(30,*) 'Ecker', time2-time1
 # endif
 
   !! Native with coded mechanism
@@ -268,12 +260,12 @@ program test
     timein = timeout; timeout = timeout+dt
     call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
     Tout = y(neq)
-    write(100,*) timeout, Tout
+    write(200,*) timeout, Tout
   enddo
   call cpu_time(time2)
 
   write(*,*) 'Ecker explicit time =', time2-time1
-  write(20,*) nsc, time2-time1
+  write(20,*) 'Ecker', time2-time1
 
   !! Native without coded mechanism
   call Assign_Mechanism('nemo')
@@ -283,12 +275,12 @@ program test
     timein = timeout; timeout = timeout+dt
     call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
     Tout = y(neq)
-    write(200,*) timeout, Tout
+    write(100,*) timeout, Tout
   enddo
   call cpu_time(time2)
 
   write(*,*) 'Ecker general time =', time2-time1
-  write(10,*) nsc, time2-time1
+  write(10,*) 'Ecker', time2-time1
 
   close(100); close(200)
 # if defined (CANTERA)
@@ -299,29 +291,27 @@ program test
   deallocate(AT); deallocate(RT)
   deallocate(wm_tab); deallocate(Ri_tab)
   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
-  deallocate(mi_tab); deallocate(k_tab)
-  deallocate(kf_tab); deallocate(kb_tab); deallocate(ni1_tab); deallocate(ni2_tab); deallocate(epsch_tab)
+  call free_chemistry_data()
 
   !-------------------------------------------------------------------------------------------------
   ! Cross
   !-------------------------------------------------------------------------------------------------
 
-  call Read_IdealGas_Properties('Cross')
-  err = read_chemistry_file( folder='Cross', mech_name=mech_name )
+  call Read_IdealGas_Properties('Cross/INPUT')
+  err = read_chemistry_file( folder='Cross/INPUT', mech_name=mech_name )
 # if defined (CANTERA)
-  call load_phase(gas, 'Cross/cross.yaml')
+  call load_phase(gas, 'Cross/INPUT/cross.yaml')
 # endif
 
-  open(100, file='Cross-batch-general.dat', status='replace', form='formatted')
-  open(200, file='Cross-batch-explicit.dat', status='replace', form='formatted')
+  open(100, file='Cross/OUTPUT/batch-general.dat', status='replace', form='formatted')
+  open(200, file='Cross/OUTPUT/batch-explicit.dat', status='replace', form='formatted')
 # if defined (CANTERA)
-  open(300, file='Cross-batch-cantera.dat', status='replace', form='formatted')
+  open(300, file='Cross/OUTPUT/batch-cantera.dat', status='replace', form='formatted')
 # endif
 
-  tlim = 0.02
+  tlim = 1d-2
   pin = 1.0d+5
-  Tin = 1005
-  nstep = 1000
+  Tin = 1010
   dt = tlim/nstep
 
   neq = nsc + 1
@@ -333,9 +323,7 @@ program test
   sp_Y(12) = 0.00534534d0
   sp_Y(17) = 0.8066661d0
 
-  iopt = 0
   allocate(RT(neq),AT(neq))
-  iopt(1)=100000
   RT(1:nsc)=1d-7
   RT(neq)=1d-7
   AT(1:nsc)=1d-7
@@ -355,7 +343,7 @@ program test
   call cpu_time(time2)
 
   write(*,*) 'Cross Cantera time =', time2-time1
-  write(30,*) nsc, time2-time1
+  write(30,*) 'Cross', time2-time1
 # endif
 
   !! Native with coded mechanism
@@ -366,12 +354,12 @@ program test
     timein = timeout; timeout = timeout+dt
     call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
     Tout = y(neq)
-    write(100,*) timeout, Tout
+    write(200,*) timeout, Tout
   enddo
   call cpu_time(time2)
 
   write(*,*) 'Cross explicit time =', time2-time1
-  write(20,*) nsc, time2-time1
+  write(20,*) 'Cross', time2-time1
 
   !! Native without coded mechanism
   call Assign_Mechanism('nemo')
@@ -381,12 +369,12 @@ program test
     timein = timeout; timeout = timeout+dt
     call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
     Tout = y(neq)
-    write(200,*) timeout, Tout
+    write(100,*) timeout, Tout
   enddo
   call cpu_time(time2)
 
   write(*,*) 'Cross general time =', time2-time1
-  write(10,*) nsc, time2-time1
+  write(10,*) 'Cross', time2-time1
 
   close(100); close(200)
 # if defined (CANTERA)
@@ -397,14 +385,388 @@ program test
   deallocate(AT); deallocate(RT)
   deallocate(wm_tab); deallocate(Ri_tab)
   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
-  deallocate(mi_tab); deallocate(k_tab)
-  deallocate(kf_tab); deallocate(kb_tab); deallocate(ni1_tab); deallocate(ni2_tab); deallocate(epsch_tab)
+  call free_chemistry_data()
+
+  !-------------------------------------------------------------------------------------------------
+  ! Smooke
+  !-------------------------------------------------------------------------------------------------
+
+  call Read_IdealGas_Properties('Smooke/INPUT')
+  err = read_chemistry_file( folder='Smooke/INPUT', mech_name=mech_name )
+# if defined (CANTERA)
+  call load_phase(gas, 'Smooke/INPUT/smooke.yaml')
+# endif
+
+  open(100, file='Smooke/OUTPUT/batch-general.dat', status='replace', form='formatted')
+  open(200, file='Smooke/OUTPUT/batch-explicit.dat', status='replace', form='formatted')
+# if defined (CANTERA)
+  open(300, file='Smooke/OUTPUT/batch-cantera.dat', status='replace', form='formatted')
+# endif
+
+  tlim = 0.2d0
+  pin = 1.0d+5
+  Tin = 1300d0
+  dt = tlim/nstep
+
+  neq = nsc + 1
+  allocate(Y(neq))
+  allocate(sp_Y(nsc))
+
+  sp_Y = 1d-20
+  sp_Y(1) = 0.0552d0
+  sp_Y(3) = 0.2201d0
+  sp_Y(16) = 0.7247d0
+
+  allocate(RT(neq),AT(neq))
+  RT(1:nsc)=1d-7
+  RT(neq)=1d-7
+  AT(1:nsc)=1d-7
+  AT(neq)=1d-7
+  call setup_odesolver(N=neq,solver=solver,RT=RT,AT=AT,iopt=iopt)
+
+  !! Cantera
+# if defined (CANTERA)
+  call initialize
+  call cpu_time(time1)
+  do n = 1, nstep
+    timein = timeout; timeout = timeout+dt
+    call run_odesolver(neq,timein,timeout,Y,rhs_cantera,err)
+    Tout = y(neq)
+    write(300,*) timeout, Tout
+  enddo
+  call cpu_time(time2)
+
+  write(*,*) 'Smooke Cantera time =', time2-time1
+  write(30,*) 'Smooke', time2-time1
+# endif
+
+  !! Native with coded mechanism
+  call Assign_Mechanism(mech_name)
+  call initialize
+  call cpu_time(time1)
+  do n = 1, nstep
+    timein = timeout; timeout = timeout+dt
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    Tout = y(neq)
+    write(200,*) timeout, Tout
+  enddo
+  call cpu_time(time2)
+
+  write(*,*) 'Smooke explicit time =', time2-time1
+  write(20,*) 'Smooke', time2-time1
+
+  !! Native without coded mechanism
+  call Assign_Mechanism('nemo')
+  call initialize
+  call cpu_time(time1)
+  do n = 1, nstep
+    timein = timeout; timeout = timeout+dt
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    Tout = y(neq)
+    write(100,*) timeout, Tout
+  enddo
+  call cpu_time(time2)
+
+  write(*,*) 'Smooke general time =', time2-time1
+  write(10,*) 'Smooke', time2-time1
+
+  close(100); close(200)
+# if defined (CANTERA)
+  close(300)
+# endif
+
+  deallocate(Y); deallocate(sp_Y)
+  deallocate(AT); deallocate(RT)
+  deallocate(wm_tab); deallocate(Ri_tab)
+  deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
+  call free_chemistry_data()
+
+  !-------------------------------------------------------------------------------------------------
+  ! CORIA
+  !-------------------------------------------------------------------------------------------------
+
+  call Read_IdealGas_Properties('CORIA/INPUT')
+  err = read_chemistry_file( folder='CORIA/INPUT', mech_name=mech_name )
+# if defined (CANTERA)
+  call load_phase(gas, 'CORIA/INPUT/coria.yaml')
+# endif
+
+  open(100, file='CORIA/OUTPUT/batch-general.dat', status='replace', form='formatted')
+  open(200, file='CORIA/OUTPUT/batch-explicit.dat', status='replace', form='formatted')
+# if defined (CANTERA)
+  open(300, file='CORIA/OUTPUT/batch-cantera.dat', status='replace', form='formatted')
+# endif
+
+  tlim = 0.005
+  pin = 1.0d+5
+  Tin = 1300d0
+  dt = tlim/nstep
+
+  neq = nsc + 1
+  allocate(Y(neq))
+  allocate(sp_Y(nsc))
+
+  sp_Y = 1d-20
+  sp_Y(9) = 0.2d0
+  sp_Y(4) = 0.8d0
+
+  allocate(RT(neq),AT(neq))
+  RT(1:nsc)=1d-7
+  RT(neq)=1d-7
+  AT(1:nsc)=1d-7
+  AT(neq)=1d-7
+  call setup_odesolver(N=neq,solver=solver,RT=RT,AT=AT,iopt=iopt)
+
+  !! Cantera
+# if defined (CANTERA)
+  call initialize
+  call cpu_time(time1)
+  do n = 1, nstep
+    timein = timeout; timeout = timeout+dt
+    call run_odesolver(neq,timein,timeout,Y,rhs_cantera,err)
+    Tout = y(neq)
+    write(300,*) timeout, Tout
+  enddo
+  call cpu_time(time2)
+
+  write(*,*) 'CORIA Cantera time =', time2-time1
+  write(30,*) 'CORIA', time2-time1
+# endif
+
+  !! Native with coded mechanism
+  call Assign_Mechanism(mech_name)
+  call initialize
+  call cpu_time(time1)
+  do n = 1, nstep
+    timein = timeout; timeout = timeout+dt
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    Tout = y(neq)
+    write(200,*) timeout, Tout
+  enddo
+  call cpu_time(time2)
+
+  write(*,*) 'CORIA explicit time =', time2-time1
+  write(20,*) 'CORIA', time2-time1
+
+  !! Native without coded mechanism
+  call Assign_Mechanism('nemo')
+  call initialize
+  call cpu_time(time1)
+  do n = 1, nstep
+    timein = timeout; timeout = timeout+dt
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    Tout = y(neq)
+    write(100,*) timeout, Tout
+  enddo
+  call cpu_time(time2)
+
+  write(*,*) 'CORIA general time =', time2-time1
+  write(10,*) 'CORIA', time2-time1
+
+  close(100); close(200)
+# if defined (CANTERA)
+  close(300)
+# endif
+
+  deallocate(Y); deallocate(sp_Y)
+  deallocate(AT); deallocate(RT)
+  deallocate(wm_tab); deallocate(Ri_tab)
+  deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
+  call free_chemistry_data()
+
+  !-------------------------------------------------------------------------------------------------
+  ! TSR-CDF-13
+  !-------------------------------------------------------------------------------------------------
+
+  call Read_IdealGas_Properties('TSR-CDF-13/INPUT')
+  err = read_chemistry_file( folder='TSR-CDF-13/INPUT', mech_name=mech_name )
+# if defined (CANTERA)
+  call load_phase(gas, 'TSR-CDF-13/INPUT/TSR-CDF-13.yaml')
+# endif
+
+  open(100, file='TSR-CDF-13/OUTPUT/batch-general.dat', status='replace', form='formatted')
+  open(200, file='TSR-CDF-13/OUTPUT/batch-explicit.dat', status='replace', form='formatted')
+# if defined (CANTERA)
+  open(300, file='TSR-CDF-13/OUTPUT/batch-cantera.dat', status='replace', form='formatted')
+# endif
+
+  tlim = 0.005
+  pin = 5.0d+5
+  Tin = 1300d0
+  dt = tlim/nstep
+
+  neq = nsc + 1
+  allocate(Y(neq))
+  allocate(sp_Y(nsc))
+
+  sp_Y = 1d-20
+  sp_Y(7) = 0.2d0
+  sp_Y(10) = 0.8d0
+
+  allocate(RT(neq),AT(neq))
+  RT(1:nsc)=1d-7
+  RT(neq)=1d-7
+  AT(1:nsc)=1d-7
+  AT(neq)=1d-7
+  call setup_odesolver(N=neq,solver=solver,RT=RT,AT=AT,iopt=iopt)
+
+  !! Cantera
+# if defined (CANTERA)
+  call initialize
+  call cpu_time(time1)
+  do n = 1, nstep
+    timein = timeout; timeout = timeout+dt
+    call run_odesolver(neq,timein,timeout,Y,rhs_cantera,err)
+    Tout = y(neq)
+    write(300,*) timeout, Tout
+  enddo
+  call cpu_time(time2)
+
+  write(*,*) 'TSR-CDF-13 Cantera time =', time2-time1
+  write(30,*) 'TSR-CDF-13', time2-time1
+# endif
+
+  !! Native with coded mechanism
+  call Assign_Mechanism(mech_name)
+  call initialize
+  call cpu_time(time1)
+  do n = 1, nstep
+    timein = timeout; timeout = timeout+dt
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    Tout = y(neq)
+    write(200,*) timeout, Tout
+  enddo
+  call cpu_time(time2)
+
+  write(*,*) 'TSR-CDF-13 explicit time =', time2-time1
+  write(20,*) 'TSR-CDF-13', time2-time1
+
+  !! Native without coded mechanism
+  call Assign_Mechanism('nemo')
+  call initialize
+  call cpu_time(time1)
+  do n = 1, nstep
+    timein = timeout; timeout = timeout+dt
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    Tout = y(neq)
+    write(100,*) timeout, Tout
+  enddo
+  call cpu_time(time2)
+
+  write(*,*) 'TSR-CDF-13 general time =', time2-time1
+  write(10,*) 'TSR-CDF-13', time2-time1
+
+  close(100); close(200)
+# if defined (CANTERA)
+  close(300)
+# endif
+
+  deallocate(Y); deallocate(sp_Y)
+  deallocate(AT); deallocate(RT)
+  deallocate(wm_tab); deallocate(Ri_tab)
+  deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
+  call free_chemistry_data()
+
+  !-------------------------------------------------------------------------------------------------
+  ! Pelucchi
+  !-------------------------------------------------------------------------------------------------
+
+  call Read_IdealGas_Properties('Pelucchi/INPUT')
+  !err = read_chemistry_file( folder='Pelucchi/INPUT', mech_name=mech_name )
+# if defined (CANTERA)
+  call load_phase(gas, 'Pelucchi/INPUT/pelucchi.yaml')
+# endif
+
+  open(100, file='Pelucchi/OUTPUT/batch-general.dat', status='replace', form='formatted')
+  open(200, file='Pelucchi/OUTPUT/batch-explicit.dat', status='replace', form='formatted')
+# if defined (CANTERA)
+  open(300, file='Pelucchi/OUTPUT/batch-cantera.dat', status='replace', form='formatted')
+# endif
+
+  tlim = 5d-2
+  pin = 1.0d+5
+  Tin = 1250d0
+  dt = tlim/nstep
+
+  neq = nsc + 1
+  allocate(Y(neq))
+  allocate(sp_Y(nsc))
+
+  sp_Y = 1d-20
+  sp_Y(18) = 0.00859d0
+  sp_Y(14) = 0.00606d0
+  sp_Y(16) = 0.00365d0
+  sp_Y(1) = 0.00025d0
+  sp_Y(13) = 0.98044d0
+
+  allocate(RT(neq),AT(neq))
+  RT(1:nsc)=1d-12
+  RT(neq)=1d-12
+  AT(1:nsc)=1d-15
+  AT(neq)=1d-15
+  call setup_odesolver(N=neq,solver=solver,RT=RT,AT=AT,iopt=iopt)
+
+  !! Cantera
+# if defined (CANTERA)
+  call initialize
+  call cpu_time(time1)
+  do n = 1, nstep
+    timein = timeout; timeout = timeout+dt
+    call run_odesolver(neq,timein,timeout,Y,rhs_cantera,err)
+    Tout = y(neq)
+    write(300,*) timeout, Tout
+  enddo
+  call cpu_time(time2)
+
+  write(*,*) 'Pelucchi Cantera time =', time2-time1
+  write(30,*) 'Pelucchi', time2-time1
+# endif
+
+  ! !! Native with coded mechanism
+  ! call Assign_Mechanism(mech_name)
+  ! call initialize
+  ! call cpu_time(time1)
+  ! do n = 1, nstep
+  !   timein = timeout; timeout = timeout+dt
+  !   call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+  !   Tout = y(neq)
+  !   write(200,*) timeout, Tout
+  ! enddo
+  ! call cpu_time(time2)
+
+  ! write(*,*) 'Pelucchi explicit time =', time2-time1
+  ! write(20,*) 'Pelucchi', time2-time1
+
+  ! !! Native without coded mechanism
+  ! call Assign_Mechanism('nemo')
+  ! call initialize
+  ! call cpu_time(time1)
+  ! do n = 1, nstep
+  !   timein = timeout; timeout = timeout+dt
+  !   call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+  !   Tout = y(neq)
+  !   write(100,*) timeout, Tout
+  ! enddo
+  ! call cpu_time(time2)
+
+  write(*,*) 'Pelucchi general time =', time2-time1
+  write(10,*) 'Pelucchi', time2-time1
+
+  close(100); close(200)
+# if defined (CANTERA)
+  close(300)
+# endif
+
+  deallocate(Y); deallocate(sp_Y)
+  deallocate(AT); deallocate(RT)
+  deallocate(wm_tab); deallocate(Ri_tab)
+  deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
+  call free_chemistry_data()
 
 contains
 
   subroutine initialize()
     implicit none
-    real(8) :: rho
     R = Rtot(sp_Y)
     rho = pin/(R*Tin)
     Y(1:nsc) = rho*sp_Y

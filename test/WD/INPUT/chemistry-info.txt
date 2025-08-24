@@ -1,0 +1,30 @@
+WD
+N.ro species = 5
+N.ro reactions = 3
+
+General loop info. They are not used if the mechanism is exlplicitly defined
+
+Reaction type
+1 Arrhenius
+2 Arrhenius
+3 Arrhenius
+
+Reaction definition
+1 CH4 1.0 0.0 0.0
+1 O2 1.5 0.0 0.0
+1 CO2 0.0 0.0 0.0
+1 H2O 0.0 2.0 0.0
+1 CO 0.0 1.0 0.0
+1 M 0.0 0.0 0.0
+2 CH4 0.0 0.0 0.0
+2 O2 0.5 0.0 0.0
+2 CO2 0.0 1.0 0.0
+2 H2O 1.0 1.0 0.0
+2 CO 1.0 0.0 0.0
+2 M 0.0 0.0 0.0
+3 CH4 0.0 0.0 0.0
+3 O2 0.0 0.5 0.0
+3 CO2 1.0 0.0 0.0
+3 H2O 0.0 0.0 0.0
+3 CO 0.0 1.0 0.0
+3 M 0.0 0.0 0.0

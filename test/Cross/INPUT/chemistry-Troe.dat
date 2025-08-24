@@ -1,0 +1,2 @@
+TITLE = "Fall-off data"
+VARIABLES = "Temperature", "k_inf", "k_0", "k_c", "F_cent"

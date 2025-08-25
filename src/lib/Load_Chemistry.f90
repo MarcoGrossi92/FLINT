@@ -1,4 +1,4 @@
-module U_IO_chemistry
+module FLINT_IO_chemistry
   use iso_fortran_env, only: I4 => int32, R8 => real64
   implicit none
 
@@ -7,8 +7,8 @@ contains
   function read_chemistry_file( folder, mech_name ) result(ios)
     use Lib_ORION_Data
     use Lib_Tecplot
-    use U_Lib_Chemistry_data
-    use U_Lib_Thermodynamic, only: nsc, U_phase_prefix
+    use FLINT_Lib_Chemistry_data
+    use FLINT_Lib_Thermodynamic, only: nsc, FLINT_phase_prefix
     implicit none
     character(len=*), intent(in), optional :: folder
     character(len=*), intent(out), optional :: mech_name
@@ -23,9 +23,9 @@ contains
 
     !! Info
     if (present(folder)) then
-      open(newunit=unitfile,file=trim(folder)//'/'//trim(U_phase_prefix)//'chemistry-info.txt',form='formatted',status='old',action='read',iostat=ios)
+      open(newunit=unitfile,file=trim(folder)//'/'//trim(FLINT_phase_prefix)//'chemistry-info.txt',form='formatted',status='old',action='read',iostat=ios)
     else
-      open(newunit=unitfile,file='INPUT/'//trim(U_phase_prefix)//'chemistry-info.txt',form='formatted',status='old',action='read',iostat=ios)
+      open(newunit=unitfile,file='INPUT/'//trim(FLINT_phase_prefix)//'chemistry-info.txt',form='formatted',status='old',action='read',iostat=ios)
     endif
     if (ios/=0) then
       write(*,*) '[WARNING] chemistry-info file not found'
@@ -78,9 +78,9 @@ contains
 
     !! Rate Arrhenius
     if (present(folder)) then
-      ios = tec_read_points_multivars(orion,2,trim(folder)//'/'//trim(U_phase_prefix)//'chemistry-Arrhenius.dat')
+      ios = tec_read_points_multivars(orion,2,trim(folder)//'/'//trim(FLINT_phase_prefix)//'chemistry-Arrhenius.dat')
     else
-      ios = tec_read_points_multivars(orion,2,trim('INPUT/')//trim(U_phase_prefix)//'chemistry-Arrhenius.dat')
+      ios = tec_read_points_multivars(orion,2,trim('INPUT/')//trim(FLINT_phase_prefix)//'chemistry-Arrhenius.dat')
     endif
     if (ios/=0) then
       write(*,*) '[ERROR] chemistry-Arrhenius file not found'
@@ -99,9 +99,9 @@ contains
     if (nrc_troe/=0) then
       deallocate(orion%block)
       if (present(folder)) then
-        ios = tec_read_points_multivars(orion,4,trim(folder)//'/'//trim(U_phase_prefix)//'chemistry-Troe.dat')
+        ios = tec_read_points_multivars(orion,4,trim(folder)//'/'//trim(FLINT_phase_prefix)//'chemistry-Troe.dat')
       else
-        ios = tec_read_points_multivars(orion,4,trim('INPUT/')//trim(U_phase_prefix)//'chemistry-Troe.dat')
+        ios = tec_read_points_multivars(orion,4,trim('INPUT/')//trim(FLINT_phase_prefix)//'chemistry-Troe.dat')
       endif
       if (ios/=0) then
         write(*,*) '[ERROR] chemistry-Troe file not found'
@@ -122,4 +122,4 @@ contains
   end function read_chemistry_file
 
 
-end module U_IO_chemistry
+end module FLINT_IO_chemistry

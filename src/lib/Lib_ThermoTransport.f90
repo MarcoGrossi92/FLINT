@@ -1,11 +1,11 @@
 
-module U_Lib_Thermodynamic
+module FLINT_Lib_Thermodynamic
   implicit none
   public:: E0, H0
   public:: prim2cons, cons2prim
   !-----------------------------------------------------------------------------------------------------------------------------------
 
-  character(len=128)      :: U_phase_prefix=''
+  character(len=128)      :: FLINT_phase_prefix=''
 
   integer                 :: nsc
   integer                 :: nu, nv, nw, np
@@ -443,4 +443,4 @@ contains
 
   endfunction comp_ms_tabT_expr
 
-endmodule U_Lib_Thermodynamic
+endmodule FLINT_Lib_Thermodynamic

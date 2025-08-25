@@ -7,9 +7,9 @@ cmake_minimum_required(VERSION 3.23)
 # endif ()
 
 # -------- Say my name! --------
-set(lib "cantIF")
+set(lib "FLINT")
 
-project (cantIF LANGUAGES C CXX Fortran)
+project (FLINT LANGUAGES C CXX Fortran)
 
 set(CMAKE_VERBOSE_MAKEFILE FALSE)
 

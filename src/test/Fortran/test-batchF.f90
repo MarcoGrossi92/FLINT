@@ -1,12 +1,12 @@
 program test
   use oslo
-  use U_cantera_load
-  use U_Lib_Thermodynamic
-  use U_IO_Table
-  use U_Lib_Chemistry_data
-  use U_Lib_Chemistry_wdot
-  use U_Lib_Chemistry_rhs
-  use U_IO_chemistry
+  use FLINT_cantera_load
+  use FLINT_Lib_Thermodynamic
+  use FLINT_IO_Table
+  use FLINT_Lib_Chemistry_data
+  use FLINT_Lib_Chemistry_wdot
+  use FLINT_Lib_Chemistry_rhs
+  use FLINT_IO_chemistry
   implicit none
   real(8)                    :: R, Tout, pin, Tin, rho
   real(8), allocatable       :: sp_Y(:)

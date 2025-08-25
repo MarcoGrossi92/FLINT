@@ -1,6 +1,6 @@
 ! Source: https://cantera.org/3.1/reference/kinetics/rate-constants.html#sec-falloff-rate
-module U_Lib_Chemistry_Troe
-  use U_Lib_Chemistry_data
+module FLINT_Lib_Chemistry_Troe
+  use FLINT_Lib_Chemistry_data
   implicit none
   private
   public :: f_k_troe
@@ -55,4 +55,4 @@ contains
   end function f_F
 
 
-end module U_Lib_Chemistry_Troe
+end module FLINT_Lib_Chemistry_Troe

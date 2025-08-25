@@ -1,14 +1,14 @@
 ! Test for wdot with thrid-body reactions
 program test
-  use U_Lib_Thermodynamic
-  use U_IO_Table
-  use U_IO_chemistry
-  use U_Lib_Chemistry_data
-  use U_Lib_Chemistry_wdot
+  use FLINT_Lib_Thermodynamic
+  use FLINT_IO_Table
+  use FLINT_IO_chemistry
+  use FLINT_Lib_Chemistry_data
+  use FLINT_Lib_Chemistry_wdot
 # if defined (CANTERA)
-  use U_Lib_Chemistry_rhs, only: gas
+  use FLINT_Lib_Chemistry_rhs, only: gas
   use cantera
-  use U_cantera_load
+  use FLINT_cantera_load
 # endif
   implicit none
   integer, parameter :: Tend=2000, Tstart=100

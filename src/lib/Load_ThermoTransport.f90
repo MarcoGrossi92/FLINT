@@ -1,5 +1,5 @@
-module U_IO_Table
-  use U_Lib_Thermodynamic
+module FLINT_IO_Table
+  use FLINT_Lib_Thermodynamic
   implicit none
 
 contains
@@ -17,13 +17,13 @@ contains
     type(ORION_data)  :: orion
 
     if (present(folder)) then
-      wmfile = trim(folder)//'/'//trim(U_phase_prefix)//'phase.txt'
-      thermofile = trim(folder)//'/'//trim(U_phase_prefix)//'thermo.dat'
-      transfile = trim(folder)//'/'//trim(U_phase_prefix)//'transport.dat'
+      wmfile = trim(folder)//'/'//trim(FLINT_phase_prefix)//'phase.txt'
+      thermofile = trim(folder)//'/'//trim(FLINT_phase_prefix)//'thermo.dat'
+      transfile = trim(folder)//'/'//trim(FLINT_phase_prefix)//'transport.dat'
     else
-      wmfile = 'INPUT/'//trim(U_phase_prefix)//'phase.txt'
-      thermofile = 'INPUT/'//trim(U_phase_prefix)//'thermo.dat'
-      transfile = 'INPUT/'//trim(U_phase_prefix)//'transport.dat'
+      wmfile = 'INPUT/'//trim(FLINT_phase_prefix)//'phase.txt'
+      thermofile = 'INPUT/'//trim(FLINT_phase_prefix)//'thermo.dat'
+      transfile = 'INPUT/'//trim(FLINT_phase_prefix)//'transport.dat'
     endif
 
     open(newunit=unitFile,file=trim(wmfile),status='old',iostat=ios)
@@ -95,4 +95,4 @@ contains
   end subroutine Read_IdealGas_Properties
 
 
-end module U_IO_Table
+end module FLINT_IO_Table

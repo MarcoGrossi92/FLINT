@@ -12,6 +12,6 @@ include_directories("${canteraD}/include/")
 include_directories("${CMAKE_SOURCE_DIR}/lib/OSlo/sundials-install/include/")
 
 add_executable(${exe} "test-batchCXX.cpp")
-target_link_libraries(${exe} PRIVATE cantIF ${ACCELERATE_FRAMEWORK} )#fmt::fmt Threads::Threads)
+target_link_libraries(${exe} PRIVATE FLINT ${ACCELERATE_FRAMEWORK} )#fmt::fmt Threads::Threads)
 
 set_target_properties(${exe} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/test")

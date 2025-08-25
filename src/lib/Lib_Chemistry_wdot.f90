@@ -1,5 +1,5 @@
 
-module U_Lib_Chemistry_wdot
+module FLINT_Lib_Chemistry_wdot
   implicit none
 
   !> Concrete procedure pointing to one of the subroutine realizations
@@ -8,8 +8,8 @@ module U_Lib_Chemistry_wdot
   !> Abstract interface relative to the finite-rate reactions source procedure
   abstract interface
   subroutine chemsource_if(roi,temp,omegadot)
-    use U_Lib_Thermodynamic
-    use U_Lib_Chemistry_data
+    use FLINT_Lib_Thermodynamic
+    use FLINT_Lib_Chemistry_data
     implicit none
     integer :: is, T_i, Tint(2)
     real(8), intent(inout) :: roi(nsc)
@@ -81,9 +81,9 @@ contains
 
   ! General mechanism
   subroutine general(roi,temp,omegadot)
-    use U_Lib_Thermodynamic
-    use U_Lib_Chemistry_data
-    use U_Lib_Chemistry_Troe
+    use FLINT_Lib_Thermodynamic
+    use FLINT_Lib_Chemistry_data
+    use FLINT_Lib_Chemistry_Troe
     implicit none
     real(8), intent(inout) :: roi(nsc)
     real(8), intent(in) :: temp 
@@ -174,4 +174,4 @@ contains
 
   end subroutine general
 
-end module U_Lib_Chemistry_wdot
+end module FLINT_Lib_Chemistry_wdot

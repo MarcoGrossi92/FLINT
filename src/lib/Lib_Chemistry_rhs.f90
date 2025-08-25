@@ -1,6 +1,6 @@
-module U_Lib_Chemistry_rhs
+module FLINT_Lib_Chemistry_rhs
   use OSLo
-  use U_Lib_Chemistry_wdot
+  use FLINT_Lib_Chemistry_wdot
 # if defined (CANTERA)
   use cantera
 # endif
@@ -13,7 +13,7 @@ module U_Lib_Chemistry_rhs
 contains
     
   subroutine rhs_native ( nz, time, Z, F )
-    use U_Lib_Thermodynamic
+    use FLINT_Lib_Thermodynamic
     implicit none
     integer, intent(in)  :: nz
     real(8), intent(in)  :: time
@@ -53,7 +53,7 @@ contains
 
 # if defined (CANTERA)
   subroutine rhs_cantera ( nz, time, Z, F )
-    use U_Lib_Thermodynamic
+    use FLINT_Lib_Thermodynamic
     use cantera
     implicit none
     integer, intent(in)  :: nz
@@ -100,4 +100,4 @@ contains
   end subroutine rhs_cantera
 # endif
 
-end module U_Lib_Chemistry_rhs
+end module FLINT_Lib_Chemistry_rhs

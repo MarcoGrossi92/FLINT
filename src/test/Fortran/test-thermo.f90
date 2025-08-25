@@ -13,11 +13,11 @@
 !> \author Marco Grossi
 !> \date 2025
 program test
-  use U_Lib_Thermodynamic
-  use U_IO_Table
+  use FLINT_Lib_Thermodynamic
+  use FLINT_IO_Table
 # if defined (CANTERA)
   use cantera
-  use U_cantera_load
+  use FLINT_cantera_load
 # endif
   implicit none
 # if defined (CANTERA)

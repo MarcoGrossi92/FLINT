@@ -1,4 +1,4 @@
-module U_Lib_Chemistry_data
+module FLINT_Lib_Chemistry_data
   implicit none
 
   integer                              :: nrc
@@ -134,4 +134,4 @@ contains
     if (allocated(epsch_troe_tab)) deallocate(epsch_troe_tab)
   end subroutine free_chemistry_data
 
-end module U_Lib_Chemistry_data
+end module FLINT_Lib_Chemistry_data

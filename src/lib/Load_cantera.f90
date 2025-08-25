@@ -1,5 +1,5 @@
 # if defined (CANTERA)
-module U_cantera_load
+module FLINT_cantera_load
   use cantera
   implicit none
 
@@ -17,5 +17,5 @@ contains
     phase = importPhase(filename, phase_name)
   end subroutine load_phase
 
-end module U_cantera_load
+end module FLINT_cantera_load
 # endif

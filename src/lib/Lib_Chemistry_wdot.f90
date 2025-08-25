@@ -32,7 +32,6 @@ contains
     use coronetti_mod
     use singh_mod
     use troyes_mod
-    use ciottoli20_mod
     use ecker_mod
     use cross_mod
     use pelucchi_mod

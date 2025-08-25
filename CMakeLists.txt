@@ -37,7 +37,7 @@ if (USE_CANTERA)
   # Check if cloned
   if(NOT EXISTS "${canteraD}/README.rst")
     message(STATUS "Cantera not found. Attempting to initialize...")
-    execute_process(COMMAND git submodule update --init --recursive lib/cantera
+    execute_process(COMMAND git submodule update --init lib/cantera
                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                     RESULT_VARIABLE GIT_SUBMOD_RESULT)
     if(NOT GIT_SUBMOD_RESULT EQUAL 0)
@@ -48,6 +48,10 @@ if (USE_CANTERA)
   set(CANTERA_CONF "${canteraD}/config.log")
   if(NOT EXISTS "${CANTERA_CONF}")
     message(STATUS "Cantera not installed, building and installing it...")
+    find_package(Boost)
+    if (NOT Boost_FOUND)
+      message(FATAL_ERROR "Boost is required to build Cantera. Please install Boost and try again.")
+    endif()
     include(ExternalProject)
     ExternalProject_Add(
         cantera_world
@@ -60,9 +64,10 @@ if (USE_CANTERA)
             f90_interface=y
             FORTRAN=gfortran
             system_sundials=y
-            sundials_include="${osloD}"/sundials-install/include
-            sundials_libdir="${osloD}"/sundials-install/lib
-            boost_inc_dir=/opt/homebrew/opt/boost/include
+            sundials_include=${osloD}/sundials-install/include
+            sundials_libdir=${osloD}/sundials-install/lib
+            boost_inc_dir=${Boost_INCLUDE_DIR}
+            system_eigen=n
         INSTALL_COMMAND scons -C ${canteraD} install
     )
   else()

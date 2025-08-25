@@ -7,7 +7,6 @@ if (USE_TECIO)
   target_link_libraries(${lib} PRIVATE ${LINKLIBS})
 endif()
 if (USE_CANTERA)
-  add_compile_definitions(CANTERA)
   target_link_libraries(${lib} PRIVATE cantera cantera_fortran ${ACCELERATE_FRAMEWORK} c++)
 endif()
 

@@ -6,7 +6,7 @@ set(exe "test-batchCXX")
 #find_package(Threads REQUIRED)
 #find_package(fmt REQUIRED)
 find_library(ACCELERATE_FRAMEWORK Accelerate)
-include_directories("${canteraDIR}/include/")
+include_directories("${canteraD}/include/")
 #include_directories("${canteraDIR}/ext/sundials/include/")
 include_directories("${CMAKE_SOURCE_DIR}/lib/OSlo/sundials-install/include/")
 

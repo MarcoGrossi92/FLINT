@@ -4,8 +4,8 @@ contains
   ! John Lindstedt with Recombination Reaction Mechanism
   ! 9 species & 7 reactions
   subroutine JLR(roi,temp,omegadot)
-    use U_Lib_Thermodynamic
-    use U_Lib_Chemistry_data
+    use FLINT_Lib_Thermodynamic
+    use FLINT_Lib_Chemistry_data
     implicit none
     real(8), intent(inout) :: roi(nsc)
     real(8), intent(in)    :: temp 
@@ -72,8 +72,8 @@ contains
   ! Frassoldati: John Lindstedt with Recombination Reaction Mechanism
   ! 9 species & 6 reactions
   subroutine Frassoldati(roi,temp,omegadot)
-    use U_Lib_Thermodynamic
-    use U_Lib_Chemistry_data
+    use FLINT_Lib_Thermodynamic
+    use FLINT_Lib_Chemistry_data
     implicit none
     real(8), intent(inout) :: roi(nsc)
     real(8), intent(in)    :: temp 
@@ -137,8 +137,8 @@ contains
   !> kerosene decomposition products combustion 10 species & 8 reactions
   !> SPECIES: O2, C2H4, H2O, CO, CO2, H2, H, O, OH, RP-1 (C12H24)
   subroutine CKJLR10sp(roi,temp,omegadot)
-    use U_Lib_Thermodynamic
-    use U_Lib_Chemistry_data
+    use FLINT_Lib_Thermodynamic
+    use FLINT_Lib_Chemistry_data
     implicit none
     real(8), intent(inout)  :: roi(nsc)
     real(8), intent(in)  :: temp 

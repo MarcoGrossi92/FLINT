@@ -2,9 +2,9 @@ module cross_mod
 implicit none
 contains
 subroutine cross(roi,temp,omegadot)
-use U_Lib_Thermodynamic
-use U_Lib_Chemistry_data
-use U_Lib_Chemistry_Troe
+use FLINT_Lib_Thermodynamic
+use FLINT_Lib_Chemistry_data
+use FLINT_Lib_Chemistry_Troe
 implicit none
 real(8), intent(inout)  :: roi(nsc)
 real(8), intent(in)     :: temp

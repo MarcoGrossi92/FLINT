@@ -4,8 +4,8 @@ contains
 
   ! Frolov: hydrogen/air with 3 species, one reaction 
   subroutine Frolov(roi,temp,omegadot)
-    use U_Lib_Thermodynamic
-    use U_Lib_Chemistry_data
+    use FLINT_Lib_Thermodynamic
+    use FLINT_Lib_Chemistry_data
     implicit none
     integer :: is, T_i, Tint(2)
     real(8), intent(inout)    :: roi(nsc)
@@ -44,8 +44,8 @@ contains
 
   ! Nassini 
   subroutine Nassini_4(roi,temp,omegadot)
-    use U_Lib_Thermodynamic
-    use U_Lib_Chemistry_data
+    use FLINT_Lib_Thermodynamic
+    use FLINT_Lib_Chemistry_data
     implicit none
     integer :: is, T_i, Tint(2)
     real(8), intent(inout) :: roi(nsc)

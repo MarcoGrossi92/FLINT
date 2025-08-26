@@ -4,8 +4,8 @@
     implicit none
     contains
   subroutine WD(roi,temp,omegadot)
-    use U_Lib_Thermodynamic
-    use U_Lib_Chemistry_data
+    use FLINT_Lib_Thermodynamic
+    use FLINT_Lib_Chemistry_data
     implicit none
     real(8), intent(inout) :: roi(nsc)
     real(8), intent(in)    :: temp 

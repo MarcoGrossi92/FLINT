@@ -4,8 +4,8 @@ contains
   ! Coronetti for butadiene combustion (DOI:10.2514/1.B34760)
   ! Order of species: O2, C4H6, H2O, CO, CO2, H2, O, H, OH
   subroutine Coronetti(roi,temp,omegadot)
-    use U_Lib_Thermodynamic
-    use U_Lib_Chemistry_data
+    use FLINT_Lib_Thermodynamic
+    use FLINT_Lib_Chemistry_data
     implicit none
     real(8), intent(inout) :: roi(nsc)
     real(8), intent(in) :: temp 

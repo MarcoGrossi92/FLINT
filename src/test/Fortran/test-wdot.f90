@@ -1,7 +1,7 @@
 ! Test for wdot with thrid-body reactions
 program test
   use FLINT_Lib_Thermodynamic
-  use FLINT_IO_Table
+  use FLINT_IO_ThermoTransport
   use FLINT_IO_chemistry
   use FLINT_Lib_Chemistry_data
   use FLINT_Lib_Chemistry_wdot
@@ -23,7 +23,7 @@ program test
   ! WD
   !-------------------------------------------------------------------------------------------------
 
-  call Read_IdealGas_Properties('WD/INPUT')
+  err = read_idealgas_properties('WD/INPUT')
   err = read_chemistry_file( folder='WD/INPUT', mech_name=mech_name )
 # if defined(CANTERA)
   call load_phase(gas, 'WD/INPUT/WD.yaml')
@@ -96,7 +96,7 @@ program test
   ! TROYES
   !-------------------------------------------------------------------------------------------------
 
-  call Read_IdealGas_Properties('Troyes/INPUT')
+  err = read_idealgas_properties('Troyes/INPUT')
   err = read_chemistry_file( folder='Troyes/INPUT', mech_name=mech_name )
 # if defined (CANTERA)
   call load_phase(gas, 'Troyes/INPUT/troyes.yaml')
@@ -167,7 +167,7 @@ program test
   ! ECKER
   !-------------------------------------------------------------------------------------------------
 
-  call Read_IdealGas_Properties('Ecker/INPUT')
+  err = read_idealgas_properties('Ecker/INPUT')
   err = read_chemistry_file( folder='Ecker/INPUT', mech_name=mech_name )
 # if defined (CANTERA)
   call load_phase(gas, 'Ecker/INPUT/ecker.yaml')
@@ -243,7 +243,7 @@ program test
   ! CROSS
   !-------------------------------------------------------------------------------------------------
 
-  call Read_IdealGas_Properties('Cross/INPUT')
+  err = read_idealgas_properties('Cross/INPUT')
   err = read_chemistry_file( folder='Cross/INPUT', mech_name=mech_name )
 # if defined (CANTERA)
   call load_phase(gas, 'Cross/INPUT/cross.yaml')
@@ -314,7 +314,7 @@ program test
   ! SMOOKE
   !-------------------------------------------------------------------------------------------------
 
-  call Read_IdealGas_Properties('Smooke/INPUT')
+  err = read_idealgas_properties('Smooke/INPUT')
   err = read_chemistry_file( folder='Smooke/INPUT', mech_name=mech_name )
 # if defined (CANTERA)
   call load_phase(gas, 'Smooke/INPUT/smooke.yaml')
@@ -385,7 +385,7 @@ program test
   ! CORIA-CNRS
   !-------------------------------------------------------------------------------------------------
 
-  call Read_IdealGas_Properties('CORIA/INPUT')
+  err = read_idealgas_properties('CORIA/INPUT')
   err = read_chemistry_file( folder='CORIA/INPUT', mech_name=mech_name )
 # if defined (CANTERA)
   call load_phase(gas, 'CORIA/INPUT/coria.yaml')
@@ -456,7 +456,7 @@ program test
   ! TSR-CDF-13
   !-------------------------------------------------------------------------------------------------
 
-  call Read_IdealGas_Properties('TSR-CDF-13/INPUT')
+  err = read_idealgas_properties('TSR-CDF-13/INPUT')
   err = read_chemistry_file( folder='TSR-CDF-13/INPUT', mech_name=mech_name )
 # if defined (CANTERA)
   call load_phase(gas, 'TSR-CDF-13/INPUT/TSR-CDF-13.yaml')

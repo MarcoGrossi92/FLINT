@@ -14,7 +14,7 @@
 !> \date 2025
 program test
   use FLINT_Lib_Thermodynamic
-  use FLINT_IO_Table
+  use FLINT_IO_ThermoTransport
 # if defined (CANTERA)
   use cantera
   use FLINT_cantera_load
@@ -27,9 +27,9 @@ program test
   real(8) :: cp_native, cp_cantera
   real(8) :: lam_cantera, lam_native, mi_native, nu_cantera
   real(8) :: time1, time2
-  integer :: i, j
+  integer :: i, j, err
 
-  call Read_IdealGas_Properties()
+  err = read_idealgas_properties()
 # if defined (CANTERA)
   call load_phase(gas, 'WD/INPUT/WD.yaml')
 # endif

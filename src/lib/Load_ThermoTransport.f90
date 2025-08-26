@@ -1,10 +1,10 @@
-module FLINT_IO_Table
+module FLINT_IO_ThermoTransport
   use FLINT_Lib_Thermodynamic
   implicit none
 
 contains
 
-  subroutine Read_IdealGas_Properties(folder)
+  function Read_IdealGas_Properties(folder) result(ios)
     use strings, only: parse
     use Lib_Tecplot
     use Lib_ORION_data
@@ -29,7 +29,7 @@ contains
     open(newunit=unitFile,file=trim(wmfile),status='old',iostat=ios)
     if (ios/=0) then
       write(*,*) '[ERROR] phase.txt type file not found'
-      stop
+      return
     endif
     ios = 0; nsc = -1
     read(unitFile,*)
@@ -92,7 +92,7 @@ contains
       k_tab(0,:) = k_tab(1,:)
     endif
 
-  end subroutine Read_IdealGas_Properties
+  end function Read_IdealGas_Properties
 
 
-end module FLINT_IO_Table
+end module FLINT_IO_ThermoTransport

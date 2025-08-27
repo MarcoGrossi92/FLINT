@@ -16,10 +16,13 @@ Like the stone it’s named after, FLINT is small but powerful — it provides t
 ## ✨ Features
 
 - **Supports species thermodynamics, chemical source terms, and transport coefficients**
-- **Modular architecture** - plug in your own chemistry or transport data sources
 - **Designed for coupling with CFD solvers**, especially for combustion and reacting flows
 - **Lightweight and fast**, with minimal dependencies
+- **Modular architecture** - plug in your own chemistry or transport data sources
 - **Optional Cantera integration** for advanced kinetic models
+- **Built-in library of chemical models** tested and verified
+- **Source code generator** for converting a yaml file to an F90 source code to be appended to the FLINT library
+- **General routine** for specific kinetic models not contained into FLINT library 
 
 ## 📦 Getting Started
 
@@ -34,6 +37,8 @@ err = read_chemistry_file( folder='WD/INPUT', mech_name=mech_name )
 ## 🛠️ Contributing: Adding a New Mechanism
 
 Follow these steps to integrate a new chemical mechanism into FLINT:
+
+0. Build FLINT againts Sundials and Cantera. If it is not possible, bypass this guide.
 
 1. ✅ Verify the YAML Mechanism
 - Ensure your `<mech>.yaml` file is valid and behaves as expected.

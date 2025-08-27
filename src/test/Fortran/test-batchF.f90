@@ -1,6 +1,8 @@
 program test
   use oslo
+# if defined (CANTERA)
   use FLINT_cantera_load
+# endif
   use FLINT_Lib_Thermodynamic
   use FLINT_IO_ThermoTransport
   use FLINT_Lib_Chemistry_data

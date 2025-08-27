@@ -1,7 +1,9 @@
 
 #find_package(Threads REQUIRED)
 
-include_directories("${canteraD}/build/src/fortran/")
+if (USE_CANTERA)
+  include_directories("${canteraD}/build/src/fortran/")
+endif()
 
 add_subdirectory("lib")
 add_subdirectory("test/Fortran")

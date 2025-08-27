@@ -30,7 +30,7 @@ contains
     T = Z(nz)
     if (T < 0.d0 .or. T > 10000d0) then
       F(:) = -1.d0
-      return 1
+      return
     end if
 
     ! Avoid negative rho_i
@@ -71,7 +71,7 @@ contains
     T = Z(nz)
     if (T < 0.d0 .or. T > 10000d0) then
       F(:) = -1.d0
-      return 1
+      return
     end if
 
     ! Avoid negative rho_i

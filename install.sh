@@ -23,6 +23,7 @@ Global Options:
 
 Commands:
   build                     Perform a full build
+    --master=<name>         Set master (None, hydra)
     --compilers=<name>      Set compilers suit (intel,gnu)
     --use-sundials          Use Sundials
     --use-cantera           Use Cantera
@@ -74,6 +75,7 @@ function write_presets() {
       "binaryDir": "\${sourceDir}/build",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "${BUILD_TYPE}",
+        "MASTER": "${MASTER_TYPE}",
         "CMAKE_Fortran_COMPILER": "${FC}",
         "CMAKE_C_COMPILER": "${CC}",
         "USE_CANTERA": "${USE_CANTERA}",
@@ -89,6 +91,7 @@ EOF
 # Default global values
 COMMAND=""
 COMPILERS=""
+MASTER_TYPE=""
 BUILD_TYPE="RELEASE"
 USE_SUNDIALS="false"
 USE_CANTERA="false"
@@ -96,7 +99,7 @@ REMOTE=false
 
 # Define allowed options for each command using regular arrays
 CMD=("build" "compile" "update")
-CMD_OPTIONS_build=("--compilers --use-sundials --use-cantera")
+CMD_OPTIONS_build=("--master --compilers --use-sundials --use-cantera")
 CMD_OPTIONS_update=("--remote")
 
 # Parse global options
@@ -133,6 +136,14 @@ shift
 # Parse command-specific options
 while [[ $# -gt 0 ]]; do
     case "$1" in
+        --master=*)
+            [[ "$COMMAND" == "build" ]] || { error " --master is only valid for 'build' command"; exit 1; }
+            if [[ ! "$1" =~ ^--master=(None|hydra)$ ]]; then
+                error "Invalid value for --master. Valid values are 'None' or 'hydra'."
+                exit 1
+            fi
+            MASTER_TYPE="${1#*=}"
+            ;;
         --compilers=*)
             [[ "$COMMAND" == "build" ]] || { error " --compilers is only valid for 'build' command"; exit 1; }
             COMPILERS="${1#*=}"
@@ -163,6 +174,16 @@ done
 case "$COMMAND" in
     build)
         task "Building $project"
+        if [[ -z "$MASTER_TYPE" ]]; then
+            error " --master is required for the 'build' command!"
+            exit 1
+        fi
+
+        task "Cloning submodules"
+        if [[ $MASTER_TYPE == "None" ]]; then
+          git submodule update --init lib/OSlo lib/ORION
+        fi
+
         if [[ $COMPILERS == "intel" ]]; then 
             export FC="ifx"
             export CC="icx"
@@ -172,6 +193,7 @@ case "$COMMAND" in
         fi
         log "Build dir: $BUILD_DIR"
         log "Build type: $BUILD_TYPE"
+        log "Master: $MASTER_TYPE"
         log "Use Cantera: $USE_CANTERA"
         log "Use Sundials: $USE_SUNDIALS"
         if [[ -z "${FC+x}" || -z "${CC+x}" ]]; then
@@ -180,7 +202,7 @@ case "$COMMAND" in
           log "Compilers: FC=$FC, CC=$CC"
         fi
         rm -rf $BUILD_DIR
-        cmake -B $BUILD_DIR -DUSE_CANTERA=$USE_CANTERA -DUSE_SUNDIALS=$USE_SUNDIALS -DCMAKE_BUILD_TYPE=$BUILD_TYPE || exit 1
+        cmake -B $BUILD_DIR -DMASTER=$MASTER_TYPE -DUSE_CANTERA=$USE_CANTERA -DUSE_SUNDIALS=$USE_SUNDIALS -DCMAKE_BUILD_TYPE=$BUILD_TYPE || exit 1
         cmake --build $BUILD_DIR || exit 1
         log "[OK] Compilation successful"
 

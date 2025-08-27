@@ -54,6 +54,11 @@ if (USE_CANTERA)
     if (NOT Boost_FOUND)
       message(FATAL_ERROR "Boost is required to build Cantera. Please install Boost and try again.")
     endif()
+    if(APPLE)
+      set (sundials_libdir ${oslosrcD}/sundials-install/lib)
+    elseif(UNIX)
+      set (sundials_libdir ${oslosrcD}/sundials-install/lib64)
+    endif()
     include(ExternalProject)
     ExternalProject_Add(
         cantera_world
@@ -67,7 +72,7 @@ if (USE_CANTERA)
             FORTRAN=gfortran
             system_sundials=y
             sundials_include=${oslosrcD}/sundials-install/include
-            sundials_libdir=${oslosrcD}/sundials-install/lib64
+            sundials_libdir=${sundials_libdir}
             boost_inc_dir=${Boost_INCLUDE_DIR}
             system_eigen=n
         INSTALL_COMMAND scons -C ${canteraD} install

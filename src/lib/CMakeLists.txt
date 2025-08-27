@@ -21,15 +21,14 @@ if (USE_TECIO)
   target_link_libraries(${lib} PRIVATE ${LINKLIBS})
 endif()
 if (USE_CANTERA)
-  target_link_libraries(${lib} PRIVATE cantera cantera_fortran c++)
+#   if(APPLE)
+#     target_link_libraries(${lib} PRIVATE c++)
+#   elseif(UNIX)
+#     target_link_libraries(${lib} PRIVATE stdc++)
+#   endif()
+  target_link_libraries(${lib} PRIVATE cantera cantera_fortran)
 endif()
 
 target_include_directories(${lib}
   INTERFACE
       $<BUILD_INTERFACE:${CMAKE_Fortran_MODULE_DIRECTORY}>)
-
-IF(USE_OPENMP)
-    SET_TARGET_PROPERTIES(${lib} PROPERTIES
-                          COMPILE_FLAGS "${OpenMP_Fortran_FLAGS}"
-                          LINK_FLAGS "${OpenMP_Fortran_FLAGS}")
-ENDIF(USE_OPENMP)

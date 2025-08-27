@@ -24,9 +24,11 @@ add_subdirectory(${orionD})
 
 # OSlo
 if(MASTER STREQUAL None)
-  set ( osloD ${CMAKE_CURRENT_SOURCE_DIR}/lib/OSlo/ )
+  set ( osloD ${CMAKE_CURRENT_SOURCE_DIR}/lib/OSlo )
+  set ( oslosrcD ${CMAKE_CURRENT_SOURCE_DIR}/lib/OSlo )
 elseif(MASTER STREQUAL hydra)
-  set ( osloD $ENV{HYDRADIR}/lib/OSlo/ "${CMAKE_CURRENT_SOURCE_DIR}/build/lib/Oslo/")
+  set ( osloD $ENV{HYDRADIR}/lib/OSlo "${CMAKE_CURRENT_SOURCE_DIR}/build/lib/Oslo")
+  set ( oslosrcD $ENV{HYDRADIR}/lib/OSlo )
 endif()
 add_subdirectory(${osloD})
 
@@ -64,8 +66,8 @@ if (USE_CANTERA)
             f90_interface=y
             FORTRAN=gfortran
             system_sundials=y
-            sundials_include=${osloD}/sundials-install/include
-            sundials_libdir=${osloD}/sundials-install/lib
+            sundials_include=${oslosrcD}/sundials-install/include
+            sundials_libdir=${oslosrcD}/sundials-install/lib64
             boost_inc_dir=${Boost_INCLUDE_DIR}
             system_eigen=n
         INSTALL_COMMAND scons -C ${canteraD} install

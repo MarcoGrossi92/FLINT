@@ -18,13 +18,11 @@ if(APPLE)
     endif()
 else()
     # On Linux, look for BLAS/LAPACK
-    find_package(BLAS REQUIRED)
-    find_package(LAPACK REQUIRED)
+    find_package(BLAS)
+    find_package(LAPACK)
 
     if(BLAS_FOUND AND LAPACK_FOUND)
         target_link_libraries(${exe} PRIVATE ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
-    else()
-        message(FATAL_ERROR "BLAS/LAPACK not found")
     endif()
 endif()
 

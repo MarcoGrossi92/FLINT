@@ -14,27 +14,38 @@ project (FLINT LANGUAGES C CXX Fortran)
 set(CMAKE_VERBOSE_MAKEFILE FALSE)
 
 # -------- Git submodules --------
-if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-  # ORION
-  if(MASTER STREQUAL None)
-    set ( orionD ${CMAKE_CURRENT_SOURCE_DIR}/lib/ORION/ )
-  elseif(MASTER STREQUAL hydra)
-    set ( orionD $ENV{HYDRADIR}/lib/ORION/ "${CMAKE_CURRENT_SOURCE_DIR}/build/lib/ORION/")
-  endif()
+set(MASTER None)
+
+# ORION
+# If FLINT is built as part of another project (assumed that project already has ORION), skip the FLINT's ORION 
+if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
+  set ( orionD ${CMAKE_SOURCE_DIR}/lib/ORION/ )
   add_subdirectory(${orionD})
 endif()
 
 # OSlo
-if(MASTER STREQUAL None)
-  set ( osloD ${CMAKE_CURRENT_SOURCE_DIR}/lib/OSlo )
-  set ( oslosrcD ${CMAKE_CURRENT_SOURCE_DIR}/lib/OSlo )
-elseif(MASTER STREQUAL hydra)
+# if FLINT is built as part of hydra, use the hydra's OSlo
+if(NOT "${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}" AND "${MASTER}" STREQUAL "hydra")
   set ( osloD $ENV{HYDRADIR}/lib/OSlo "${CMAKE_CURRENT_SOURCE_DIR}/build/lib/Oslo")
   set ( oslosrcD $ENV{HYDRADIR}/lib/OSlo )
+else()
+  set ( osloD ${CMAKE_CURRENT_SOURCE_DIR}/lib/OSlo )
+  set ( oslosrcD ${CMAKE_CURRENT_SOURCE_DIR}/lib/OSlo )
+  # Check if cloned
+  if(NOT EXISTS "${oslosrcD}/README.md")
+    message(STATUS "OSlo not found. Attempting to initialize...")
+    execute_process(COMMAND git submodule update --init lib/OSlo
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                    RESULT_VARIABLE GIT_SUBMOD_RESULT)
+    if(NOT GIT_SUBMOD_RESULT EQUAL 0)
+      message(FATAL_ERROR "Failed to initialize git submodules.")
+    endif()
+  endif()
 endif()
 add_subdirectory(${osloD})
 
 # Cantera
+# Cantera is optional and only used into FLINT
 OPTION(USE_CANTERA "Use Canera" ON)
 if (USE_CANTERA)
   set(canteraD "${CMAKE_CURRENT_SOURCE_DIR}/lib/cantera")
@@ -93,7 +104,7 @@ set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 
 # -------- Compile  --------
 add_subdirectory("src/lib")
-if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
   add_subdirectory("src/test/Fortran")
   if (USE_CANTERA)
     add_subdirectory("src/test/CXX")

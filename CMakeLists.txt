@@ -14,13 +14,15 @@ project (FLINT LANGUAGES C CXX Fortran)
 set(CMAKE_VERBOSE_MAKEFILE FALSE)
 
 # -------- Git submodules --------
-# ORION
-if(MASTER STREQUAL None)
-  set ( orionD ${CMAKE_CURRENT_SOURCE_DIR}/lib/ORION/ )
-elseif(MASTER STREQUAL hydra)
-  set ( orionD $ENV{HYDRADIR}/lib/ORION/ "${CMAKE_CURRENT_SOURCE_DIR}/build/lib/ORION/")
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  # ORION
+  if(MASTER STREQUAL None)
+    set ( orionD ${CMAKE_CURRENT_SOURCE_DIR}/lib/ORION/ )
+  elseif(MASTER STREQUAL hydra)
+    set ( orionD $ENV{HYDRADIR}/lib/ORION/ "${CMAKE_CURRENT_SOURCE_DIR}/build/lib/ORION/")
+  endif()
+  add_subdirectory(${orionD})
 endif()
-add_subdirectory(${orionD})
 
 # OSlo
 if(MASTER STREQUAL None)
@@ -81,6 +83,7 @@ if (USE_CANTERA)
     message(STATUS "Cantera already installed.")
   endif()
   link_directories("${canteraD}/build/lib")
+  include_directories("${canteraD}/build/src/fortran/")
   add_compile_definitions(CANTERA)
 endif(USE_CANTERA)
 
@@ -89,4 +92,10 @@ include(GNUInstallDirs)
 set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 
 # -------- Compile  --------
-add_subdirectory(src)
+add_subdirectory("src/lib")
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  add_subdirectory("src/test/Fortran")
+  if (USE_CANTERA)
+    add_subdirectory("src/test/CXX")
+  endif()
+endif()

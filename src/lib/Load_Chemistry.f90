@@ -1,14 +1,14 @@
-module FLINT_IO_chemistry
+module FLINT_Load_Chemistry
   use iso_fortran_env, only: I4 => int32, R8 => real64
   implicit none
 
 contains
 
-  function read_chemistry_file( folder, mech_name ) result(ios)
+  function read_chemistry( folder, mech_name ) result(ios)
     use Lib_ORION_Data
     use Lib_Tecplot
     use FLINT_Lib_Chemistry_data
-    use FLINT_Lib_Thermodynamic, only: nsc, FLINT_phase_prefix
+    use FLINT_Lib_Thermodynamic, only: ns, FLINT_phase_prefix
     implicit none
     character(len=*), intent(in), optional :: folder
     character(len=*), intent(out), optional :: mech_name
@@ -49,13 +49,13 @@ contains
       endif
     enddo
     ! Read info for general loop
-    allocate(ni1_arrh_tab(1:nsc+1,1:nrc_arrh))
-    allocate(ni2_arrh_tab(1:nsc+1,1:nrc_arrh))
-    allocate(epsch_arrh_tab(1:nsc+1,1:nrc_arrh))
+    allocate(ni1_arrh_tab(1:ns+1,1:nrc_arrh))
+    allocate(ni2_arrh_tab(1:ns+1,1:nrc_arrh))
+    allocate(epsch_arrh_tab(1:ns+1,1:nrc_arrh))
     if (nrc_troe>0) then
-      allocate(ni1_troe_tab(1:nsc+1,1:nrc_troe))
-      allocate(ni2_troe_tab(1:nsc+1,1:nrc_troe))
-      allocate(epsch_troe_tab(1:nsc+1,1:nrc_troe))
+      allocate(ni1_troe_tab(1:ns+1,1:nrc_troe))
+      allocate(ni2_troe_tab(1:ns+1,1:nrc_troe))
+      allocate(epsch_troe_tab(1:ns+1,1:nrc_troe))
     endif
     ! Read reaction info
     read(unitfile,*)
@@ -64,12 +64,12 @@ contains
     do j = 1, nrc
       if (rxn_type(j)==0) then
         j0 = j0+1
-        do i = 1, nsc+1
+        do i = 1, ns+1
           read(unitfile,*)idum,chardum,ni1_arrh_tab(i,j0),ni2_arrh_tab(i,j0),epsch_arrh_tab(i,j0)
         enddo
       elseif (rxn_type(j)==1) then
         j1 = j1+1
-        do i = 1, nsc+1
+        do i = 1, ns+1
           read(unitfile,*)idum,chardum,ni1_troe_tab(i,j1),ni2_troe_tab(i,j1),epsch_troe_tab(i,j1)
         enddo
       endif
@@ -119,7 +119,7 @@ contains
       enddo
     endif
 
-  end function read_chemistry_file
+  end function read_chemistry
 
 
-end module FLINT_IO_chemistry
+end module FLINT_Load_Chemistry

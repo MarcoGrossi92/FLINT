@@ -12,10 +12,10 @@ module FLINT_Lib_Chemistry_wdot
     use FLINT_Lib_Chemistry_data
     implicit none
     integer :: is, T_i, Tint(2)
-    real(8), intent(inout) :: roi(nsc)
+    real(8), intent(inout) :: roi(ns)
     real(8), intent(in) :: temp 
-    real(8), intent(out) :: omegadot(nsc)
-    real(8) :: coi(nsc+1), Tdiff
+    real(8), intent(out) :: omegadot(ns)
+    real(8) :: coi(ns+1), Tdiff
     !--------------------------------------------------------------
   end subroutine chemsource_if
   end interface
@@ -85,17 +85,17 @@ contains
     use FLINT_Lib_Chemistry_data
     use FLINT_Lib_Chemistry_Troe
     implicit none
-    real(8), intent(inout) :: roi(nsc)
+    real(8), intent(inout) :: roi(ns)
     real(8), intent(in) :: temp 
-    real(8), intent(out) :: omegadot(nsc)
+    real(8), intent(out) :: omegadot(ns)
     ! Local
     integer :: is, T_i, Tint(2)
-    real(8) :: coi(nsc), Tdiff
+    real(8) :: coi(ns), Tdiff
     real(8) :: prod_fwd, prod_rev, deltani, k(2)
     real(8) :: rate_fwd, rate_rev, net_rate, coM
     integer :: ir
 
-    do is = 1, nsc
+    do is = 1, ns
       coi(is) = roi(is)/Wm_tab(is)  ! kmol/m^3
     enddo
 
@@ -111,9 +111,9 @@ contains
     do ir = 1, nrc_arrh
 
       ! Compute third-body effective concentration
-      if (ni1_arrh_tab(nsc+1, ir)>0d0) then
+      if (ni1_arrh_tab(ns+1, ir)>0d0) then
         coM = 0.d0
-        do is = 1, nsc
+        do is = 1, ns
           coM = coM + coi(is) * epsch_arrh_tab(is, ir)
         enddo
       else 
@@ -123,7 +123,7 @@ contains
       ! Compute forward and reverse rate-of-progress
       prod_fwd = 1.0d0
       prod_rev = 1.0d0
-      do is = 1, nsc
+      do is = 1, ns
         if (ni1_arrh_tab(is, ir) /= 0) prod_fwd = prod_fwd * coi(is)**nint(ni1_arrh_tab(is, ir))
         if (ni2_arrh_tab(is, ir) /= 0) prod_rev = prod_rev * coi(is)**nint(ni2_arrh_tab(is, ir))
       enddo
@@ -132,7 +132,7 @@ contains
       net_rate = rate_fwd - rate_rev
 
       ! Sum up net production rate for each species
-      do is = 1, nsc
+      do is = 1, ns
         deltani = ni2_arrh_tab(is, ir) - ni1_arrh_tab(is, ir)
         omegadot(is) = omegadot(is) + Wm_tab(is) * deltani * net_rate
       enddo
@@ -143,9 +143,9 @@ contains
     do ir = 1, nrc_troe
 
       ! Compute third-body effective concentration
-      if (ni1_troe_tab(nsc+1, ir)>0d0) then
+      if (ni1_troe_tab(ns+1, ir)>0d0) then
         coM = 0.d0
-        do is = 1, nsc
+        do is = 1, ns
           coM = coM + coi(is) * epsch_troe_tab(is, ir)
         enddo
       else 
@@ -155,7 +155,7 @@ contains
       ! Compute forward and reverse rate-of-progress
       prod_fwd = 1.0d0
       prod_rev = 1.0d0
-      do is = 1, nsc
+      do is = 1, ns
         if (ni1_troe_tab(is, ir) /= 0) prod_fwd = prod_fwd * coi(is)**ni1_troe_tab(is, ir)
         if (ni2_troe_tab(is, ir) /= 0) prod_rev = prod_rev * coi(is)**ni2_troe_tab(is, ir)
       enddo
@@ -165,7 +165,7 @@ contains
       net_rate = rate_fwd - rate_rev
 
       ! Sum up net production rate for each species
-      do is = 1, nsc
+      do is = 1, ns
         deltani = ni2_troe_tab(is, ir) - ni1_troe_tab(is, ir)
         omegadot(is) = omegadot(is) + Wm_tab(is) * deltani * net_rate
       enddo

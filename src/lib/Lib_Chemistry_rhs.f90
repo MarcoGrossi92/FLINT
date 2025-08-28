@@ -26,7 +26,7 @@ contains
     real(8) :: eiroi,rho_cv
     integer :: s
 
-    roi(1:nsc) = Z(1:nsc)
+    roi(1:ns) = Z(1:ns)
     T = Z(nz)
     if (T < 0.d0 .or. T > 10000d0) then
       F(:) = -1.d0
@@ -34,19 +34,19 @@ contains
     end if
 
     ! Avoid negative rho_i
-    do s = 1, nsc
+    do s = 1, ns
       roi(s) = max(roi(s), 0.d0)
     end do
 
     call Chemistry_Source ( roi, T, droic )
 
     eiroi = 0.d0; rho_cv = 0.d0
-    do s = 1, nsc
-      eiroi = eiroi + ( comp_ms_tabT(T,s,h_tab) - Ri_tab(s)*T ) * droic(s)
-      rho_cv = rho_cv + roi(s)*( comp_ms_tabT(T,s,cp_tab) - Ri_tab(s) )
+    do s = 1, ns
+      eiroi = eiroi + ( f_tabT(T,s,h_tab) - Ri_tab(s)*T ) * droic(s)
+      rho_cv = rho_cv + roi(s)*( f_tabT(T,s,cp_tab) - Ri_tab(s) )
     enddo
 
-    F(1:nsc) = droic
+    F(1:ns) = droic
     F(nz) = -eiroi / rho_cv
 
   end subroutine rhs_native
@@ -67,7 +67,7 @@ contains
     real(8) :: eiroi,rho_cv, e_s, cp_s
     integer :: s
 
-    roi(1:nsc) = Z(1:nsc)
+    roi(1:ns) = Z(1:ns)
     T = Z(nz)
     if (T < 0.d0 .or. T > 10000d0) then
       F(:) = -1.d0
@@ -75,7 +75,7 @@ contains
     end if
 
     ! Avoid negative rho_i
-    do s = 1, nsc
+    do s = 1, ns
       roi(s) = max(roi(s), 0.d0)
     end do
     rho = sum(roi)
@@ -87,14 +87,14 @@ contains
 
     eiroi = 0.d0
     rho_cv = 0.d0
-    do s = 1, nsc
-      e_s = comp_ms_tabT(T, s, h_tab) - Ri_tab(s) * T
-      cp_s = comp_ms_tabT(T, s, cp_tab) - Ri_tab(s)
+    do s = 1, ns
+      e_s = f_tabT(T, s, h_tab) - Ri_tab(s) * T
+      cp_s = f_tabT(T, s, cp_tab) - Ri_tab(s)
       eiroi = eiroi + e_s * droic(s)
       rho_cv = rho_cv + roi(s) * cp_s
     end do
 
-    F(1:nsc) = droic
+    F(1:ns) = droic
     F(nz) = -eiroi / rho_cv
 
   end subroutine rhs_cantera

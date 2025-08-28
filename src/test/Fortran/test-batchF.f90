@@ -4,11 +4,11 @@ program test
   use FLINT_cantera_load
 # endif
   use FLINT_Lib_Thermodynamic
-  use FLINT_IO_ThermoTransport
+  use FLINT_Load_ThermoTransport
   use FLINT_Lib_Chemistry_data
   use FLINT_Lib_Chemistry_wdot
   use FLINT_Lib_Chemistry_rhs
-  use FLINT_IO_chemistry
+  use FLINT_Load_chemistry
   implicit none
   real(8)                    :: R, Tout, pin, Tin, rho
   real(8), allocatable       :: sp_Y(:)
@@ -34,8 +34,8 @@ program test
   ! WD
   !-------------------------------------------------------------------------------------------------
 
-  err = read_idealgas_properties('WD/INPUT')
-  err = read_chemistry_file( folder='WD/INPUT', mech_name=mech_name )
+  err = read_idealgas_thermo('WD/INPUT')
+  err = read_chemistry( folder='WD/INPUT', mech_name=mech_name )
 # if defined (CANTERA)
   call load_phase(gas, 'WD/INPUT/WD.yaml')
 # endif
@@ -50,18 +50,18 @@ program test
   Tin = 1000
   dt = tlim/nstep
 
-  neq = nsc + 1
+  neq = ns + 1
   allocate(Y(neq))
-  allocate(sp_Y(nsc))
+  allocate(sp_Y(ns))
 
   sp_Y = 1d-20
   sp_Y(1) = 0.2
   sp_Y(2) = 0.8
 
   allocate(RT(neq),AT(neq))
-  RT(1:nsc)=1d-7
+  RT(1:ns)=1d-7
   RT(neq)=1d-7
-  AT(1:nsc)=1d-7
+  AT(1:ns)=1d-7
   AT(neq)=1d-7
   call setup_odesolver(N=neq,solver=solver,RT=RT,AT=AT,iopt=iopt)
 
@@ -111,8 +111,8 @@ program test
   ! Troyes
   !-------------------------------------------------------------------------------------------------
 
-  err = read_idealgas_properties('Troyes/INPUT')
-  err = read_chemistry_file( folder='Troyes/INPUT', mech_name=mech_name )
+  err = read_idealgas_thermo('Troyes/INPUT')
+  err = read_chemistry( folder='Troyes/INPUT', mech_name=mech_name )
 # if defined (CANTERA)
   call load_phase(gas, 'Troyes/INPUT/troyes.yaml')
 # endif
@@ -128,9 +128,9 @@ program test
   Tin = 1000
   dt = tlim/nstep
 
-  neq = nsc + 1
+  neq = ns + 1
   allocate(Y(neq))
-  allocate(sp_Y(nsc))
+  allocate(sp_Y(ns))
 
   sp_Y = 1d-20
   sp_Y(6) = 0.00534
@@ -138,9 +138,9 @@ program test
   sp_Y(12) = 0.80670
 
   allocate(RT(neq),AT(neq))
-  RT(1:nsc)=1d-7
+  RT(1:ns)=1d-7
   RT(neq)=1d-7
-  AT(1:nsc)=1d-7
+  AT(1:ns)=1d-7
   AT(neq)=1d-7
   call setup_odesolver(N=neq,solver=solver,RT=RT,AT=AT,iopt=iopt)
 
@@ -205,8 +205,8 @@ program test
   ! Ecker
   !-------------------------------------------------------------------------------------------------
 
-  err = read_idealgas_properties('Ecker/INPUT')
-  err = read_chemistry_file( folder='Ecker/INPUT', mech_name=mech_name )
+  err = read_idealgas_thermo('Ecker/INPUT')
+  err = read_chemistry( folder='Ecker/INPUT', mech_name=mech_name )
 # if defined (CANTERA)
   call load_phase(gas, 'Ecker/INPUT/ecker.yaml')
 # endif
@@ -222,9 +222,9 @@ program test
   Tin = 1000d0
   dt = tlim/nstep
 
-  neq = nsc + 1
+  neq = ns + 1
   allocate(Y(neq))
-  allocate(sp_Y(nsc))
+  allocate(sp_Y(ns))
 
   sp_Y = 1d-20
   sp_Y(12) = 0.18798856d0
@@ -232,9 +232,9 @@ program test
   sp_Y(14) = 0.8066661d0
 
   allocate(RT(neq),AT(neq))
-  RT(1:nsc)=1d-7
+  RT(1:ns)=1d-7
   RT(neq)=1d-7
-  AT(1:nsc)=1d-7
+  AT(1:ns)=1d-7
   AT(neq)=1d-7
   call setup_odesolver(N=neq,solver=solver,RT=RT,AT=AT,iopt=iopt)
 
@@ -299,8 +299,8 @@ program test
   ! Cross
   !-------------------------------------------------------------------------------------------------
 
-  err = read_idealgas_properties('Cross/INPUT')
-  err = read_chemistry_file( folder='Cross/INPUT', mech_name=mech_name )
+  err = read_idealgas_thermo('Cross/INPUT')
+  err = read_chemistry( folder='Cross/INPUT', mech_name=mech_name )
 # if defined (CANTERA)
   call load_phase(gas, 'Cross/INPUT/cross.yaml')
 # endif
@@ -316,9 +316,9 @@ program test
   Tin = 1010
   dt = tlim/nstep
 
-  neq = nsc + 1
+  neq = ns + 1
   allocate(Y(neq))
-  allocate(sp_Y(nsc))
+  allocate(sp_Y(ns))
 
   sp_Y = 1d-20
   sp_Y(9) = 0.18798856d0
@@ -326,9 +326,9 @@ program test
   sp_Y(17) = 0.8066661d0
 
   allocate(RT(neq),AT(neq))
-  RT(1:nsc)=1d-7
+  RT(1:ns)=1d-7
   RT(neq)=1d-7
-  AT(1:nsc)=1d-7
+  AT(1:ns)=1d-7
   AT(neq)=1d-7
   call setup_odesolver(N=neq,solver=solver,RT=RT,AT=AT,iopt=iopt)
 
@@ -393,8 +393,8 @@ program test
   ! Smooke
   !-------------------------------------------------------------------------------------------------
 
-  err = read_idealgas_properties('Smooke/INPUT')
-  err = read_chemistry_file( folder='Smooke/INPUT', mech_name=mech_name )
+  err = read_idealgas_thermo('Smooke/INPUT')
+  err = read_chemistry( folder='Smooke/INPUT', mech_name=mech_name )
 # if defined (CANTERA)
   call load_phase(gas, 'Smooke/INPUT/smooke.yaml')
 # endif
@@ -410,9 +410,9 @@ program test
   Tin = 1300d0
   dt = tlim/nstep
 
-  neq = nsc + 1
+  neq = ns + 1
   allocate(Y(neq))
-  allocate(sp_Y(nsc))
+  allocate(sp_Y(ns))
 
   sp_Y = 1d-20
   sp_Y(1) = 0.0552d0
@@ -420,9 +420,9 @@ program test
   sp_Y(16) = 0.7247d0
 
   allocate(RT(neq),AT(neq))
-  RT(1:nsc)=1d-7
+  RT(1:ns)=1d-7
   RT(neq)=1d-7
-  AT(1:nsc)=1d-7
+  AT(1:ns)=1d-7
   AT(neq)=1d-7
   call setup_odesolver(N=neq,solver=solver,RT=RT,AT=AT,iopt=iopt)
 
@@ -487,8 +487,8 @@ program test
   ! CORIA
   !-------------------------------------------------------------------------------------------------
 
-  err = read_idealgas_properties('CORIA/INPUT')
-  err = read_chemistry_file( folder='CORIA/INPUT', mech_name=mech_name )
+  err = read_idealgas_thermo('CORIA/INPUT')
+  err = read_chemistry( folder='CORIA/INPUT', mech_name=mech_name )
 # if defined (CANTERA)
   call load_phase(gas, 'CORIA/INPUT/coria.yaml')
 # endif
@@ -504,18 +504,18 @@ program test
   Tin = 1300d0
   dt = tlim/nstep
 
-  neq = nsc + 1
+  neq = ns + 1
   allocate(Y(neq))
-  allocate(sp_Y(nsc))
+  allocate(sp_Y(ns))
 
   sp_Y = 1d-20
   sp_Y(9) = 0.2d0
   sp_Y(4) = 0.8d0
 
   allocate(RT(neq),AT(neq))
-  RT(1:nsc)=1d-7
+  RT(1:ns)=1d-7
   RT(neq)=1d-7
-  AT(1:nsc)=1d-7
+  AT(1:ns)=1d-7
   AT(neq)=1d-7
   call setup_odesolver(N=neq,solver=solver,RT=RT,AT=AT,iopt=iopt)
 
@@ -580,8 +580,8 @@ program test
   ! TSR-CDF-13
   !-------------------------------------------------------------------------------------------------
 
-  err = read_idealgas_properties('TSR-CDF-13/INPUT')
-  err = read_chemistry_file( folder='TSR-CDF-13/INPUT', mech_name=mech_name )
+  err = read_idealgas_thermo('TSR-CDF-13/INPUT')
+  err = read_chemistry( folder='TSR-CDF-13/INPUT', mech_name=mech_name )
 # if defined (CANTERA)
   call load_phase(gas, 'TSR-CDF-13/INPUT/TSR-CDF-13.yaml')
 # endif
@@ -597,18 +597,18 @@ program test
   Tin = 1300d0
   dt = tlim/nstep
 
-  neq = nsc + 1
+  neq = ns + 1
   allocate(Y(neq))
-  allocate(sp_Y(nsc))
+  allocate(sp_Y(ns))
 
   sp_Y = 1d-20
   sp_Y(7) = 0.2d0
   sp_Y(10) = 0.8d0
 
   allocate(RT(neq),AT(neq))
-  RT(1:nsc)=1d-7
+  RT(1:ns)=1d-7
   RT(neq)=1d-7
-  AT(1:nsc)=1d-7
+  AT(1:ns)=1d-7
   AT(neq)=1d-7
   call setup_odesolver(N=neq,solver=solver,RT=RT,AT=AT,iopt=iopt)
 
@@ -673,8 +673,8 @@ program test
   ! Pelucchi
   !-------------------------------------------------------------------------------------------------
 
-  err = read_idealgas_properties('Pelucchi/INPUT')
-  !err = read_chemistry_file( folder='Pelucchi/INPUT', mech_name=mech_name )
+  err = read_idealgas_thermo('Pelucchi/INPUT')
+  !err = read_chemistry( folder='Pelucchi/INPUT', mech_name=mech_name )
 # if defined (CANTERA)
   call load_phase(gas, 'Pelucchi/INPUT/pelucchi.yaml')
 # endif
@@ -690,9 +690,9 @@ program test
   Tin = 1250d0
   dt = tlim/nstep
 
-  neq = nsc + 1
+  neq = ns + 1
   allocate(Y(neq))
-  allocate(sp_Y(nsc))
+  allocate(sp_Y(ns))
 
   sp_Y = 1d-20
   sp_Y(18) = 0.00859d0
@@ -702,9 +702,9 @@ program test
   sp_Y(13) = 0.98044d0
 
   allocate(RT(neq),AT(neq))
-  RT(1:nsc)=1d-12
+  RT(1:ns)=1d-12
   RT(neq)=1d-12
-  AT(1:nsc)=1d-15
+  AT(1:ns)=1d-15
   AT(neq)=1d-15
   call setup_odesolver(N=neq,solver=solver,RT=RT,AT=AT,iopt=iopt)
 
@@ -769,9 +769,9 @@ contains
 
   subroutine initialize()
     implicit none
-    R = Rtot(sp_Y)
+    R = f_Rtot(sp_Y)
     rho = pin/(R*Tin)
-    Y(1:nsc) = rho*sp_Y
+    Y(1:ns) = rho*sp_Y
     Y(neq) = Tin
     timein  = 0.D0
     timeout = 0.D0

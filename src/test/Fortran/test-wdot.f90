@@ -1,8 +1,8 @@
 ! Test for wdot with thrid-body reactions
 program test
   use FLINT_Lib_Thermodynamic
-  use FLINT_IO_ThermoTransport
-  use FLINT_IO_chemistry
+  use FLINT_Load_ThermoTransport
+  use FLINT_Load_chemistry
   use FLINT_Lib_Chemistry_data
   use FLINT_Lib_Chemistry_wdot
 # if defined (CANTERA)
@@ -23,22 +23,23 @@ program test
   ! WD
   !-------------------------------------------------------------------------------------------------
 
-  err = read_idealgas_properties('WD/INPUT')
-  err = read_chemistry_file( folder='WD/INPUT', mech_name=mech_name )
+  err = read_idealgas_thermo('WD/INPUT')
+  err = read_chemistry( folder='WD/INPUT', mech_name=mech_name )
 # if defined(CANTERA)
   call load_phase(gas, 'WD/INPUT/WD.yaml')
 # endif()
   call Assign_Mechanism(mech_name)
 
-  allocate(rhoi(1:nsc))
-  allocate(droic(1:nsc))
-  allocate(wdot_explicit(nsc,Tstart:Tend))
-  allocate(wdot_cantera(nsc,Tstart:Tend))
+  allocate(rhoi(1:ns))
+  allocate(droic(1:ns))
+  allocate(wdot_explicit(ns,Tstart:Tend))
+  allocate(wdot_cantera(ns,Tstart:Tend))
 
   rhoi = 1d-20
   rhoi(1) = 0.2
   rhoi(2) = 0.8
-  call co_rotot_Rtot(rhoi,rho,R)
+  R = f_Rtot(rhoi)
+  rho = sum(rhoi)
 
   call cpu_time(time1)
   do j = 1, 1
@@ -74,13 +75,13 @@ program test
 
   open(100, file='WD/OUTPUT/wdot-explicit.dat', status='replace', form='formatted')
   do i = Tstart, Tend
-    write(100,*) dble(i), (wdot_explicit(j,i),j=1,nsc)
+    write(100,*) dble(i), (wdot_explicit(j,i),j=1,ns)
   enddo
   close(100)
 # if defined(CANTERA)
   open(200, file='WD/OUTPUT/wdot-cantera.dat', status='replace', form='formatted')
   do i = Tstart, Tend
-    write(200,*) dble(i), (wdot_cantera(j,i),j=1,nsc)
+    write(200,*) dble(i), (wdot_cantera(j,i),j=1,ns)
   enddo
   close(200)
 # endif
@@ -96,20 +97,21 @@ program test
   ! TROYES
   !-------------------------------------------------------------------------------------------------
 
-  err = read_idealgas_properties('Troyes/INPUT')
-  err = read_chemistry_file( folder='Troyes/INPUT', mech_name=mech_name )
+  err = read_idealgas_thermo('Troyes/INPUT')
+  err = read_chemistry( folder='Troyes/INPUT', mech_name=mech_name )
 # if defined (CANTERA)
   call load_phase(gas, 'Troyes/INPUT/troyes.yaml')
 # endif
   call Assign_Mechanism(mech_name)
 
-  allocate(rhoi(1:nsc))
-  allocate(droic(1:nsc))
-  allocate(wdot_explicit(nsc,Tstart:Tend))
-  allocate(wdot_cantera(nsc,Tstart:Tend))
+  allocate(rhoi(1:ns))
+  allocate(droic(1:ns))
+  allocate(wdot_explicit(ns,Tstart:Tend))
+  allocate(wdot_cantera(ns,Tstart:Tend))
 
-  rhoi = 1d0/nsc
-  call co_rotot_Rtot(rhoi,rho,R)
+  rhoi = 1d0/ns
+  R = f_Rtot(rhoi)
+  rho = sum(rhoi)
 
   call cpu_time(time1)
   do j = 1, 1
@@ -145,13 +147,13 @@ program test
 
   open(100, file='Troyes/OUTPUT/wdot-explicit.dat', status='replace', form='formatted')
   do i = Tstart, Tend
-    write(100,*) dble(i), (wdot_explicit(j,i),j=1,nsc)
+    write(100,*) dble(i), (wdot_explicit(j,i),j=1,ns)
   enddo
   close(100)
 # if defined (CANTERA)
   open(200, file='Troyes/OUTPUT/wdot-cantera.dat', status='replace', form='formatted')
   do i = Tstart, Tend
-    write(200,*) dble(i), (wdot_cantera(j,i),j=1,nsc)
+    write(200,*) dble(i), (wdot_cantera(j,i),j=1,ns)
   enddo
   close(200)
 # endif
@@ -167,17 +169,17 @@ program test
   ! ECKER
   !-------------------------------------------------------------------------------------------------
 
-  err = read_idealgas_properties('Ecker/INPUT')
-  err = read_chemistry_file( folder='Ecker/INPUT', mech_name=mech_name )
+  err = read_idealgas_thermo('Ecker/INPUT')
+  err = read_chemistry( folder='Ecker/INPUT', mech_name=mech_name )
 # if defined (CANTERA)
   call load_phase(gas, 'Ecker/INPUT/ecker.yaml')
 # endif
   call Assign_Mechanism(mech_name)
 
-  allocate(rhoi(1:nsc))
-  allocate(droic(1:nsc))
-  allocate(wdot_explicit(nsc,Tstart:Tend))
-  allocate(wdot_cantera(nsc,Tstart:Tend))
+  allocate(rhoi(1:ns))
+  allocate(droic(1:ns))
+  allocate(wdot_explicit(ns,Tstart:Tend))
+  allocate(wdot_cantera(ns,Tstart:Tend))
 
   rhoi = 1d-20
   rhoi(2) = 0.00606
@@ -185,7 +187,8 @@ program test
   rhoi(9) = 0.00861
   rhoi(11) = 0.00025
   rhoi(14) = 0.98143
-  call co_rotot_Rtot(rhoi,rho,R)
+  R = f_Rtot(rhoi)
+  rho = sum(rhoi)
 
   call cpu_time(time1)
   do j = 1, 1
@@ -221,13 +224,13 @@ program test
 
   open(100, file='Ecker/OUTPUT/wdot-explicit.dat', status='replace', form='formatted')
   do i = Tstart, Tend
-    write(100,*) dble(i), (wdot_explicit(j,i),j=1,nsc)
+    write(100,*) dble(i), (wdot_explicit(j,i),j=1,ns)
   enddo
   close(100)
 # if defined (CANTERA)
   open(200, file='Ecker/OUTPUT/wdot-cantera.dat', status='replace', form='formatted')
   do i = Tstart, Tend
-    write(200,*) dble(i), (wdot_cantera(j,i),j=1,nsc)
+    write(200,*) dble(i), (wdot_cantera(j,i),j=1,ns)
   enddo
   close(200)
 # endif
@@ -243,20 +246,21 @@ program test
   ! CROSS
   !-------------------------------------------------------------------------------------------------
 
-  err = read_idealgas_properties('Cross/INPUT')
-  err = read_chemistry_file( folder='Cross/INPUT', mech_name=mech_name )
+  err = read_idealgas_thermo('Cross/INPUT')
+  err = read_chemistry( folder='Cross/INPUT', mech_name=mech_name )
 # if defined (CANTERA)
   call load_phase(gas, 'Cross/INPUT/cross.yaml')
 # endif
   call Assign_Mechanism(mech_name)
 
-  allocate(rhoi(1:nsc))
-  allocate(droic(1:nsc))
-  allocate(wdot_explicit(nsc,Tstart:Tend))
-  allocate(wdot_cantera(nsc,Tstart:Tend))
+  allocate(rhoi(1:ns))
+  allocate(droic(1:ns))
+  allocate(wdot_explicit(ns,Tstart:Tend))
+  allocate(wdot_cantera(ns,Tstart:Tend))
 
-  rhoi = 1d0/nsc
-  call co_rotot_Rtot(rhoi,rho,R)
+  rhoi = 1d0/ns
+  R = f_Rtot(rhoi)
+  rho = sum(rhoi)
 
   call cpu_time(time1)
   do j = 1, 1
@@ -292,13 +296,13 @@ program test
 
   open(100, file='Cross/OUTPUT/wdot-explicit.dat', status='replace', form='formatted')
   do i = Tstart, Tend
-    write(100,*) dble(i), (wdot_explicit(j,i),j=1,nsc)
+    write(100,*) dble(i), (wdot_explicit(j,i),j=1,ns)
   enddo
   close(100)
 # if defined (CANTERA)
   open(200, file='Cross/OUTPUT/wdot-cantera.dat', status='replace', form='formatted')
   do i = Tstart, Tend
-    write(200,*) dble(i), (wdot_cantera(j,i),j=1,nsc)
+    write(200,*) dble(i), (wdot_cantera(j,i),j=1,ns)
   enddo
   close(200)
 # endif
@@ -314,20 +318,21 @@ program test
   ! SMOOKE
   !-------------------------------------------------------------------------------------------------
 
-  err = read_idealgas_properties('Smooke/INPUT')
-  err = read_chemistry_file( folder='Smooke/INPUT', mech_name=mech_name )
+  err = read_idealgas_thermo('Smooke/INPUT')
+  err = read_chemistry( folder='Smooke/INPUT', mech_name=mech_name )
 # if defined (CANTERA)
   call load_phase(gas, 'Smooke/INPUT/smooke.yaml')
 # endif
   call Assign_Mechanism(mech_name)
 
-  allocate(rhoi(1:nsc))
-  allocate(droic(1:nsc))
-  allocate(wdot_explicit(nsc,Tstart:Tend))
-  allocate(wdot_cantera(nsc,Tstart:Tend))
+  allocate(rhoi(1:ns))
+  allocate(droic(1:ns))
+  allocate(wdot_explicit(ns,Tstart:Tend))
+  allocate(wdot_cantera(ns,Tstart:Tend))
 
-  rhoi = 1d0/nsc
-  call co_rotot_Rtot(rhoi,rho,R)
+  rhoi = 1d0/ns
+  R = f_Rtot(rhoi)
+  rho = sum(rhoi)
 
   call cpu_time(time1)
   do j = 1, 1
@@ -363,13 +368,13 @@ program test
 
   open(100, file='Smooke/OUTPUT/wdot-explicit.dat', status='replace', form='formatted')
   do i = Tstart, Tend
-    write(100,*) dble(i), (wdot_explicit(j,i),j=1,nsc)
+    write(100,*) dble(i), (wdot_explicit(j,i),j=1,ns)
   enddo
   close(100)
 # if defined (CANTERA)
   open(200, file='Smooke/OUTPUT/wdot-cantera.dat', status='replace', form='formatted')
   do i = Tstart, Tend
-    write(200,*) dble(i), (wdot_cantera(j,i),j=1,nsc)
+    write(200,*) dble(i), (wdot_cantera(j,i),j=1,ns)
   enddo
   close(200)
 # endif
@@ -385,20 +390,21 @@ program test
   ! CORIA-CNRS
   !-------------------------------------------------------------------------------------------------
 
-  err = read_idealgas_properties('CORIA/INPUT')
-  err = read_chemistry_file( folder='CORIA/INPUT', mech_name=mech_name )
+  err = read_idealgas_thermo('CORIA/INPUT')
+  err = read_chemistry( folder='CORIA/INPUT', mech_name=mech_name )
 # if defined (CANTERA)
   call load_phase(gas, 'CORIA/INPUT/coria.yaml')
 # endif
   call Assign_Mechanism(mech_name)
 
-  allocate(rhoi(1:nsc))
-  allocate(droic(1:nsc))
-  allocate(wdot_explicit(nsc,Tstart:Tend))
-  allocate(wdot_cantera(nsc,Tstart:Tend))
+  allocate(rhoi(1:ns))
+  allocate(droic(1:ns))
+  allocate(wdot_explicit(ns,Tstart:Tend))
+  allocate(wdot_cantera(ns,Tstart:Tend))
 
-  rhoi = 1d0/nsc
-  call co_rotot_Rtot(rhoi,rho,R)
+  rhoi = 1d0/ns
+  R = f_Rtot(rhoi)
+  rho = sum(rhoi)
 
   call cpu_time(time1)
   do j = 1, 1
@@ -434,13 +440,13 @@ program test
 
   open(100, file='CORIA/OUTPUT/wdot-explicit.dat', status='replace', form='formatted')
   do i = Tstart, Tend
-    write(100,*) dble(i), (wdot_explicit(j,i),j=1,nsc)
+    write(100,*) dble(i), (wdot_explicit(j,i),j=1,ns)
   enddo
   close(100)
 # if defined (CANTERA)
   open(200, file='CORIA/OUTPUT/wdot-cantera.dat', status='replace', form='formatted')
   do i = Tstart, Tend
-    write(200,*) dble(i), (wdot_cantera(j,i),j=1,nsc)
+    write(200,*) dble(i), (wdot_cantera(j,i),j=1,ns)
   enddo
   close(200)
 # endif
@@ -456,20 +462,21 @@ program test
   ! TSR-CDF-13
   !-------------------------------------------------------------------------------------------------
 
-  err = read_idealgas_properties('TSR-CDF-13/INPUT')
-  err = read_chemistry_file( folder='TSR-CDF-13/INPUT', mech_name=mech_name )
+  err = read_idealgas_thermo('TSR-CDF-13/INPUT')
+  err = read_chemistry( folder='TSR-CDF-13/INPUT', mech_name=mech_name )
 # if defined (CANTERA)
   call load_phase(gas, 'TSR-CDF-13/INPUT/TSR-CDF-13.yaml')
 # endif
   call Assign_Mechanism(mech_name)
 
-  allocate(rhoi(1:nsc))
-  allocate(droic(1:nsc))
-  allocate(wdot_explicit(nsc,Tstart:Tend))
-  allocate(wdot_cantera(nsc,Tstart:Tend))
+  allocate(rhoi(1:ns))
+  allocate(droic(1:ns))
+  allocate(wdot_explicit(ns,Tstart:Tend))
+  allocate(wdot_cantera(ns,Tstart:Tend))
 
-  rhoi = 1d0/nsc
-  call co_rotot_Rtot(rhoi,rho,R)
+  rhoi = 1d0/ns
+  R = f_Rtot(rhoi)
+  rho = sum(rhoi)
 
   call cpu_time(time1)
   do j = 1, 1
@@ -505,13 +512,13 @@ program test
 
   open(100, file='TSR-CDF-13/OUTPUT/wdot-explicit.dat', status='replace', form='formatted')
   do i = Tstart, Tend
-    write(100,*) dble(i), (wdot_explicit(j,i),j=1,nsc)
+    write(100,*) dble(i), (wdot_explicit(j,i),j=1,ns)
   enddo
   close(100)
 # if defined (CANTERA)
   open(200, file='TSR-CDF-13/OUTPUT/wdot-cantera.dat', status='replace', form='formatted')
   do i = Tstart, Tend
-    write(200,*) dble(i), (wdot_cantera(j,i),j=1,nsc)
+    write(200,*) dble(i), (wdot_cantera(j,i),j=1,ns)
   enddo
   close(200)
 # endif

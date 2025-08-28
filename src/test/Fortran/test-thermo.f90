@@ -14,7 +14,7 @@
 !> \date 2025
 program test
   use FLINT_Lib_Thermodynamic
-  use FLINT_IO_ThermoTransport
+  use FLINT_Load_ThermoTransport
 # if defined (CANTERA)
   use cantera
   use FLINT_cantera_load
@@ -29,7 +29,7 @@ program test
   real(8) :: time1, time2
   integer :: i, j, err
 
-  err = read_idealgas_properties()
+  err = read_idealgas_thermo()
 # if defined (CANTERA)
   call load_phase(gas, 'WD/INPUT/WD.yaml')
 # endif
@@ -39,13 +39,14 @@ program test
   rhoi(2) = 0.15d0 ! O2
   rhoi(3) = 0.30d0 ! CO2
   rhoi(5) = 0.40d0 ! CO
-  call co_rotot_Rtot(rhoi,rho,R)
+  R = f_Rtot(rhoi)
+  rho = sum(rhoi)
 
   call cpu_time(time1)
   do j = 1, 1000
     do i = 1,2000
       T = dble(i)
-      cp_native = co_cp(rhoi,T,rho)
+      cp_native = f_cp(rhoi,T,rho)
     enddo
   enddo
   call cpu_time(time2)

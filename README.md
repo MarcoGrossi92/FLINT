@@ -27,11 +27,12 @@ Like the stone it’s named after, FLINT is small but powerful — it provides t
 ## 📦 Getting Started
 
 ```fortran
-use FLINT_IO_ThermoTransport
-use FLINT_IO_Chemistry
+use FLINT_Load_ThermoTransport
+use FLINT_Load_Chemistry
 
-err = read_idealgas_properties('WD/INPUT')
-err = read_chemistry_file( folder='WD/INPUT', mech_name=mech_name )
+err = read_idealgas_thermo(folder='WD/INPUT')
+err = read_idealgas_transport(folder='WD/INPUT')
+err = read_chemistry(folder='WD/INPUT', mech_name=mech_name)
 ```
 
 ## 🛠️ Contributing: Adding a New Mechanism

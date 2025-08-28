@@ -202,7 +202,7 @@ case "$COMMAND" in
           log "Compilers: FC=$FC, CC=$CC"
         fi
         rm -rf $BUILD_DIR
-        cmake -B $BUILD_DIR -DMASTER=$MASTER_TYPE -DUSE_CANTERA=$USE_CANTERA -DUSE_SUNDIALS=$USE_SUNDIALS -DCMAKE_BUILD_TYPE=$BUILD_TYPE || exit 1
+        cmake -B $BUILD_DIR -DMASTER=$MASTER_TYPE -DUSE_CANTERA=$USE_CANTERA -DUSE_SUNDIALS=$USE_SUNDIALS -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DUSE_OPENMP=OFF -DUSE_MPI=OFF -DUSE_TECIO=OFF || exit 1
         cmake --build $BUILD_DIR || exit 1
         log "[OK] Compilation successful"
 

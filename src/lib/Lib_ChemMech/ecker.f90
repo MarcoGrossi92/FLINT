@@ -5,16 +5,16 @@ contains
     use FLINT_Lib_Thermodynamic
     use FLINT_Lib_Chemistry_data
     implicit none
-    real(8), intent(inout)  :: roi(nsc)
+    real(8), intent(inout)  :: roi(ns)
     real(8), intent(in)     :: temp
-    real(8), intent(out)    :: omegadot(nsc) 
+    real(8), intent(out)    :: omegadot(ns) 
 
-    real(8) :: coi(nsc+1), Tdiff
+    real(8) :: coi(ns), Tdiff
     real(8) :: M !< Third body
     integer :: is, T_i, Tint(2)
     real(8) :: prodf(1:28), prodb(1:28)
 
-    do is = 1, nsc
+    do is = 1, ns
     coi(is)=roi(is)/Wm_tab(is) ! kmol/m^3
     enddo 
     T_i = int(temp) 

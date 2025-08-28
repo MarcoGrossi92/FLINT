@@ -8,19 +8,19 @@ contains
     use FLINT_Lib_Thermodynamic
     use FLINT_Lib_Chemistry_data
     implicit none
-    real(8), intent(inout) :: roi(nsc)
+    real(8), intent(inout) :: roi(ns)
     real(8), intent(in) :: temp 
-    real(8), intent(out) :: omegadot(nsc)
+    real(8), intent(out) :: omegadot(ns)
     ! Local
     integer :: is, T_i, Tint(2)
-    real(8) :: coi(nsc+1), Tdiff
+    real(8) :: coi(ns), Tdiff
     real(8) :: M, prod1f, prod1b, prod1, prod2f, prod2b, prod2
     real(8) :: prod3f, prod3b, prod3, prod4f, prod4b, prod4
     real(8) :: prod5f, prod5b, prod5, prod6f, prod6b, prod6
     real(8) :: prod7f, prod7b, prod7, prod8f, prod8b, prod8
     real(8) :: prod9f, prod9b, prod9, prod10f, prod10b, prod10
 
-    do is = 1, nsc
+    do is = 1, ns
       coi(is)=roi(is)/Wm_tab(is)  ! kmol/m^3
       if (coi(is).lt.1d-12) coi(is) = 0d0
     enddo
@@ -100,17 +100,17 @@ contains
     use FLINT_Lib_Thermodynamic
     use FLINT_Lib_Chemistry_data
     implicit none
-    real(8), intent(inout) :: roi(nsc)
+    real(8), intent(inout) :: roi(ns)
     real(8), intent(in) :: temp 
-    real(8), intent(out) :: omegadot(nsc)
+    real(8), intent(out) :: omegadot(ns)
     ! Local
     integer :: is, T_i, Tint(2)
     integer, parameter :: iH=1, iC2H4=2, iOH=3, iCO=4, iCO2=5
     integer, parameter :: iH2=6, iH2O=7, iO2=8, iO=9, iC32H66=10
-    real(8) :: coi(nsc+1), Tdiff
+    real(8) :: coi(ns), Tdiff
     real(8) :: M, prodf(11), prodb(11), prod(11)
 
-    do is = 1, nsc
+    do is = 1, ns
       coi(is)=roi(is)/Wm_tab(is)  ! kmol/m^3
       if (coi(is).lt.1d-12) coi(is) = 0d0
     enddo

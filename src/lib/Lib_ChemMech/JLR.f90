@@ -7,15 +7,15 @@ contains
     use FLINT_Lib_Thermodynamic
     use FLINT_Lib_Chemistry_data
     implicit none
-    real(8), intent(inout) :: roi(nsc)
+    real(8), intent(inout) :: roi(ns)
     real(8), intent(in)    :: temp 
-    real(8), intent(out)   :: omegadot(nsc)
+    real(8), intent(out)   :: omegadot(ns)
     ! Local
     integer :: is, T_i, Tint(2)
-    real(8) :: coi(nsc+1), Tdiff
+    real(8) :: coi(ns), Tdiff
     real(8) :: prod1,prod2,prod3,prod4,prod5,prod6,prod7
 
-   do is = 1, nsc
+   do is = 1, ns
      coi(is)=roi(is)/Wm_tab(is)  ! kmol/m^3
      ! Loop done in order to avoid numerical issues in omegadot evaluation
      ! Very low coi could produce finite prods
@@ -75,15 +75,15 @@ contains
     use FLINT_Lib_Thermodynamic
     use FLINT_Lib_Chemistry_data
     implicit none
-    real(8), intent(inout) :: roi(nsc)
+    real(8), intent(inout) :: roi(ns)
     real(8), intent(in)    :: temp 
-    real(8), intent(out)   :: omegadot(nsc)
+    real(8), intent(out)   :: omegadot(ns)
     ! Local
     integer :: is, T_i, Tint(2)
-    real(8) :: coi(nsc+1), Tdiff
+    real(8) :: coi(ns), Tdiff
     real(8) :: prod1,prod2,prod3,prod4,prod5,prod6
 
-   do is = 1, nsc
+   do is = 1, ns
      coi(is)=roi(is)/Wm_tab(is)  ! kmol/m^3
      ! Loop done in order to avoid numerical issues in omegadot evaluation
      ! Very low coi could produce finite prods
@@ -140,16 +140,16 @@ contains
     use FLINT_Lib_Thermodynamic
     use FLINT_Lib_Chemistry_data
     implicit none
-    real(8), intent(inout)  :: roi(nsc)
+    real(8), intent(inout)  :: roi(ns)
     real(8), intent(in)  :: temp 
-    real(8), intent(out) :: omegadot(nsc)
+    real(8), intent(out) :: omegadot(ns)
     ! Local
     integer :: is, T_i, Tint(2)
-    real(8) :: coi(nsc+1), Tdiff
+    real(8) :: coi(ns), Tdiff
     real(8) :: prod1, prod2, prod3, prod4, prod5, prod6, prod7, prod8
     real(8), parameter :: limitH2=1.d-10
 
-    do is = 1, nsc
+    do is = 1, ns
       coi(is)=roi(is)/Wm_tab(is)  ! kmol/m^3
       ! Loop done in order to avoid numerical issues in omegadot evaluation
       ! Very low coi could produce finite prods

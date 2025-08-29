@@ -19,6 +19,11 @@ function(link_FLINT_dependencies target_name)
   # Cantera
   if (USE_CANTERA)
     target_link_libraries(${target_name} PRIVATE cantera cantera_fortran)
+    if (APPLE)
+      target_link_libraries(${target_name} PRIVATE c++)
+    elseif (UNIX)
+      target_link_libraries(${target_name} PRIVATE stdc++)
+    endif()
   endif()
 
   # OSlo

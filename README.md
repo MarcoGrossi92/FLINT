@@ -39,7 +39,7 @@ err = read_chemistry(folder='WD/INPUT', mech_name=mech_name)
 
 Follow these steps to integrate a new chemical mechanism into FLINT:
 
-0. Build FLINT againts Sundials and Cantera. If it is not possible, bypass this guide.
+0. Build FLINT againts Sundials and Cantera. If it is not possible, bypass steps 5 and 6 and use **KAnt** to generate a benchmark.
 
 1. ✅ Verify the YAML Mechanism
 - Ensure your `<mech>.yaml` file is valid and behaves as expected.

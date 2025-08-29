@@ -19,7 +19,7 @@ module FLINT_Lib_Thermodynamic
 contains
 
   !> Function for computing the total specific entalpy (per unit of mass)
-  function H0(p,r,u) result(entalpy)
+  pure function H0(p,r,u) result(entalpy)
     implicit none
     real(kind=8), intent(IN):: p       !< Pressure.
     real(kind=8), intent(IN):: r(:)    !< Density (\f$\rho\f$).
@@ -29,7 +29,7 @@ contains
   endfunction H0
 
   !> Function for computing the static specific entalpy (per unit of mass)
-  function H(p,r) result(entalpy)
+  pure function H(p,r) result(entalpy)
     implicit none
     real(kind=8), intent(IN):: p       !< Pressure.
     real(kind=8), intent(IN):: r(:)    !< Density (\f$\rho\f$).
@@ -47,7 +47,7 @@ contains
 
 
   !> Function for computing the total specific energy (per unit of mass)
-  function E0(p,r,u) result(energy)
+  pure function E0(p,r,u) result(energy)
     real(kind=8), intent(IN):: p      !< Pressure.
     real(kind=8), intent(IN):: r(:)   !< Density (\f$\rho\f$).
     real(kind=8), intent(IN):: u      !< Module of velocity vector.
@@ -57,7 +57,7 @@ contains
 
 
   !> Function for computing the static specific energy (per unit of mass)
-  function E(p,r) result(energy)
+  pure function E(p,r) result(energy)
     implicit none
     real(kind=8), intent(IN):: p      !< Pressure.
     real(kind=8), intent(IN):: r(:)   !< Density (\f$\rho\f$).
@@ -78,7 +78,7 @@ contains
 
 
   !> Function to compute the conservative variables starting from the primitive ones.
-  function cons2prim(cons,T) result(prim)
+  pure function cons2prim(cons,T) result(prim)
     implicit none
     real(kind=8), intent(IN) :: cons(:)
     real(kind=8), intent(IN) :: T
@@ -110,14 +110,14 @@ contains
       T_iter = T_iter+(energy-energy_iter)/(cv_iter)
       iter_T = iter_T+1
     enddo
-    if (iter_T==21) write(*,*)'Warning: max NR iter reached'
+    !if (iter_T==21) write(*,*)'Warning: max NR iter reached'
     prim(np) = rho*Rgas*T_iter               ! pressure
 
   end function cons2prim
 
 
   !> Subroutine to compute the primitive variables starting from the conserveative ones 
-  function prim2cons(prim) result(cons)
+  pure function prim2cons(prim) result(cons)
     implicit none
     real(kind=8), intent(IN) :: prim(:)
     real(kind=8)             :: cons(size(prim))
@@ -137,7 +137,7 @@ contains
   end function prim2cons
 
 
-  subroutine co_rotot_Rtot ( rhoi, rho, R )
+  pure subroutine co_rotot_Rtot ( rhoi, rho, R )
     implicit none
     real(8), intent(in)  :: rhoi(ns)
     real(8), intent(out) :: rho, R
@@ -148,7 +148,7 @@ contains
   endsubroutine co_rotot_Rtot
 
 
-  function f_molecularWeight(rhoi) result(result)
+  pure function f_molecularWeight(rhoi) result(result)
     implicit none
     real(8), intent(in)  :: rhoi(ns)
     real(8) :: result
@@ -165,7 +165,7 @@ contains
   endfunction f_molecularWeight
 
 
-  function f_Rtot(rhoi) result(result)
+  pure function f_Rtot(rhoi) result(result)
     implicit none
     real(8), intent(in)  :: rhoi(ns)
     real(8) :: result
@@ -181,7 +181,7 @@ contains
   endfunction f_Rtot
 
 
-  function f_cp(rhoi,T,rho) result(result)
+  pure function f_cp(rhoi,T,rho) result(result)
     implicit none
     real(8), intent(in) :: rhoi(ns)
     real(8), intent(in) :: T, rho
@@ -204,7 +204,7 @@ contains
   endfunction f_cp
 
 
-  function f_cp_expr(rhoi,Tint,Tdiff,rho) result(result)
+  pure function f_cp_expr(rhoi,Tint,Tdiff,rho) result(result)
     implicit none
     real(8), intent(in) :: rhoi(ns)
     real(8), intent(in) :: Tdiff, rho
@@ -401,7 +401,7 @@ contains
   endsubroutine co_DS
 
 
-  function f_tab(p,rho,Rtot,s,tab) result(result)
+  pure function f_tab(p,rho,Rtot,s,tab) result(result)
     implicit none
     real(8), intent(in) :: rho, p, Rtot, tab(Tmin:Tmax,ns)
     integer, intent(in) :: s
@@ -416,7 +416,7 @@ contains
   endfunction f_tab
 
 
-  function f_tabT(T,sp,tab) result(result)
+  pure function f_tabT(T,sp,tab) result(result)
     implicit none
     real(8), intent(in) :: T, tab(Tmin:Tmax,ns)
     integer, intent(in) :: sp
@@ -431,7 +431,7 @@ contains
   endfunction f_tabT
 
 
-  function f_tabT_expr(sp,tab,Tint,Tdiff) result(result)
+  pure function f_tabT_expr(sp,tab,Tint,Tdiff) result(result)
     implicit none
     real(8), intent(in) :: Tdiff, tab(Tmin:Tmax,ns)
     integer, intent(in) :: sp, Tint(2)

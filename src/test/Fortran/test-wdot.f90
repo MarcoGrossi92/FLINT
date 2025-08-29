@@ -23,6 +23,7 @@ program test
   ! WD
   !-------------------------------------------------------------------------------------------------
 
+  call execute_command_line('mkdir -p WD/OUTPUT')
   err = read_idealgas_thermo('WD/INPUT')
   err = read_chemistry( folder='WD/INPUT', mech_name=mech_name )
 # if defined(CANTERA)
@@ -97,6 +98,7 @@ program test
   ! TROYES
   !-------------------------------------------------------------------------------------------------
 
+  call execute_command_line('mkdir -p Troyes/OUTPUT')
   err = read_idealgas_thermo('Troyes/INPUT')
   err = read_chemistry( folder='Troyes/INPUT', mech_name=mech_name )
 # if defined (CANTERA)
@@ -169,6 +171,7 @@ program test
   ! ECKER
   !-------------------------------------------------------------------------------------------------
 
+  call execute_command_line('mkdir -p Ecker/OUTPUT')
   err = read_idealgas_thermo('Ecker/INPUT')
   err = read_chemistry( folder='Ecker/INPUT', mech_name=mech_name )
 # if defined (CANTERA)
@@ -246,6 +249,7 @@ program test
   ! CROSS
   !-------------------------------------------------------------------------------------------------
 
+  call execute_command_line('mkdir -p Cross/OUTPUT')
   err = read_idealgas_thermo('Cross/INPUT')
   err = read_chemistry( folder='Cross/INPUT', mech_name=mech_name )
 # if defined (CANTERA)
@@ -318,6 +322,7 @@ program test
   ! SMOOKE
   !-------------------------------------------------------------------------------------------------
 
+  call execute_command_line('mkdir -p Smooke/OUTPUT')
   err = read_idealgas_thermo('Smooke/INPUT')
   err = read_chemistry( folder='Smooke/INPUT', mech_name=mech_name )
 # if defined (CANTERA)
@@ -390,6 +395,7 @@ program test
   ! CORIA-CNRS
   !-------------------------------------------------------------------------------------------------
 
+  call execute_command_line('mkdir -p CORIA/OUTPUT')
   err = read_idealgas_thermo('CORIA/INPUT')
   err = read_chemistry( folder='CORIA/INPUT', mech_name=mech_name )
 # if defined (CANTERA)
@@ -462,6 +468,7 @@ program test
   ! TSR-CDF-13
   !-------------------------------------------------------------------------------------------------
 
+  call execute_command_line('mkdir -p TSR-CDF-13/OUTPUT')
   err = read_idealgas_thermo('TSR-CDF-13/INPUT')
   err = read_chemistry( folder='TSR-CDF-13/INPUT', mech_name=mech_name )
 # if defined (CANTERA)

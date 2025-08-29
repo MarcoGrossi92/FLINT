@@ -5,9 +5,16 @@ set(EXECUTABLE_OUTPUT_PATH "${CMAKE_SOURCE_DIR}/bin/test")
 foreach(TEST ${TESTS})
   get_filename_component(EXE_NAME ${TEST} NAME_WE)
   add_executable(${EXE_NAME} ${TEST})
-  target_link_libraries(${EXE_NAME} PRIVATE FLINT)
-  target_include_directories(${EXE_NAME}
-      INTERFACE
-          $<BUILD_INTERFACE:${CMAKE_Fortran_MODULE_DIRECTORY}>
-  )
+  target_include_directories(${EXE_NAME} INTERFACE $<BUILD_INTERFACE:${CMAKE_Fortran_MODULE_DIRECTORY}>)
+  target_link_libraries(${EXE_NAME} PRIVATE $<TARGET_OBJECTS:FLINT>)
+
+  # FLINT dependencies (see cmake/LinkDependencies.cmake): OSlo and Cantera (optional)
+  link_common_dependencies(${EXE_NAME})
+
+  # ORION
+  target_link_libraries(${EXE_NAME} PRIVATE ORION)
+  if (USE_TECIO)
+    target_link_libraries(${EXE_NAME} PRIVATE ${LINKLIBS})
+  endif()
+
 endforeach()

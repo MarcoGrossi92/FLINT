@@ -19,7 +19,7 @@ program test
   character(32)              :: solver, mech_name
   integer                    :: iopt(3)
 
-  solver = 'dvodef90'
+  solver = 'cvode'
   nstep = 1000
   iopt = 0
   iopt(1) = 1000000

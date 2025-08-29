@@ -11,10 +11,24 @@ set(lib "FLINT")
 
 project (FLINT LANGUAGES C CXX Fortran)
 
-set(CMAKE_VERBOSE_MAKEFILE FALSE)
+if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
+  set(CMAKE_VERBOSE_MAKEFILE FALSE)
+
+  # Search path for cmake modules
+  set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+
+  # This INCLUDE statement executes code that sets the compile flags for DEBUG,
+  # RELEASE, and TESTING.
+  INCLUDE(${CMAKE_MODULE_PATH}/SetFortranFlags.cmake) 
+
+  set(MASTER None)
+endif()
+
+# -------- Dependencies linking --------
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+include(LinkDependencies)
 
 # -------- Git submodules --------
-set(MASTER None)
 
 # ORION
 # If FLINT is built as part of another project (assumed that project already has ORION), skip the FLINT's ORION 

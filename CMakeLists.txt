@@ -116,8 +116,15 @@ endif(USE_CANTERA)
 include(GNUInstallDirs)
 set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 
-# -------- Compile  --------
-add_subdirectory("src/lib")
+# -------- Define FLINT sources --------
+file(GLOB LIBSRC src/lib/*.f90 src/lib/Lib_ChemMech/*.f90)
+if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
+  set(FLINT_SRC ${LIBSRC})
+else()
+  set(FLINT_SRC ${LIBSRC} PARENT_SCOPE)
+endif()
+
+# -------- Build FLINT test suite --------
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
   add_subdirectory("src/test/Fortran")
   if (USE_CANTERA)

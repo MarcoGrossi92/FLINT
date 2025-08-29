@@ -1,6 +1,6 @@
 # cmake/LinkDependencies.cmake
 
-function(link_common_dependencies target_name)
+function(link_FLINT_dependencies target_name)
   # Optimized math libraries
   if(APPLE)
     find_library(ACCELERATE_FRAMEWORK Accelerate)

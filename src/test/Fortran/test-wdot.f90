@@ -27,7 +27,7 @@ program test
   err = read_chemistry( folder='WD/INPUT', mech_name=mech_name )
 # if defined(CANTERA)
   call load_phase(gas, 'WD/INPUT/WD.yaml')
-# endif()
+# endif
   call Assign_Mechanism(mech_name)
 
   allocate(rhoi(1:ns))

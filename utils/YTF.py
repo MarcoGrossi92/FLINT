@@ -8,7 +8,8 @@
 # new code placement
 # add CLI argument for mechanism name
 # refactor to properly manage falloff-Troe reactions
-# m. grossi, 07/30/2025
+# worked properly for the tested mechanisms
+# m. grossi, summer 2025
 
 import cantera as ct
 import sys
@@ -35,8 +36,8 @@ def format_eff(val: float) -> str:
 # Main script
 
 print()
-print( 'hydra-Kinetix ' )
-print( 'created with no love and poor testing')
+print( 'FLINT-Kinetix ' )
+print( 'created with no love and partial testing')
 print()
 
 # Input file definition

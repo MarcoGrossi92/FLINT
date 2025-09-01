@@ -19,7 +19,7 @@ program test
   character(32)              :: solver, mech_name
   integer                    :: iopt(3), sim_type
 
-  solver = 'cvode'
+  solver = 'H-sdirk4'
   write(*,*)'what kind of simulation do you want to run?'
   write(*,*)'1) verification'
   write(*,*)'2) performance'
@@ -881,95 +881,95 @@ program test
   ! TSR-GP-24
   !-------------------------------------------------------------------------------------------------
 
-  call execute_command_line('mkdir -p TSR-GP-24/OUTPUT')
-  err = read_idealgas_thermo('TSR-GP-24/INPUT')
-  err = read_chemistry( folder='TSR-GP-24/INPUT', mech_name=mech_name )
-# if defined (CANTERA)
-  call load_phase(gas, 'TSR-GP-24/INPUT/TSR-GP-24.yaml')
-# endif
+!   call execute_command_line('mkdir -p TSR-GP-24/OUTPUT')
+!   err = read_idealgas_thermo('TSR-GP-24/INPUT')
+!   err = read_chemistry( folder='TSR-GP-24/INPUT', mech_name=mech_name )
+! # if defined (CANTERA)
+!   call load_phase(gas, 'TSR-GP-24/INPUT/TSR-GP-24.yaml')
+! # endif
 
-  open(100, file='TSR-GP-24/OUTPUT/batch-general.dat', status='replace', form='formatted')
-  open(200, file='TSR-GP-24/OUTPUT/batch-explicit.dat', status='replace', form='formatted')
-# if defined (CANTERA)
-  open(300, file='TSR-GP-24/OUTPUT/batch-cantera.dat', status='replace', form='formatted')
-# endif
+!   open(100, file='TSR-GP-24/OUTPUT/batch-general.dat', status='replace', form='formatted')
+!   open(200, file='TSR-GP-24/OUTPUT/batch-explicit.dat', status='replace', form='formatted')
+! # if defined (CANTERA)
+!   open(300, file='TSR-GP-24/OUTPUT/batch-cantera.dat', status='replace', form='formatted')
+! # endif
 
-  tlim = 0.005
-  pin = 5.0d+5
-  Tin = 1300d0
-  dt = tlim/nstep
+!   tlim = 0.005
+!   pin = 5.0d+5
+!   Tin = 1300d0
+!   dt = tlim/nstep
 
-  neq = ns + 1
-  allocate(Y(neq))
-  allocate(sp_Y(ns))
+!   neq = ns + 1
+!   allocate(Y(neq))
+!   allocate(sp_Y(ns))
 
-  sp_Y = 1d-20
-  sp_Y(22) = 0.2d0
-  sp_Y(19) = 0.8d0
+!   sp_Y = 1d-20
+!   sp_Y(22) = 0.2d0
+!   sp_Y(19) = 0.8d0
 
-  allocate(RT(neq),AT(neq))
-  RT(1:ns)=1d-7
-  RT(neq)=1d-7
-  AT(1:ns)=1d-7
-  AT(neq)=1d-7
-  call setup_odesolver(N=neq,solver=solver,RT=RT,AT=AT,iopt=iopt)
+!   allocate(RT(neq),AT(neq))
+!   RT(1:ns)=1d-7
+!   RT(neq)=1d-7
+!   AT(1:ns)=1d-7
+!   AT(neq)=1d-7
+!   call setup_odesolver(N=neq,solver=solver,RT=RT,AT=AT,iopt=iopt)
 
-  !! Cantera
-# if defined (CANTERA)
-  call initialize
-  call cpu_time(time1)
-  do n = 1, nstep
-    timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_cantera,err)
-    Tout = y(neq)
-    write(300,*) timeout, Tout
-  enddo
-  call cpu_time(time2)
+!   !! Cantera
+! # if defined (CANTERA)
+!   call initialize
+!   call cpu_time(time1)
+!   do n = 1, nstep
+!     timein = timeout; timeout = timeout+dt
+!     call run_odesolver(neq,timein,timeout,Y,rhs_cantera,err)
+!     Tout = y(neq)
+!     write(300,*) timeout, Tout
+!   enddo
+!   call cpu_time(time2)
 
-  write(*,*) 'TSR-GP-24 Cantera time =', time2-time1
-  write(30,*) 'TSR-GP-24', time2-time1
-# endif
+!   write(*,*) 'TSR-GP-24 Cantera time =', time2-time1
+!   write(30,*) 'TSR-GP-24', time2-time1
+! # endif
 
-  !! Native with coded mechanism
-  call Assign_Mechanism(mech_name)
-  call initialize
-  call cpu_time(time1)
-  do n = 1, nstep
-    timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
-    Tout = y(neq)
-    write(200,*) timeout, Tout
-  enddo
-  call cpu_time(time2)
+!   !! Native with coded mechanism
+!   call Assign_Mechanism(mech_name)
+!   call initialize
+!   call cpu_time(time1)
+!   do n = 1, nstep
+!     timein = timeout; timeout = timeout+dt
+!     call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+!     Tout = y(neq)
+!     write(200,*) timeout, Tout
+!   enddo
+!   call cpu_time(time2)
 
-  write(*,*) 'TSR-GP-24 explicit time =', time2-time1
-  write(20,*) 'TSR-GP-24', time2-time1
+!   write(*,*) 'TSR-GP-24 explicit time =', time2-time1
+!   write(20,*) 'TSR-GP-24', time2-time1
 
-  !! Native without coded mechanism
-  call Assign_Mechanism('nemo')
-  call initialize
-  call cpu_time(time1)
-  do n = 1, nstep
-    timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
-    Tout = y(neq)
-    write(100,*) timeout, Tout
-  enddo
-  call cpu_time(time2)
+!   !! Native without coded mechanism
+!   call Assign_Mechanism('nemo')
+!   call initialize
+!   call cpu_time(time1)
+!   do n = 1, nstep
+!     timein = timeout; timeout = timeout+dt
+!     call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+!     Tout = y(neq)
+!     write(100,*) timeout, Tout
+!   enddo
+!   call cpu_time(time2)
 
-  write(*,*) 'TSR-GP-24 general time =', time2-time1
-  write(10,*) 'TSR-GP-24', time2-time1
+!   write(*,*) 'TSR-GP-24 general time =', time2-time1
+!   write(10,*) 'TSR-GP-24', time2-time1
 
-  close(100); close(200)
-# if defined (CANTERA)
-  close(300)
-# endif
+!   close(100); close(200)
+! # if defined (CANTERA)
+!   close(300)
+! # endif
 
-  deallocate(Y); deallocate(sp_Y)
-  deallocate(AT); deallocate(RT)
-  deallocate(wm_tab); deallocate(Ri_tab)
-  deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
-  call free_chemistry_data()
+!   deallocate(Y); deallocate(sp_Y)
+!   deallocate(AT); deallocate(RT)
+!   deallocate(wm_tab); deallocate(Ri_tab)
+!   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
+!   call free_chemistry_data()
 
 contains
 

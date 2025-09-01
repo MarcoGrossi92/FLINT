@@ -3,7 +3,7 @@ import numpy as np
 
 # File names (update these with your actual filenames if needed)
 files = ['comp-batch-cantera.dat', 'comp-batch-canteraFor.dat', 'comp-batch-explicit.dat', 'comp-batch-general.dat']
-labels = ['Cantera (CXX)', 'hydra-Cantera', 'hydra-explicit', 'hydra-general']
+labels = ['Cantera (CXX)', 'FLINT-Cantera', 'FLINT-explicit', 'FLINT-general']
 data = {}
 
 # Step 1: Load data

@@ -194,7 +194,7 @@ M=coi(2)
 prodf(50)=f_kf(44,Tint,Tdiff)*(coi(4))*(coi(6))*M
 prodb(50)=f_kb(44,Tint,Tdiff)*(coi(9))*M
 ! reac n. 51: H + O2 + Ar <=> HO2 + Ar
-M=
+M=coi(1)
 prodf(51)=f_kf(45,Tint,Tdiff)*(coi(4))*(coi(6))*M
 prodb(51)=f_kb(45,Tint,Tdiff)*(coi(9))*M
 ! species source terms

@@ -29,6 +29,7 @@ contains
     use smooke_mod
     use coria_mod
     use TSRCDF13_mod
+    use TSRGP24_mod
     use ZK_mod
     use coronetti_mod
     use singh_mod
@@ -52,6 +53,8 @@ contains
       chemistry_source => coria
     case('TSR-CDF-13')
       chemistry_source => TSRCDF13
+    case('TSR-GP-24')
+      chemistry_source => TSRGP24
     case('ZK')
       chemistry_source => ZK
     case('CoronettiC4H6')

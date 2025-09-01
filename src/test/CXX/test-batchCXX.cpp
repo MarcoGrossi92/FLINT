@@ -64,8 +64,25 @@ int main()
         std::chrono::high_resolution_clock::time_point t1;
         std::chrono::duration<double> elapsed = t1 - t0;
 
-        int nsteps = 1000;
+        int nsteps = 0;
         double dt = 0;
+        int sim_type = 0;
+
+        std::cout << "What kind of simulation do you want to run?\n";
+        std::cout << "1) verification\n";
+        std::cout << "2) performance\n";
+        std::cin >> sim_type;
+
+        if (sim_type == 1) {
+            nsteps = 1000;
+        } else if (sim_type == 2) {
+            nsteps = 1;
+        } else {
+            std::cerr << "Choose 1 or 2!\n";
+            exit(EXIT_FAILURE);
+        }
+
+        std::cout << "Running with nstep = " << nsteps << "\n";
 
         //-------------------------------------------------------------------------------------------------
         // WD
@@ -245,7 +262,7 @@ int main()
 
 
         //-------------------------------------------------------------------------------------------------
-        // CORIA
+        // CORIA-CNRS
         //-------------------------------------------------------------------------------------------------
 
         // Create the solution and thermo object
@@ -351,6 +368,75 @@ int main()
             outFile8 << time << "\t" << temp << "\n";
         }
 
+        //-------------------------------------------------------------------------------------------------
+        // ZK
+        //-------------------------------------------------------------------------------------------------
+
+        // Create the solution and thermo object
+        auto sol9 = newSolution("ZK/INPUT/ZK.yaml");
+        auto& gas9 = *sol9->thermo();
+        gas9.setState_TPY(1300.0, 500000, "CH4:1, O2:4");
+
+        // Reactor setup
+        IdealGasReactor reactor9(sol9);
+        ReactorNet sim9;
+        sim9.addReactor(reactor9);
+        sim9.setTolerances(1e-7, 1e-7);
+
+        // Integration settings
+        dt = 5.0e-3 / nsteps;
+
+        // Run the simulation
+        t0 = std::chrono::high_resolution_clock::now();
+        auto timeTemp9 = simulateReactorTemperature(sim9, gas9, nsteps, dt);
+        t1 = std::chrono::high_resolution_clock::now();
+        elapsed = t1 - t0;
+        std::cout << "ZK Cantera-CXX time = "
+          << std::scientific << elapsed.count()
+          << std::endl;
+        summaryData.emplace_back("ZK", elapsed.count());
+
+
+        // Write results for second simulation
+        std::ofstream outFile9("ZK/OUTPUT/batch-CXX.dat");
+        for (const auto& [time, temp] : timeTemp9) {
+            outFile9 << time << "\t" << temp << "\n";
+        }
+
+        //-------------------------------------------------------------------------------------------------
+        // TSR-GP-24
+        //-------------------------------------------------------------------------------------------------
+
+        // Create the solution and thermo object
+        auto sol10 = newSolution("TSR-GP-24/INPUT/TSR-GP-24.yaml");
+        auto& gas10 = *sol10->thermo();
+        gas10.setState_TPY(1300.0, 500000, "CH4:1, O2:4");
+
+        // Reactor setup
+        IdealGasReactor reactor10(sol10);
+        ReactorNet sim10;
+        sim10.addReactor(reactor10);
+        sim10.setTolerances(1e-7, 1e-7);
+
+        // Integration settings
+        dt = 5.0e-3 / nsteps;
+
+        // Run the simulation
+        t0 = std::chrono::high_resolution_clock::now();
+        auto timeTemp10 = simulateReactorTemperature(sim10, gas10, nsteps, dt);
+        t1 = std::chrono::high_resolution_clock::now();
+        elapsed = t1 - t0;
+        std::cout << "TSR-GP-24 Cantera-CXX time = "
+          << std::scientific << elapsed.count()
+          << std::endl;
+        summaryData.emplace_back("TSR-GP-24", elapsed.count());
+
+
+        // Write results for second simulation
+        std::ofstream outFile10("TSR-GP-24/OUTPUT/batch-CXX.dat");
+        for (const auto& [time, temp] : timeTemp10) {
+            outFile10 << time << "\t" << temp << "\n";
+        }
 
         //-------------------------------------------------------------------------------------------------
         // Summary output

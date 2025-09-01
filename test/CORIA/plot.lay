@@ -100,7 +100,7 @@ $!RenameDataSetZone
   Name = 'hyda-Cantera'
 $!RenameDataSetZone 
   Zone = 2
-  Name = 'hydra-explicit'
+  Name = 'FLINT-explicit'
 $!RenameDataSetZone 
   Zone = 3
   Name = 'Cantera'
@@ -117,10 +117,10 @@ $!RemoveVar |LFDSVL3|
 $!RemoveVar |LFDSFN3|
 $!RenameDataSetZone 
   Zone = 4
-  Name = 'hydra-general'
+  Name = 'FLINT-general'
 $!RenameDataSetZone 
   Zone = 1
-  Name = 'hydra-Cantera'
+  Name = 'FLINT-Cantera'
 $!FrameLayout 
   ShowBorder = No
   ShowHeader = No

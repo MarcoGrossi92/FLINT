@@ -3,6 +3,8 @@ $!VarSet |LFDSFN1| = '"OUTPUT/batch-cantera.dat" "OUTPUT/batch-explicit.dat"'
 $!VarSet |LFDSVL1| = '"V1" "V2" "V3"'
 $!VarSet |LFDSFN2| = '"OUTPUT/batch-CXX.dat"'
 $!VarSet |LFDSVL2| = '"V1";"Time, s" "V2" "V3";"Temperature, K"'
+$!VarSet |LFDSFN3| = '"OUTPUT/batch-general.dat"'
+$!VarSet |LFDSVL3| = '"V1";"Time, s" "V2" "V3";"Temperature, K"'
 $!SetStyleBase Factory
 $!GlobalPaper 
   PaperSizeInfo
@@ -95,13 +97,39 @@ $!RenameDataSetZone
   Name = 'Native'
 $!RenameDataSetZone 
   Zone = 1
-  Name = 'FLINT-Cantera'
+  Name = 'hyda-Cantera'
 $!RenameDataSetZone 
   Zone = 2
   Name = 'FLINT-explicit'
 $!RenameDataSetZone 
   Zone = 3
   Name = 'Cantera'
+$!ReadDataSet  '|LFDSFN3|'
+  InitialPlotType = XYLine
+  IncludeText = No
+  IncludeGeom = No
+  ReadDataOption = Append
+  ResetStyle = No
+  AssignStrandIDs = Yes
+  VarLoadMode = ByName
+  VarNameList = '|LFDSVL3|'
+$!RemoveVar |LFDSVL3|
+$!RemoveVar |LFDSFN3|
+$!RenameDataSetZone 
+  Zone = 4
+  Name = 'FLINT-general'
+$!RenameDataSetZone 
+  Zone = 1
+  Name = 'FLINT-Cantera'
+$!RenameDataSetZone 
+  Zone = 1
+  Name = 'FLINT-Cantera'
+$!RenameDataSetZone 
+  Zone = 2
+  Name = 'FLINT-explicit'
+$!RenameDataSetZone 
+  Zone = 4
+  Name = 'FLINT-general'
 $!FrameLayout 
   ShowBorder = No
   ShowHeader = No
@@ -121,7 +149,7 @@ $!FrameName  = 'Frame 001'
 $!GlobalTime 
   SolutionTime = 0
 $!DeleteLineMaps 
-$!ActiveLineMaps  =  [1-3]
+$!ActiveLineMaps  =  [1-4]
 $!GlobalLinePlot 
   DataLabels
     {
@@ -137,8 +165,8 @@ $!GlobalLinePlot
       }
     XYPos
       {
-      X = 45.328
-      Y = 85.007
+      X = 84.898
+      Y = 49.397
       }
     }
 $!LineMap  [1]
@@ -151,7 +179,7 @@ $!LineMap  [1]
     }
   Lines
     {
-    Color = Red
+    Color = Custom3
     LineThickness = 0.4
     }
   Symbols
@@ -175,6 +203,35 @@ $!LineMap  [1]
     Color = Red
     }
 $!LineMap  [2]
+  Name = '&ZN&'
+  Assign
+    {
+    Zone = 4
+    XAxisVar = 1
+    YAxisVar = 2
+    }
+  Lines
+    {
+    Color = Red
+    LinePattern = LongDash
+    LineThickness = 0.4
+    }
+  Symbols
+    {
+    Show = No
+    Color = Custom1
+    FillColor = Custom1
+    }
+  BarCharts
+    {
+    Color = Custom1
+    FillColor = Custom1
+    }
+  ErrorBars
+    {
+    Color = Custom1
+    }
+$!LineMap  [3]
   Name = '&ZN&'
   Assign
     {
@@ -212,7 +269,7 @@ $!LineMap  [2]
     {
     Color = Green
     }
-$!LineMap  [3]
+$!LineMap  [4]
   Name = '&ZN&'
   Assign
     {
@@ -262,8 +319,8 @@ $!XYLineAxis
     {
     CoordScale = Linear
     RangeMin = 0
-    RangeMax = 0.0080000000000000001665
-    GRSpacing = 0.001
+    RangeMax = 0.0020000000000000000416
+    GRSpacing = 0.0005
     Ticks
       {
       TickDirection = Out
@@ -292,8 +349,8 @@ $!XYLineAxis
   YDetail 1
     {
     CoordScale = Linear
-    RangeMin = 500
-    RangeMax = 6500
+    RangeMin = 1000
+    RangeMax = 4000
     GRSpacing = 500
     Ticks
       {

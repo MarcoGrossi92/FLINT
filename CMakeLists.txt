@@ -38,9 +38,8 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
 endif()
 
 # OSlo
-# if FLINT is built as part of hydra, use the hydra's OSlo
+# if FLINT is built as part of hydra, use the hydra's OSlo, otherwise use the FLINT's one
 if(NOT "${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}" AND "${MASTER}" STREQUAL "hydra")
-  set ( osloD $ENV{HYDRADIR}/lib/OSlo "${CMAKE_CURRENT_SOURCE_DIR}/build/lib/Oslo")
   set ( oslosrcD $ENV{HYDRADIR}/lib/OSlo )
 else()
   set ( osloD ${CMAKE_CURRENT_SOURCE_DIR}/lib/OSlo )
@@ -55,11 +54,11 @@ else()
       message(FATAL_ERROR "Failed to initialize git submodules.")
     endif()
   endif()
+  add_subdirectory(${osloD})
 endif()
-add_subdirectory(${osloD})
 
 # Cantera
-# Cantera is optional and only used into FLINT
+# Cantera is optional and only used by FLINT
 OPTION(USE_CANTERA "Use Canera" ON)
 if (USE_CANTERA)
   set(canteraD "${CMAKE_CURRENT_SOURCE_DIR}/lib/cantera")

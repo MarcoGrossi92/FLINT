@@ -13,17 +13,20 @@ contains
     ! Local
     integer           :: ios, i, unitfile, start
     character(256)    :: wholestring, args(2)
-    character(512)    :: wmfile, thermofile
+    character(512)    :: wmfile, thermofile(2)
     type(ORION_data)  :: orion
 
     if (present(folder)) then
       wmfile = trim(folder)//'/'//trim(FLINT_phase_prefix)//'phase.txt'
-      thermofile = trim(folder)//'/'//trim(FLINT_phase_prefix)//'thermo.dat'
+      thermofile(1) = trim(folder)//'/'//trim(FLINT_phase_prefix)//'thermo.dat'
+      thermofile(2) = trim(folder)//'/'//trim(FLINT_phase_prefix)//'thermo.szplt'
     else
       wmfile = 'INPUT/'//trim(FLINT_phase_prefix)//'phase.txt'
-      thermofile = 'INPUT/'//trim(FLINT_phase_prefix)//'thermo.dat'
+      thermofile(1) = 'INPUT/'//trim(FLINT_phase_prefix)//'thermo.dat'
+      thermofile(2) = 'INPUT/'//trim(FLINT_phase_prefix)//'thermo.szplt'
     endif
 
+    ! File 1: phase
     open(newunit=unitFile,file=trim(wmfile),status='old',iostat=ios)
     if (ios/=0) then
       write(*,*) '[ERROR] phase.txt type file not found'
@@ -48,7 +51,11 @@ contains
 
     Ri_tab = Runiv/wm_tab
 
-    ios = tec_read_points_multivars(orion,4,trim(thermofile))
+    ! File 2: thermo
+    ios = tec_read_points_multivars(orion,4,trim(thermofile(1)))
+    if (ios/=0) then
+      ios = tec_read_structured_multiblock(orion=orion, filename=trim(thermofile(2)))
+    endif
     if (ios/=0) then
       write(*,*) '[ERROR] Reading thermo file'
       return

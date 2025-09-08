@@ -27,6 +27,7 @@ Commands:
     --compilers=<name>      Set compilers suit (intel,gnu)
     --use-sundials          Use Sundials
     --use-cantera           Use Cantera
+    --use-tecio             Use TecIO
 
   compile                   Compile the program using the CMakePresets file
 
@@ -79,7 +80,8 @@ function write_presets() {
         "CMAKE_Fortran_COMPILER": "${FC}",
         "CMAKE_C_COMPILER": "${CC}",
         "USE_CANTERA": "${USE_CANTERA}",
-        "USE_SUNDIALS": "${USE_SUNDIALS}"
+        "USE_SUNDIALS": "${USE_SUNDIALS}",
+        "USE_TECIO": "${USE_TECIO}"
       }
     }
   ]
@@ -95,11 +97,12 @@ MASTER_TYPE=""
 BUILD_TYPE="RELEASE"
 USE_SUNDIALS="false"
 USE_CANTERA="false"
+USE_TECIO="false"
 REMOTE=false
 
 # Define allowed options for each command using regular arrays
 CMD=("build" "compile" "update")
-CMD_OPTIONS_build=("--master --compilers --use-sundials --use-cantera")
+CMD_OPTIONS_build=("--master --compilers --use-sundials --use-cantera --use-tecio")
 CMD_OPTIONS_update=("--remote")
 
 # Parse global options
@@ -156,6 +159,10 @@ while [[ $# -gt 0 ]]; do
             [[ "$COMMAND" == "build" ]] || { error " --use-sundials is only valid for 'build' command"; exit 1; }
             USE_SUNDIALS="true"
             ;;
+        --use-tecio)
+            [[ "$COMMAND" == "build" ]] || { error " --use-tecio is only valid for 'build' command"; exit 1; }
+            USE_TECIO="true"
+            ;;
         --remote)
             [[ "$COMMAND" == "update" ]] || { error " --remote is only valid for 'update' command"; exit 1; }
             REMOTE=true
@@ -186,9 +193,11 @@ case "$COMMAND" in
 
         if [[ $COMPILERS == "intel" ]]; then 
             export FC="ifx"
+            export CXX="icpx"
             export CC="icx"
         elif [[ $COMPILERS == "gnu" ]]; then 
             export FC="gfortran"
+            export CXX="g++"
             export CC="gcc"
         fi
         log "Build dir: $BUILD_DIR"
@@ -196,13 +205,14 @@ case "$COMMAND" in
         log "Master: $MASTER_TYPE"
         log "Use Cantera: $USE_CANTERA"
         log "Use Sundials: $USE_SUNDIALS"
-        if [[ -z "${FC+x}" || -z "${CC+x}" ]]; then
+        log "Use TecIO: $USE_TECIO"
+        if [[ -z "${FC+x}" || -z "${CC+x}" || -z "${CXX+x}" ]]; then
           log "Compilers not set. CMake will decide."
         else
-          log "Compilers: FC=$FC, CC=$CC"
+          log "Compilers: FC=$FC, CC=$CC", CXX=$CXX
         fi
         rm -rf $BUILD_DIR
-        cmake -B $BUILD_DIR -DMASTER=$MASTER_TYPE -DUSE_CANTERA=$USE_CANTERA -DUSE_SUNDIALS=$USE_SUNDIALS -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DUSE_OPENMP=OFF -DUSE_MPI=OFF -DUSE_TECIO=OFF || exit 1
+        cmake -B $BUILD_DIR -DMASTER=$MASTER_TYPE -DUSE_CANTERA=$USE_CANTERA -DUSE_SUNDIALS=$USE_SUNDIALS -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DUSE_OPENMP=OFF -DUSE_MPI=OFF -DUSE_TECIO=$USE_TECIO || exit 1
         cmake --build $BUILD_DIR || exit 1
         log "[OK] Compilation successful"
 

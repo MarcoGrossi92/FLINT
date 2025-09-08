@@ -21,7 +21,6 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
   # RELEASE, and TESTING.
   INCLUDE(${CMAKE_MODULE_PATH}/SetFortranFlags.cmake) 
 
-  set(MASTER None)
 endif()
 
 # -------- Dependencies linking --------
@@ -33,14 +32,20 @@ include(LinkDependencies)
 # ORION
 # If FLINT is built as part of another project (assumed that project already has ORION), skip the FLINT's ORION 
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
-  set ( orionD ${CMAKE_SOURCE_DIR}/lib/ORION/ )
+  if ("${MASTER}" STREQUAL "hydra")
+    set ( orionD $ENV{HYDRADIR}/lib/ORION/ "${CMAKE_CURRENT_SOURCE_DIR}/build/lib/ORION/")
+  else()
+    set ( orionD ${CMAKE_SOURCE_DIR}/lib/ORION/ )
+  endif()
   add_subdirectory(${orionD})
 endif()
 
 # OSlo
 # if FLINT is built as part of hydra, use the hydra's OSlo, otherwise use the FLINT's one
-if(NOT "${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}" AND "${MASTER}" STREQUAL "hydra")
+if ("${MASTER}" STREQUAL "hydra")
+  set ( osloD $ENV{HYDRADIR}/lib/OSlo "${CMAKE_CURRENT_SOURCE_DIR}/build/lib/OSlo")
   set ( oslosrcD $ENV{HYDRADIR}/lib/OSlo )
+  add_subdirectory(${osloD})
 else()
   set ( osloD ${CMAKE_CURRENT_SOURCE_DIR}/lib/OSlo )
   set ( oslosrcD ${CMAKE_CURRENT_SOURCE_DIR}/lib/OSlo )

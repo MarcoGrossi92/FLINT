@@ -28,7 +28,7 @@ contains
 
     roi(1:ns) = Z(1:ns)
     T = Z(nz)
-    if (T < 0.d0 .or. T > 10000d0) then
+    if (T < Tmin .or. T > Tmax .or. isnan(T)) then
       F(:) = -1.d0
       return
     end if

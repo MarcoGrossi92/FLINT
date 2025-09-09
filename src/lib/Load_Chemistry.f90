@@ -15,7 +15,7 @@ contains
     integer :: idum, unitfile
     type(ORION_data)  :: orion
     integer :: i, j, ios, j0, j1
-    integer :: Ti1, Ti2
+    integer :: Ti1, Ti2, dummy1, dummy23
     character(len=16):: chardum
 
     nrc_arrh = 0
@@ -79,20 +79,25 @@ contains
     !! Rate Arrhenius
     if (present(folder)) then
       ios = tec_read_points_multivars(orion,2,trim(folder)//'/'//trim(FLINT_phase_prefix)//'chemistry-Arrhenius.dat')
+      if (ios/=0) ios = tec_read_structured_multiblock(orion=orion, filename=trim(folder)//'/'//trim(FLINT_phase_prefix)//'chemistry-Arrhenius.szplt')
     else
       ios = tec_read_points_multivars(orion,2,trim('INPUT/')//trim(FLINT_phase_prefix)//'chemistry-Arrhenius.dat')
+      if (ios/=0) ios = tec_read_structured_multiblock(orion=orion, filename=trim('INPUT/')//trim(FLINT_phase_prefix)//'chemistry-Arrhenius.szplt')
     endif
     if (ios/=0) then
       write(*,*) '[ERROR] chemistry-Arrhenius file not found'
       stop
     endif
-    Ti1 = nint(orion%block(1)%mesh(1,1,1,1))
-    Ti2 = Ti1 + orion%block(1)%Ni - 1
+    dummy1  = lbound(orion%block(1)%mesh, dim=2)
+    dummy23 = lbound(orion%block(1)%mesh, dim=3)
+    Ti1 = nint(orion%block(1)%mesh(1,dummy1,dummy23,dummy23))
+    Ti2 = Ti1 + ubound(orion%block(1)%mesh, dim=2) - dummy1
     allocate(kf_tab(Ti1:Ti2, 1:nrc_arrh))
     allocate(kb_tab(Ti1:Ti2, 1:nrc_arrh))
+    dummy23 = lbound(orion%block(1)%vars, dim=3)
     do i = 1, nrc_arrh
-      kf_tab(Ti1:Ti2,i) = orion%block(i)%vars(1,1:orion%block(1)%Ni,1,1)
-      kb_tab(Ti1:Ti2,i) = orion%block(i)%vars(2,1:orion%block(1)%Ni,1,1)
+      kf_tab(Ti1:Ti2,i) = orion%block(i)%vars(1,:,dummy23,dummy23)
+      kb_tab(Ti1:Ti2,i) = orion%block(i)%vars(2,:,dummy23,dummy23)
     enddo
 
     !! Rate Troe
@@ -100,8 +105,10 @@ contains
       deallocate(orion%block)
       if (present(folder)) then
         ios = tec_read_points_multivars(orion,4,trim(folder)//'/'//trim(FLINT_phase_prefix)//'chemistry-Troe.dat')
+        if (ios/=0) ios = tec_read_structured_multiblock(orion=orion, filename=trim(folder)//'/'//trim(FLINT_phase_prefix)//'chemistry-Troe.szplt')
       else
         ios = tec_read_points_multivars(orion,4,trim('INPUT/')//trim(FLINT_phase_prefix)//'chemistry-Troe.dat')
+        if (ios/=0) ios = tec_read_structured_multiblock(orion=orion, filename=trim('INPUT/')//trim(FLINT_phase_prefix)//'chemistry-Troe.szplt')
       endif
       if (ios/=0) then
         write(*,*) '[ERROR] chemistry-Troe file not found'
@@ -112,10 +119,10 @@ contains
       allocate(kc_tab(Ti1:Ti2, 1:nrc_troe))
       allocate(Fcent_tab(Ti1:Ti2, 1:nrc_troe))
       do i = 1, nrc_troe
-        kinf_tab(Ti1:Ti2,i)  = orion%block(i)%vars(1,1:orion%block(1)%Ni,1,1)
-        k0_tab(Ti1:Ti2,i)    = orion%block(i)%vars(2,1:orion%block(1)%Ni,1,1)
-        kc_tab(Ti1:Ti2,i)    = orion%block(i)%vars(3,1:orion%block(1)%Ni,1,1)
-        Fcent_tab(Ti1:Ti2,i) = orion%block(i)%vars(4,1:orion%block(1)%Ni,1,1)
+        kinf_tab(Ti1:Ti2,i)  = orion%block(i)%vars(1,:,dummy23,dummy23)
+        k0_tab(Ti1:Ti2,i)    = orion%block(i)%vars(2,:,dummy23,dummy23)
+        kc_tab(Ti1:Ti2,i)    = orion%block(i)%vars(3,:,dummy23,dummy23)
+        Fcent_tab(Ti1:Ti2,i) = orion%block(i)%vars(4,:,dummy23,dummy23)
       enddo
     endif
 

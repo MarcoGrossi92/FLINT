@@ -11,7 +11,7 @@ contains
     implicit none
     character(len=*), intent(in), optional :: folder
     ! Local
-    integer           :: ios, i, unitfile, start
+    integer           :: ios, i, unitfile, start, dummy_i, dummy1, dummy23
     character(256)    :: wholestring, args(2)
     character(512)    :: wmfile, thermofile(2)
     type(ORION_data)  :: orion
@@ -60,17 +60,20 @@ contains
       write(*,*) '[ERROR] Reading thermo file'
       return
     endif
-    Tmin = nint(orion%block(1)%mesh(1,1,1,1))
-    Tmax = Tmin + orion%block(1)%Ni - 1
+    dummy1  = lbound(orion%block(1)%mesh, dim=2)
+    dummy23 = lbound(orion%block(1)%mesh, dim=3)
+    Tmin = nint(orion%block(1)%mesh(1,dummy1,dummy23,dummy23))
+    Tmax = Tmin + ubound(orion%block(1)%mesh, dim=2) - dummy1
     start = Tmin
     if (Tmin==1) Tmin = 0
     allocate(h_tab(Tmin:Tmax, 1:ns))
     allocate(s_tab, cp_tab, dcpi_tab, mold=h_tab)
+    dummy23 = lbound(orion%block(1)%vars, dim=3)
     do i = 1, ns
-      cp_tab(start:Tmax,i) = orion%block(i)%vars(1,:,1,1)
-      h_tab(start:Tmax,i) = orion%block(i)%vars(2,:,1,1)
-      s_tab(start:Tmax,i) = orion%block(i)%vars(3,:,1,1)
-      dcpi_tab(start:Tmax,i) = orion%block(i)%vars(4,:,1,1)
+      cp_tab(start:Tmax,i) = orion%block(i)%vars(1,:,dummy23,dummy23)
+      h_tab(start:Tmax,i) = orion%block(i)%vars(2,:,dummy23,dummy23)
+      s_tab(start:Tmax,i) = orion%block(i)%vars(3,:,dummy23,dummy23)
+      dcpi_tab(start:Tmax,i) = orion%block(i)%vars(4,:,dummy23,dummy23)
     enddo
     if (Tmin == 0) then
       cp_tab(0,:) = cp_tab(1,:)
@@ -89,28 +92,34 @@ contains
     implicit none
     character(len=*), intent(in), optional :: folder
     ! Local
-    integer           :: ios, i, unitfile, start
+    integer           :: ios, i, unitfile, start, dummy1, dummy23
     character(256)    :: wholestring, args(2)
-    character(512)    :: transfile
+    character(512)    :: transfile(2)
     type(ORION_data)  :: orion
 
     if (present(folder)) then
-      transfile = trim(folder)//'/'//trim(FLINT_phase_prefix)//'transport.dat'
+      transfile(1) = trim(folder)//'/'//trim(FLINT_phase_prefix)//'transport.dat'
+      transfile(2) = trim(folder)//'/'//trim(FLINT_phase_prefix)//'transport.szplt'
     else
-      transfile = 'INPUT/'//trim(FLINT_phase_prefix)//'transport.dat'
+      transfile(1) = 'INPUT/'//trim(FLINT_phase_prefix)//'transport.dat'
+      transfile(2) = 'INPUT/'//trim(FLINT_phase_prefix)//'transport.szplt'
     endif
 
-    ios = tec_read_points_multivars(orion,2,trim(transfile))
+    ios = tec_read_points_multivars(orion,2,trim(transfile(1)))
+    if (ios/=0) ios = tec_read_structured_multiblock(orion=orion, filename=trim(transfile(2)))
     if (ios/=0) return
-    Tmin = nint(orion%block(1)%mesh(1,1,1,1))
-    Tmax = Tmin + orion%block(1)%Ni - 1
+    dummy1  = lbound(orion%block(1)%mesh, dim=2)
+    dummy23 = lbound(orion%block(1)%mesh, dim=3)
+    Tmin = nint(orion%block(1)%mesh(1,dummy1,dummy23,dummy23))
+    Tmax = Tmin + ubound(orion%block(1)%mesh, dim=2) - dummy1
     start = Tmin
     if (Tmin==1) Tmin = 0
     allocate(mi_tab(Tmin:Tmax, 1:ns))
     allocate(k_tab(Tmin:Tmax, 1:ns))
+    dummy23 = lbound(orion%block(1)%vars, dim=3)
     do i = 1, ns
-      mi_tab(start:Tmax,i) = orion%block(i)%vars(1,:,1,1)
-      k_tab(start:Tmax,i) = orion%block(i)%vars(2,:,1,1)
+      mi_tab(start:Tmax,i) = orion%block(i)%vars(1,:,dummy23,dummy23)
+      k_tab(start:Tmax,i) = orion%block(i)%vars(2,:,dummy23,dummy23)
     enddo
     if (Tmin==0) then
       mi_tab(0,:) = mi_tab(1,:)

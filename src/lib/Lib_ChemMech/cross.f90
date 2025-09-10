@@ -7,8 +7,8 @@ use FLINT_Lib_Chemistry_data
 use FLINT_Lib_Chemistry_Troe
 implicit none
 real(8), intent(inout)  :: roi(ns)
-real(8), intent(in)     :: temp
-real(8), intent(out)    :: omegadot(ns) 
+real(8), intent(in)  :: temp
+real(8), intent(out) :: omegadot(ns) 
 
 real(8) :: coi(ns), Tdiff 
 real(8) :: M !< Third body
@@ -16,8 +16,9 @@ integer :: is, T_i, Tint(2)
 real(8) :: prodf(1:33), prodb(1:33)
 real(8) :: k(2) !< Troe rate coefficients
 
-do is = 1, ns
-coi(is)=roi(is)/Wm_tab(is) ! kmol/m^3
+
+do is = 1, ns 
+ coi(is)=roi(is)/Wm_tab(is) ! kmol/m^3
 enddo 
 T_i = int(temp) 
 Tdiff  = temp-T_i 
@@ -46,7 +47,7 @@ M=coi(1)+coi(2)+coi(3)+coi(4)+coi(5)*2+coi(6)*1.5+coi(7)*2+coi(8)+coi(9)+coi(10)
 prodf(7)=f_kf(7,Tint,Tdiff)*(coi(4))*(coi(11))*M
 prodb(7)=f_kb(7,Tint,Tdiff)*(coi(5))*M
 ! reac n. 8: HCO + M <=> CO + H + M
-M=coi(1)+coi(2)+coi(3)+coi(4)+coi(5)*2+coi(6)*1.5+coi(7)*2+coi(8)+coi(9)+coi(10)+coi(11)+coi(12)*2+coi(13)*0+coi(14)+coi(15)+coi(16)+coi(17)+coi(18)+coi(19)
+M=coi(1)+coi(2)+coi(3)+coi(4)+coi(5)*2+coi(6)*1.5+coi(7)*2+coi(8)+coi(9)+coi(10)+coi(11)+coi(12)*2+coi(14)+coi(15)+coi(16)+coi(17)+coi(18)+coi(19)
 prodf(8)=f_kf(8,Tint,Tdiff)*(coi(15))*M
 prodb(8)=f_kb(8,Tint,Tdiff)*(coi(6))*(coi(11))*M
 ! reac n. 9: CO + OH <=> CO2 + H
@@ -108,11 +109,11 @@ M=coi(1)+coi(2)+coi(3)+coi(4)+coi(5)*2+coi(6)+coi(7)+coi(8)+coi(9)+coi(10)+coi(1
 prodf(26)=f_kf(26,Tint,Tdiff)*(coi(11)*coi(11))*M
 prodb(26)=f_kb(26,Tint,Tdiff)*(coi(12))*M
 ! reac n. 27: 2 H + H2 <=> H2 + H2
-M=coi(1)+coi(2)+coi(3)+coi(4)+coi(5)+coi(6)+coi(7)+coi(8)+coi(9)+coi(10)+coi(11)+coi(12)+coi(13)+coi(14)+coi(15)+coi(16)+coi(17)+coi(18)+coi(19)
+M=coi(12)
 prodf(27)=f_kf(27,Tint,Tdiff)*(coi(11)*coi(11))*M
 prodb(27)=f_kb(27,Tint,Tdiff)*(coi(12))*M
 ! reac n. 28: 2 H + H2O <=> H2 + H2O
-M=coi(1)+coi(2)+coi(3)+coi(4)+coi(5)+coi(6)+coi(7)+coi(8)+coi(9)+coi(10)+coi(11)+coi(12)+coi(13)+coi(14)+coi(15)+coi(16)+coi(17)+coi(18)+coi(19)
+M=coi(13)
 prodf(28)=f_kf(28,Tint,Tdiff)*(coi(11)*coi(11))*M
 prodb(28)=f_kb(28,Tint,Tdiff)*(coi(12))*M
 ! reac n. 29: H + HCO <=> CO + H2

@@ -610,4 +610,77 @@ program test
   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
   call free_chemistry_data()
 
+  !-------------------------------------------------------------------------------------------------
+  ! TSR-Rich-31
+  !-------------------------------------------------------------------------------------------------
+
+  call execute_command_line('mkdir -p TSR-Rich-31/OUTPUT')
+  err = read_idealgas_thermo('TSR-Rich-31/INPUT')
+  err = read_chemistry( folder='TSR-Rich-31/INPUT', mech_name=mech_name )
+# if defined (CANTERA)
+  call load_phase(gas, 'TSR-Rich-31/INPUT/TSR-Rich-31.yaml')
+# endif
+  call Assign_Mechanism(mech_name)
+
+  allocate(rhoi(1:ns))
+  allocate(droic(1:ns))
+  allocate(wdot_explicit(ns,Tstart:Tend))
+  allocate(wdot_cantera(ns,Tstart:Tend))
+
+  rhoi = 1d0/ns
+  R = f_Rtot(rhoi)
+  rho = sum(rhoi)
+
+  call cpu_time(time1)
+  do j = 1, 1
+    do i = Tstart, Tend
+      T = dble(i)
+      call Chemistry_Source ( rhoi, T, droic )
+      wdot_explicit(:,i) = droic
+    enddo
+  enddo
+  call cpu_time(time2)
+
+  write(*,*) 'TSR-Rich-31 explicit time =', time2-time1
+
+# if defined (CANTERA)
+
+  call setState_TRY(gas, T, rho, rhoi)
+
+  call cpu_time(time1)
+  do j = 1, 1
+    do i = Tstart, Tend
+      T = dble(i)
+      call setTemperature(gas, T)
+      call getNetProductionRates(gas, droic)
+      droic = droic*wm_tab
+      wdot_cantera(:,i) = droic
+    enddo
+  enddo
+  call cpu_time(time2)
+
+  write(*,*) 'TSR-Rich-31 Cantera time =', time2-time1
+
+# endif
+
+  open(100, file='TSR-Rich-31/OUTPUT/wdot-explicit.dat', status='replace', form='formatted')
+  do i = Tstart, Tend
+    write(100,*) dble(i), (wdot_explicit(j,i),j=1,ns)
+  enddo
+  close(100)
+# if defined (CANTERA)
+  open(200, file='TSR-Rich-31/OUTPUT/wdot-cantera.dat', status='replace', form='formatted')
+  do i = Tstart, Tend
+    write(200,*) dble(i), (wdot_cantera(j,i),j=1,ns)
+  enddo
+  close(200)
+# endif
+
+  deallocate(wdot_cantera); deallocate(wdot_explicit)
+  deallocate(droic)
+  deallocate(rhoi)
+  deallocate(wm_tab); deallocate(Ri_tab)
+  deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
+  call free_chemistry_data()
+
 end program test

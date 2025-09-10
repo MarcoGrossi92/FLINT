@@ -30,6 +30,7 @@ contains
     use coria_mod
     use TSRCDF13_mod
     use TSRGP24_mod
+    use TSRRich31_mod
     use ZK_mod
     use coronetti_mod
     use singh_mod
@@ -55,6 +56,8 @@ contains
       chemistry_source => TSRCDF13
     case('TSR-GP-24')
       chemistry_source => TSRGP24
+    case('TSR-Rich-31')
+      chemistry_source => TSRRich31
     case('ZK')
       chemistry_source => ZK
     case('CoronettiC4H6')

@@ -439,6 +439,41 @@ int main()
         }
 
         //-------------------------------------------------------------------------------------------------
+        // TSR-Rich-31
+        //-------------------------------------------------------------------------------------------------
+
+        // Create the solution and thermo object
+        auto sol11 = newSolution("TSR-Rich-31/INPUT/TSR-Rich-31.yaml");
+        auto& gas11 = *sol11->thermo();
+        gas11.setState_TPY(1300.0, 500000, "CH4:1, O2:4");
+
+        // Reactor setup
+        IdealGasReactor reactor11(sol11);
+        ReactorNet sim11;
+        sim11.addReactor(reactor11);
+        sim11.setTolerances(1e-7, 1e-7);
+
+        // Integration settings
+        dt = 5.0e-3 / nsteps;
+
+        // Run the simulation
+        t0 = std::chrono::high_resolution_clock::now();
+        auto timeTemp11 = simulateReactorTemperature(sim11, gas11, nsteps, dt);
+        t1 = std::chrono::high_resolution_clock::now();
+        elapsed = t1 - t0;
+        std::cout << "TSR-Rich-31 Cantera-CXX time = "
+          << std::scientific << elapsed.count()
+          << std::endl;
+        summaryData.emplace_back("TSR-Rich-31", elapsed.count());
+
+
+        // Write results for second simulation
+        std::ofstream outFile11("TSR-Rich-31/OUTPUT/batch-CXX.dat");
+        for (const auto& [time, temp] : timeTemp11) {
+            outFile11 << time << "\t" << temp << "\n";
+        }
+
+        //-------------------------------------------------------------------------------------------------
         // Summary output
         //-------------------------------------------------------------------------------------------------
 

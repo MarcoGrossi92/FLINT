@@ -31,7 +31,7 @@ include(LinkDependencies)
 
 # ORION
 # If FLINT is built as part of another project (assumed that project already has ORION), skip the FLINT's ORION 
-if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
+if ("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
   if ("${MASTER}" STREQUAL "hydra")
     set ( orionD $ENV{HYDRADIR}/lib/ORION/ "${CMAKE_CURRENT_SOURCE_DIR}/build/lib/ORION/")
   else()
@@ -43,9 +43,11 @@ endif()
 # OSlo
 # if FLINT is built as part of hydra, use the hydra's OSlo, otherwise use the FLINT's one
 if ("${MASTER}" STREQUAL "hydra")
-  set ( osloD $ENV{HYDRADIR}/lib/OSlo "${CMAKE_CURRENT_SOURCE_DIR}/build/lib/OSlo")
   set ( oslosrcD $ENV{HYDRADIR}/lib/OSlo )
-  add_subdirectory(${osloD})
+  if ("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
+    set ( osloD $ENV{HYDRADIR}/lib/OSlo "${CMAKE_CURRENT_SOURCE_DIR}/build/lib/OSlo")
+    add_subdirectory(${osloD})
+  endif()
 else()
   set ( osloD ${CMAKE_CURRENT_SOURCE_DIR}/lib/OSlo )
   set ( oslosrcD ${CMAKE_CURRENT_SOURCE_DIR}/lib/OSlo )

@@ -289,7 +289,7 @@ $!LineMap  [4]
     Size = 1.25
     LineThickness = 0.3
     SkipMode = ByFrameUnits
-    Skipping = 2
+    Skipping = 3
     }
   BarCharts
     {

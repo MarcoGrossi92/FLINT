@@ -4,17 +4,17 @@ contains
 subroutine pelucchi(roi,temp,omegadot)
 use FLINT_Lib_Thermodynamic
 use FLINT_Lib_Chemistry_data
-use FLINT_Lib_Chemistry_Troe
+use FLINT_Lib_Chemistry_falloff
 implicit none
 real(8), intent(inout)  :: roi(ns)
-real(8), intent(in)     :: temp
-real(8), intent(out)    :: omegadot(ns) 
+real(8), intent(in)  :: temp
+real(8), intent(out) :: omegadot(ns) 
 
 real(8) :: coi(ns), Tdiff 
 real(8) :: M !< Third body
 integer :: is, T_i, Tint(2)
 real(8) :: prodf(1:103), prodb(1:103)
-real(8) :: k(2) !< Troe rate coefficients
+real(8) :: k(2) !< Falloff rate coefficients
 
 
 do is = 1, ns 
@@ -121,11 +121,15 @@ prodb(30)=f_kb(30,Tint,Tdiff)*(coi(3))*(coi(6))
 prodf(31)=f_kf(31,Tint,Tdiff)*(coi(4)*coi(4))
 prodb(31)=f_kb(31,Tint,Tdiff)*(coi(3))*(coi(7))
 ! reac n. 32: CLO + O (+M) <=> OCLO (+M)
-prodf(31)=f_kf(31,Tint,Tdiff)*(coi(4)*coi(4))
-prodb(31)=f_kb(31,Tint,Tdiff)*(coi(3))*(coi(7))
+M=sum(coi(1:25))
+k = f_k_lindemann(1,Tint,Tdiff,M)
+prodf(32)=k(1)*(coi(4))*(coi(21))
+prodb(32)=k(2)*(coi(7))
 ! reac n. 33: OCLO (+M) <=> CL + O2 (+M)
-prodf(31)=f_kf(31,Tint,Tdiff)*(coi(4)*coi(4))
-prodb(31)=f_kb(31,Tint,Tdiff)*(coi(3))*(coi(7))
+M=sum(coi(1:25))
+k = f_k_lindemann(2,Tint,Tdiff,M)
+prodf(33)=k(1)*(coi(7))
+prodb(33)=k(2)*(coi(3))*(coi(14))
 ! reac n. 34: H + OCLO <=> CLO + OH
 prodf(34)=f_kf(32,Tint,Tdiff)*(coi(22))*(coi(7))
 prodb(34)=f_kb(32,Tint,Tdiff)*(coi(4))*(coi(23))
@@ -139,8 +143,10 @@ prodb(36)=f_kb(34,Tint,Tdiff)*(coi(5))*(coi(14))
 prodf(37)=f_kf(35,Tint,Tdiff)*(coi(4))*(coi(7))
 prodb(37)=f_kb(35,Tint,Tdiff)*(coi(4))*(coi(6))
 ! reac n. 38: CL + O2 (+M) <=> CLOO (+M)
-prodf(37)=f_kf(35,Tint,Tdiff)*(coi(4))*(coi(7))
-prodb(37)=f_kb(35,Tint,Tdiff)*(coi(4))*(coi(6))
+M=sum(coi(1:25))
+k = f_k_lindemann(3,Tint,Tdiff,M)
+prodf(38)=k(1)*(coi(3))*(coi(14))
+prodb(38)=k(2)*(coi(6))
 ! reac n. 39: CLOO + H <=> CLO + OH
 prodf(39)=f_kf(36,Tint,Tdiff)*(coi(6))*(coi(22))
 prodb(39)=f_kb(36,Tint,Tdiff)*(coi(4))*(coi(23))
@@ -224,7 +230,7 @@ k = f_k_troe(1,Tint,Tdiff,M)
 prodf(64)=k(1)*(coi(22))*(coi(14))
 prodb(64)=k(2)*(coi(24))
 ! reac n. 65: H + O2 + O2 <=> HO2 + O2
-M=coi(1)+coi(2)+coi(3)+coi(4)+coi(5)+coi(6)+coi(7)+coi(8)+coi(9)+coi(10)+coi(11)+coi(12)+coi(13)+coi(14)+coi(15)+coi(16)+coi(17)+coi(18)+coi(19)+coi(20)+coi(21)+coi(22)+coi(23)+coi(24)+coi(25)
+M=coi(14)
 prodf(65)=f_kf(61,Tint,Tdiff)*(coi(22))*(coi(14))*M
 prodb(65)=f_kb(61,Tint,Tdiff)*(coi(24))*M
 ! reac n. 66: HO2 + OH <=> H2O + O2
@@ -273,8 +279,10 @@ prodb(77)=f_kb(72,Tint,Tdiff)*(coi(19))*(coi(21))
 prodf(78)=f_kf(73,Tint,Tdiff)*(coi(25))*(coi(14))
 prodb(78)=f_kb(73,Tint,Tdiff)*(coi(18))*(coi(24))
 ! reac n. 79: CO + O (+M) <=> CO2 (+M)
-prodf(78)=f_kf(73,Tint,Tdiff)*(coi(25))*(coi(14))
-prodb(78)=f_kb(73,Tint,Tdiff)*(coi(18))*(coi(24))
+M=coi(1)+coi(2)+coi(3)+coi(4)+coi(5)+coi(6)+coi(7)+coi(8)+coi(9)+coi(10)+coi(11)+coi(12)*0.5+coi(13)+coi(14)+coi(15)*2+coi(16)*12+coi(17)+coi(18)*1.5+coi(19)*2+coi(20)+coi(21)+coi(22)+coi(23)+coi(24)+coi(25)
+k = f_k_lindemann(4,Tint,Tdiff,M)
+prodf(79)=k(1)*(coi(18))*(coi(21))
+prodb(79)=k(2)*(coi(19))
 ! reac n. 80: CO + OH <=> CO2 + H
 prodf(80)=f_kf(74,Tint,Tdiff)*(coi(18))*(coi(23))
 prodb(80)=f_kb(74,Tint,Tdiff)*(coi(19))*(coi(22))

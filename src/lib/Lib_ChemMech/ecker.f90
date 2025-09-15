@@ -4,7 +4,7 @@ contains
 subroutine ecker(roi,temp,omegadot)
 use FLINT_Lib_Thermodynamic
 use FLINT_Lib_Chemistry_data
-use FLINT_Lib_Chemistry_Troe
+use FLINT_Lib_Chemistry_falloff
 implicit none
 real(8), intent(inout)  :: roi(ns)
 real(8), intent(in)  :: temp

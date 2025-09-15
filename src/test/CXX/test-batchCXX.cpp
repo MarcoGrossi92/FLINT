@@ -339,7 +339,7 @@ int main()
         // Create the solution and thermo object
         auto sol8 = newSolution("Pelucchi/INPUT/pelucchi.yaml");
         auto& gas8 = *sol8->thermo();
-        gas8.setState_TPY(1250.0, OneAtm, "CO:0.00859, O2:0.00606, H2O:0.00365, HCL:0.00025, N2:0.98044");
+        gas8.setState_TPY(1250.0, 100000, "CO:0.00859, O2:0.00606, H2O:0.00365, HCL:0.00025, N2:0.98044");
         //gas7.setState_TPX(1250.0, OneAtm, "CO:0.0086, O2:0.0053, H2O:0.0057, HCL:0.00019, N2:0.98021");
 
         // Reactor setup

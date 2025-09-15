@@ -696,7 +696,7 @@ program test
 
   call execute_command_line('mkdir -p Pelucchi/OUTPUT')
   err = read_idealgas_thermo('Pelucchi/INPUT')
-  !err = read_chemistry( folder='Pelucchi/INPUT', mech_name=mech_name )
+  err = read_chemistry( folder='Pelucchi/INPUT', mech_name=mech_name )
 # if defined (CANTERA)
   call load_phase(gas, 'Pelucchi/INPUT/pelucchi.yaml')
 # endif
@@ -746,32 +746,32 @@ program test
   write(30,*) 'Pelucchi', time2-time1
 # endif
 
-  ! !! Native with coded mechanism
-  ! call Assign_Mechanism(mech_name)
-  ! call initialize
-  ! call cpu_time(time1)
-  ! do n = 1, nstep
-  !   timein = timeout; timeout = timeout+dt
-  !   call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
-  !   Tout = y(neq)
-  !   write(200,*) timeout, Tout
-  ! enddo
-  ! call cpu_time(time2)
+  !! Native with coded mechanism
+  call Assign_Mechanism(mech_name)
+  call initialize
+  call cpu_time(time1)
+  do n = 1, nstep
+    timein = timeout; timeout = timeout+dt
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    Tout = y(neq)
+    write(200,*) timeout, Tout
+  enddo
+  call cpu_time(time2)
 
-  ! write(*,*) 'Pelucchi explicit time =', time2-time1
-  ! write(20,*) 'Pelucchi', time2-time1
+  write(*,*) 'Pelucchi explicit time =', time2-time1
+  write(20,*) 'Pelucchi', time2-time1
 
-  ! !! Native without coded mechanism
-  ! call Assign_Mechanism('nemo')
-  ! call initialize
-  ! call cpu_time(time1)
-  ! do n = 1, nstep
-  !   timein = timeout; timeout = timeout+dt
-  !   call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
-  !   Tout = y(neq)
-  !   write(100,*) timeout, Tout
-  ! enddo
-  ! call cpu_time(time2)
+  !! Native without coded mechanism
+  call Assign_Mechanism('nemo')
+  call initialize
+  call cpu_time(time1)
+  do n = 1, nstep
+    timein = timeout; timeout = timeout+dt
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    Tout = y(neq)
+    write(100,*) timeout, Tout
+  enddo
+  call cpu_time(time2)
 
   write(*,*) 'Pelucchi general time =', time2-time1
   write(10,*) 'Pelucchi', time2-time1

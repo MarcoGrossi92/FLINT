@@ -5,11 +5,11 @@
 # use at your own peril
 # m.fabiani, 05/05/2025 ei fu siccome immobile
 
-# new code placement
+# adapt to work into FLINT workspace
 # add CLI argument for mechanism name
-# refactor to properly manage falloff-Troe reactions
-# worked properly for the tested mechanisms
-# m. grossi, summer 2025
+# refactor to properly manage Lindemann and Troe falloff reactions
+# tested on the already present mechanisms
+# m.grossi, summer 2025
 
 import cantera as ct
 import sys
@@ -67,7 +67,7 @@ f.write("contains\n")
 f.write("subroutine "+mechname+"(roi,temp,omegadot)\n")
 f.write("use FLINT_Lib_Thermodynamic\n")
 f.write("use FLINT_Lib_Chemistry_data\n")
-f.write("use FLINT_Lib_Chemistry_Troe\n")
+f.write("use FLINT_Lib_Chemistry_falloff\n")
 f.write("implicit none\n")
 f.write("real(8), intent(inout)  :: roi(ns)\n")
 f.write("real(8), intent(in)  :: temp\n")
@@ -77,7 +77,7 @@ f.write('real(8) :: coi(ns), Tdiff \n')
 f.write('real(8) :: M !< Third body\n')
 f.write('integer :: is, T_i, Tint(2)\n')
 f.write('real(8) :: prodf(1:'+str(nr)+'), prodb(1:'+str(nr)+')\n')
-f.write('real(8) :: k(2) !< Troe rate coefficients\n')
+f.write('real(8) :: k(2) !< Falloff rate coefficients\n')
 f.write('\n')
 f.write('\n')
 
@@ -92,7 +92,7 @@ f.write('Tint(1) = T_i \n')
 f.write('Tint(2) = T_i + 1 \n')
 
 # Writing of prodf and prodb
-ir=0; ir_arrhenius=0; ir_troe=0
+ir=0; ir_arrhenius=0; ir_troe=0; ir_lindemann=0
 for R in all_reactions:
   f.write('! reac n. '+str(ir+1)+': '+ str(R.equation)+'\n')
     
@@ -185,6 +185,46 @@ for R in all_reactions:
             if mult_expr != '1.0':
                 string_prod += f'*({mult_expr})'
 
+  elif (R.reaction_type=='falloff-Lindemann'):
+    ir_lindemann += 1
+    # by default all species have efficiency 1.0
+    efficiencies = R.third_body.efficiencies
+    use_eff = len(efficiencies) > 0
+
+    if use_eff:
+      M_terms = []
+      for isp, sp in enumerate(species):
+        eff = efficiencies.get(sp, 1.0)
+        coeff = format_eff(eff)
+        M_terms.append(f'coi({isp+1}){coeff}')
+      Mstring = 'M=' + '+'.join(M_terms)
+    else:
+      Mstring = f'M=sum(coi(1:{len(species)}))'
+
+    f.write(Mstring+'\n')
+    f.write(f"k = f_k_lindemann({ir_lindemann},Tint,Tdiff,M)\n")
+    string_reac='prodf('+str(ir+1)+')=k(1)'
+    string_prod='prodb('+str(ir+1)+')=k(2)'
+
+    for react in R.reactants:
+        ireact = find_indices(species, lambda e: e == react)[0]
+        ni = gas.reactant_stoich_coeff(react, ir)
+
+        if ni > 0:
+            var = f'coi({ireact+1})'
+            mult_expr = stoich_to_mult(var, ni)
+            if mult_expr != '1.0':
+                string_reac += f'*({mult_expr})'
+
+    for prod in R.products:
+        iprod = find_indices(species, lambda e: e == prod)[0]
+        ni = gas.product_stoich_coeff(prod, ir)
+
+        if ni > 0:
+            var = f'coi({iprod+1})'
+            mult_expr = stoich_to_mult(var, ni)
+            if mult_expr != '1.0':
+                string_prod += f'*({mult_expr})'
 
   f.write(string_reac+'\n')
   f.write(string_prod+'\n')

@@ -16,7 +16,6 @@ module FLINT_Lib_Chemistry_wdot
     real(8), intent(in) :: temp 
     real(8), intent(out) :: omegadot(ns)
     real(8) :: coi(ns+1), Tdiff
-    !--------------------------------------------------------------
   end subroutine chemsource_if
   end interface
 
@@ -92,7 +91,7 @@ contains
   subroutine general(roi,temp,omegadot)
     use FLINT_Lib_Thermodynamic
     use FLINT_Lib_Chemistry_data
-    use FLINT_Lib_Chemistry_Troe
+    use FLINT_Lib_Chemistry_falloff
     implicit none
     real(8), intent(inout) :: roi(ns)
     real(8), intent(in) :: temp 
@@ -176,6 +175,39 @@ contains
       ! Sum up net production rate for each species
       do is = 1, ns
         deltani = ni2_troe_tab(is, ir) - ni1_troe_tab(is, ir)
+        omegadot(is) = omegadot(is) + Wm_tab(is) * deltani * net_rate
+      enddo
+
+    enddo
+
+    ! Loop over falloff-Lindemann reactions
+    do ir = 1, nrc_lindemann
+
+      ! Compute third-body effective concentration
+      if (ni1_lind_tab(ns+1, ir)>0d0) then
+        coM = 0.d0
+        do is = 1, ns
+          coM = coM + coi(is) * epsch_lind_tab(is, ir)
+        enddo
+      else 
+        coM = 1.d0
+      endif
+
+      ! Compute forward and reverse rate-of-progress
+      prod_fwd = 1.0d0
+      prod_rev = 1.0d0
+      do is = 1, ns
+        if (ni1_lind_tab(is, ir) /= 0) prod_fwd = prod_fwd * coi(is)**ni1_lind_tab(is, ir)
+        if (ni2_lind_tab(is, ir) /= 0) prod_rev = prod_rev * coi(is)**ni2_lind_tab(is, ir)
+      enddo
+      k = f_k_lindemann(ir,Tint,Tdiff,coM)
+      rate_fwd = k(1) * prod_fwd
+      rate_rev = k(2) * prod_rev
+      net_rate = rate_fwd - rate_rev
+
+      ! Sum up net production rate for each species
+      do is = 1, ns
+        deltani = ni2_lind_tab(is, ir) - ni1_lind_tab(is, ir)
         omegadot(is) = omegadot(is) + Wm_tab(is) * deltani * net_rate
       enddo
 

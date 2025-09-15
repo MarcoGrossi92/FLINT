@@ -1,11 +1,36 @@
 ! Source: https://cantera.org/3.1/reference/kinetics/rate-constants.html#sec-falloff-rate
-module FLINT_Lib_Chemistry_Troe
+module FLINT_Lib_Chemistry_falloff
   use FLINT_Lib_Chemistry_data
   implicit none
   private
   public :: f_k_troe
+  public :: f_k_lindemann
 
 contains
+
+  ! Computes the Lindemann rates for a reaction given temperature, third-body concentration, and reaction index
+  pure function f_k_lindemann(ireact, Tint, Tdiff, coM) result(rate)
+    real(8), intent(in) :: coM
+    integer, intent(in) :: ireact
+    integer, intent(in) :: Tint(2)
+    real(8), intent(in) :: Tdiff
+    real(8) :: rate(2)
+    real(8) :: kinf, k0, kc, Fcent, Pr
+
+    ! Compute the Troe rate using the precomputed tables
+    kinf = f_kinf_lind(ireact, Tint, Tdiff)
+    k0 = f_k0_lind(ireact, Tint, Tdiff)
+    kc = f_kc_lind(ireact, Tint, Tdiff)
+
+    ! Reduced pressure
+    Pr = k0 * coM / kinf
+
+    ! Forward rate
+    rate(1) = kinf * ( Pr / (1d0+Pr) )
+    ! Backward rate
+    rate(2) = rate(1) / kc
+
+  end function f_k_lindemann
 
   ! Computes the Troe rates for a reaction given temperature, third-body concentration, and reaction index
   pure function f_k_troe(ireact, Tint, Tdiff, coM) result(rate)
@@ -17,9 +42,9 @@ contains
     real(8) :: kinf, k0, kc, Fcent, Pr
 
     ! Compute the Troe rate using the precomputed tables
-    kinf = f_kinf(ireact, Tint, Tdiff)
-    k0 = f_k0(ireact, Tint, Tdiff)
-    kc = f_kc(ireact, Tint, Tdiff)
+    kinf = f_kinf_troe(ireact, Tint, Tdiff)
+    k0 = f_k0_troe(ireact, Tint, Tdiff)
+    kc = f_kc_troe(ireact, Tint, Tdiff)
     Fcent = f_Fcent(ireact, Tint, Tdiff)
 
     ! Reduced pressure
@@ -55,4 +80,4 @@ contains
   end function f_F
 
 
-end module FLINT_Lib_Chemistry_Troe
+end module FLINT_Lib_Chemistry_falloff

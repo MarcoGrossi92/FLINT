@@ -93,9 +93,12 @@ contains
     character(len=*), intent(in), optional :: folder
     ! Local
     integer           :: ios, i, unitfile, start, dummy1, dummy23
+    logical           :: exists
     character(256)    :: wholestring, args(2)
     character(512)    :: transfile(2)
     type(ORION_data)  :: orion
+
+    ios = 1
 
     if (present(folder)) then
       transfile(1) = trim(folder)//'/'//trim(FLINT_phase_prefix)//'transport.dat'
@@ -105,8 +108,10 @@ contains
       transfile(2) = 'INPUT/'//trim(FLINT_phase_prefix)//'transport.szplt'
     endif
 
-    ios = tec_read_points_multivars(orion,2,trim(transfile(1)))
-    if (ios/=0) ios = tec_read_structured_multiblock(orion=orion, filename=trim(transfile(2)))
+    inquire(file=trim(transfile(1)),exist=exists)
+    if (exists) ios = tec_read_points_multivars(orion,2,trim(transfile(1)))
+    inquire(file=trim(transfile(2)),exist=exists)
+    if (exists) ios = tec_read_structured_multiblock(orion=orion, filename=trim(transfile(2)))
     if (ios/=0) return
     dummy1  = lbound(orion%block(1)%mesh, dim=2)
     dummy23 = lbound(orion%block(1)%mesh, dim=3)

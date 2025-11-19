@@ -79,8 +79,13 @@ contains
       chemistry_source => cross
     case('Pelucchi')
       chemistry_source => pelucchi
+    case('WD-Andersen')
+      chemistry_source => Andersen
+    case('OSK')
+      chemistry_source => OSK
+
     case default
-      ! write(*,*) "[WARNING] Explicit procedure for "//trim(mad_world)//" not found, defaulting to the general procedure"
+      write(*,*) "[WARNING] Explicit procedure for "//trim(mad_world)//" not found, defaulting to the general procedure"
       chemistry_source => general
     end select
 

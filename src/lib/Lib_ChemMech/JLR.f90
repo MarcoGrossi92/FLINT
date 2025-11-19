@@ -41,8 +41,8 @@ contains
     if (coi(6) < 1.d-10) then
       prod4 = (comp_ch_tabT(4,kf_tab,Tint,Tdiff)*(coi(6)**0.25)*(coi(1)**1.50))
     else
-      prod4 = comp_ch_tabT(4,kf_tab,Tint,Tdiff)*(coi(6)**0.25)* & 
-              (coi(1)**1.50)-comp_ch_tabT(4,kb_tab,Tint,Tdiff)*(coi(3))*(coi(1))*(coi(6)**(-0.75))
+      prod4 = comp_ch_tabT(4,kf_tab,Tint,Tdiff)*(coi(6)**0.25)*(coi(1)**1.50) - & 
+              comp_ch_tabT(4,kb_tab,Tint,Tdiff)*(coi(3))*(coi(1))*(coi(6)**(-0.75))
     endif
 
     ! O2 <--> 2O
@@ -109,8 +109,8 @@ contains
     if (coi(6) < 1.d-10) then
       prod4 = (comp_ch_tabT(4,kf_tab,Tint,Tdiff)*(coi(6)**0.3)*(coi(1)**1.55))
     else
-      prod4 = comp_ch_tabT(4,kf_tab,Tint,Tdiff)*(coi(6)**0.3)* & 
-              (coi(1)**1.55)-comp_ch_tabT(4,kb_tab,Tint,Tdiff)*(coi(3))*(coi(1))*(coi(6)**(-0.75))
+      prod4 = comp_ch_tabT(4,kf_tab,Tint,Tdiff)*(coi(6)**0.3)*(coi(1)**1.55) - & 
+              comp_ch_tabT(4,kb_tab,Tint,Tdiff)*(coi(3))*(coi(1))*(coi(6)**(-0.75))
     endif
 
     ! O2 <--> 2O
@@ -135,7 +135,7 @@ contains
 
   !> John Lindstedt with Recombination Reaction Mechanism adapted for
   !> kerosene decomposition products combustion 10 species & 8 reactions
-  !> SPECIES: O2, C2H4, H2O, CO, CO2, H2, H, O, OH, RP-1 (C12H24)
+  !> SPECIES: O2, C2H4, H2O, CO, CO2, H2, H, O, OH, RP-1 surrogate (C12H24)
   subroutine CKJLR10sp(roi,temp,omegadot)
     use FLINT_Lib_Thermodynamic
     use FLINT_Lib_Chemistry_data
@@ -147,13 +147,12 @@ contains
     integer :: is, T_i, Tint(2)
     real(8) :: coi(ns), Tdiff
     real(8) :: prod1, prod2, prod3, prod4, prod5, prod6, prod7, prod8
-    real(8), parameter :: limitH2=1.d-10
 
     do is = 1, ns
       coi(is)=roi(is)/Wm_tab(is)  ! kmol/m^3
       ! Loop done in order to avoid numerical issues in omegadot evaluation
       ! Very low coi could produce finite prods
-      if (coi(is).lt.1d-20) coi(is) = 0.0d0
+      if (coi(is).lt.1d-10) coi(is) = 0.0d0
     enddo
 
     ! Preliminary
@@ -163,35 +162,38 @@ contains
     Tint(2) = T_i + 1
 
     !> 0.5 C2H4 + 1.25 O2 --> 2 CO + 2 H2 - 0.5 C2H4 + 0.25 O2
-    prod1=comp_ch_tabT(1,kf_tab,Tint,Tdiff)*(coi(2)**0.50)*(coi(1)**1.25)
+    prod1 = comp_ch_tabT(1,kf_tab,Tint,Tdiff)*(coi(2)**0.50)*(coi(1)**1.25)
 
     !> C2H4 + H2O --> 2 CO + 4 H2 - H2O
-    prod2=comp_ch_tabT(2,kf_tab,Tint,Tdiff)*coi(2)*coi(3)
+    prod2 = comp_ch_tabT(2,kf_tab,Tint,Tdiff)*coi(2)*coi(3)
 
     !> CO + H2O <--> CO2 + H2
-    prod3=comp_ch_tabT(3,kf_tab,Tint,Tdiff)*coi(4)*coi(3)-comp_ch_tabT(3,kb_tab,Tint,Tdiff)*coi(5)*coi(6)
+    prod3 = comp_ch_tabT(3,kf_tab,Tint,Tdiff)*coi(4)*coi(3)-&
+            comp_ch_tabT(3,kb_tab,Tint,Tdiff)*coi(5)*coi(6)
 
     !> 1/4 H2 + 3/2 O2 <--> H2O + O2 - 3/4 H2
-    if (coi(6) < limitH2) then
-      prod4=comp_ch_tabT(4,kf_tab,Tint,Tdiff)*(coi(6)**0.25)*(coi(1)**1.50)
+    if (coi(6) < 1.d-10) then
+      prod4 = comp_ch_tabT(4,kf_tab,Tint,Tdiff)*(coi(6)**0.25)*(coi(1)**1.50)
     else
-      prod4=comp_ch_tabT(4,kf_tab,Tint,Tdiff)*(coi(6)**0.25)*(coi(1)**1.50) - &
-            comp_ch_tabT(4,kb_tab,Tint,Tdiff)*coi(3)*coi(1)*(coi(6)**(-0.75))
+      prod4 = comp_ch_tabT(4,kf_tab,Tint,Tdiff)*(coi(6)**0.25)*(coi(1)**1.50) - &
+              comp_ch_tabT(4,kb_tab,Tint,Tdiff)*coi(3)*coi(1)*(coi(6)**(-0.75))
     endif
 
     !> O2 <--> 2O
-    prod5=comp_ch_tabT(5,kf_tab,Tint,Tdiff)*coi(1)-comp_ch_tabT(5,kb_tab,Tint,Tdiff)*coi(8)**2
+    prod5 = comp_ch_tabT(5,kf_tab,Tint,Tdiff)*coi(1)-comp_ch_tabT(5,kb_tab,Tint,Tdiff)*coi(8)**2
 
     !> H2O <--> H + OH
-    prod6=comp_ch_tabT(6,kf_tab,Tint,Tdiff)*coi(3)-comp_ch_tabT(6,kb_tab,Tint,Tdiff)*coi(7)*coi(9)
+    prod6 = comp_ch_tabT(6,kf_tab,Tint,Tdiff)*coi(3)-comp_ch_tabT(6,kb_tab,Tint,Tdiff)*coi(7)*coi(9)
 
     !> OH + H2 <--> H + H2O
-    prod7=comp_ch_tabT(7,kf_tab,Tint,Tdiff)*coi(9)*coi(6)-comp_ch_tabT(7,kb_tab,Tint,Tdiff)*coi(7)*coi(3)
+    prod7 = comp_ch_tabT(7,kf_tab,Tint,Tdiff)*coi(9)*coi(6)- &
+            comp_ch_tabT(7,kb_tab,Tint,Tdiff)*coi(7)*coi(3)
 
     !> C12H24 --> 6C2H4 
-    prod8=comp_ch_tabT(8,kf_tab,Tint,Tdiff)*coi(10)
+    prod8 = comp_ch_tabT(8,kf_tab,Tint,Tdiff)*coi(10)
 
     !> Chemical Source Terms
+    omegadot = 0d0
     omegadot(1) =Wm_tab(1)*(-prod1-0.5*prod4-prod5)             !O2     [kg/(m3*s)]  
     omegadot(2) =Wm_tab(2)*(-prod1-prod2+6*prod8)               !C2H4   [kg/(m3*s)]  
     omegadot(3) =Wm_tab(3)*(-2*prod2-prod3+prod4-prod6+prod7)   !H2O    [kg/(m3*s)]  

@@ -11,7 +11,7 @@ contains
     implicit none
     character(len=*), intent(in), optional :: folder
     ! Local
-    integer           :: ios, i, unitfile, start, dummy_i, dummy1, dummy23
+    integer           :: ios, i, unitfile, start, dummy1, dummy23
     character(256)    :: wholestring, args(2)
     character(512)    :: wmfile, thermofile(2)
     type(ORION_data)  :: orion
@@ -40,11 +40,13 @@ contains
     enddo
     allocate(wm_tab(1:ns))
     allocate(Ri_tab(1:ns))
+    allocate(species_names(1:ns))
     rewind(unitFile)
     read(unitFile,*)
     do i = 1, ns
       read(unitFile,'(A)') wholestring
       call parse(wholestring,' ',args)
+      species_names(i) = trim(args(1))
       read(args(2),*) wm_tab(i)
     end do
     close(unitFile)
@@ -82,7 +84,45 @@ contains
       dcpi_tab(0,:) = dcpi_tab(1,:)
     endif
 
+    ios = read_idealgas_composition(folder)
+
   end function read_idealgas_thermo
+
+
+  function read_idealgas_composition(folder) result(ios)
+    use strings, only: parse
+    implicit none
+    character(len=*), intent(in), optional :: folder
+    ! Local
+    integer           :: ios, i, unitfile
+    character(512)    :: file
+
+    if (present(folder)) then
+      file = trim(folder)//'/'//trim(FLINT_phase_prefix)//'composition.txt'
+    else
+      file = 'INPUT/'//trim(FLINT_phase_prefix)//'composition.txt'
+    endif
+
+    ! File 1: phase
+    open(newunit=unitFile,file=trim(file),status='old',iostat=ios)
+    if (ios/=0) then
+      write(*,*) '[WARNING] composition.txt file not found'
+      return
+    endif
+    read(unitfile,*,iostat=ios) ne
+    allocate(elements_names(1:ne))
+    allocate(species_composition(1:ne,1:ns))
+    do i = 1, ne
+      read(unitFile,'(A)',iostat=ios) elements_names(i)
+    enddo
+    read(unitFile,*,iostat=ios) ! blank
+    read(unitFile,*,iostat=ios) ! composition word
+    do i = 1, ns
+      read(unitFile,*,iostat=ios) species_composition(:,i)
+    end do
+    close(unitFile)
+
+  end function read_idealgas_composition
 
 
   function read_idealgas_transport(folder) result(ios)
@@ -92,9 +132,8 @@ contains
     implicit none
     character(len=*), intent(in), optional :: folder
     ! Local
-    integer           :: ios, i, unitfile, start, dummy1, dummy23
+    integer           :: ios, i, start, dummy1, dummy23
     logical           :: exists
-    character(256)    :: wholestring, args(2)
     character(512)    :: transfile(2)
     type(ORION_data)  :: orion
 

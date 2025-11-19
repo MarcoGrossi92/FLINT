@@ -8,11 +8,19 @@ module FLINT_Lib_Thermodynamic
   character(len=128)      :: FLINT_phase_prefix=''
 
   integer                 :: ns                 ! Number of species
+  integer                 :: ne                 ! Number of atomic elements
   integer                 :: Tmin,Tmax          ! Extreme temperatures in tables
   real(kind=8), parameter :: Runiv = 8314.51d0  ! Universal gas constant [J/(kmol*K)]
 
+  integer, parameter :: s_str_len = 20
+  character(len=s_str_len), allocatable :: species_names(:)
+  character(len=s_str_len), allocatable :: elements_names(:)
+
+  real(kind=8), dimension(:,:), allocatable :: species_composition
+
   real(kind=8), dimension(:), allocatable   :: wm_tab, Ri_tab
-  real(kind=8), dimension(:,:), allocatable :: cp_tab, dcpi_tab, h_tab, s_tab, mi_tab, k_tab
+  real(kind=8), dimension(:,:), allocatable :: cp_tab, dcpi_tab, h_tab, s_tab
+  real(kind=8), dimension(:,:), allocatable :: mi_tab, k_tab
   real(kind=8), dimension(:,:), allocatable :: dij_tab  !> coefficiente di diffusione binaria (T,interazione)
   integer                                   :: inter    !> numero di interazioni tra le specie in miscela
 
@@ -64,6 +72,47 @@ contains
     real(kind=8)               energy !< Static specific energy (per unit of mass).
     energy = H(p,r)-p/sum(r)
   endfunction E
+
+
+  pure function S0i(i,T) result(s)
+    implicit none
+    integer, intent(IN)     :: i
+    real(kind=8), intent(IN):: T
+    real(kind=8)            :: s
+
+    s = f_tabT(T,i,s_tab)
+
+  end function S0i
+
+
+  pure function H0i(i,T) result(h)
+    implicit none
+    integer, intent(IN)     :: i
+    real(kind=8), intent(IN):: T
+    real(kind=8)            :: h
+
+    h = f_tabT(T,i,h_tab)
+
+  end function H0i
+
+
+  !> Computes the values of C_P_0, H_0 and S_0
+  pure subroutine COMP_THERMO_QUANTS(temp,N_reac,C_P_0,H_0,S_0)
+    use CEAinc, only: Rr
+    !! I/O
+    real(8), intent(in)          :: temp
+    integer, intent(in)           :: N_reac
+    real(8), intent(out)         :: C_P_0(N_reac), H_0(N_reac), S_0(N_reac)
+    !! internal
+    integer                       :: i_reac
+
+    do i_reac = 1, N_reac
+      C_P_0(i_reac) = cpi(i_reac,temp) * wm_tab(i_reac) / (Rr)
+      H_0(i_reac) = H0i(i_reac,temp) * wm_tab(i_reac) / (Rr*temp)
+      S_0(i_reac) = S0i(i_reac,temp) * wm_tab(i_reac) / (Rr)
+    end do
+
+  end subroutine COMP_THERMO_QUANTS
 
 
   !> Function for the perfect gas equation of state
@@ -181,6 +230,24 @@ contains
   endfunction f_Rtot
 
 
+  pure function cpi(i,T) result(result)
+    implicit none
+    integer, intent(in) :: i
+    real(8), intent(in) :: T
+    real(8) :: Tdiff
+    integer :: T_i, Tint(2)
+    real(8) :: result
+
+    T_i = idint(T)
+    Tdiff  = T-T_i
+    Tint(1) = T_i
+    Tint(2) = T_i + 1
+
+    result = f_tabT_expr(i,cp_tab,Tint,Tdiff)
+
+  endfunction cpi
+
+
   pure function f_cp(rhoi,T,rho) result(result)
     implicit none
     real(8), intent(in) :: rhoi(ns)
@@ -250,6 +317,36 @@ contains
   endfunction f_gamma
 
 
+  pure function mass2molar(Y_species) result(x_species)
+    implicit none
+    real(8), intent(in) :: Y_species(ns)
+    real(8)             :: x_species(ns)
+    integer  :: j
+    real(8)  :: n(ns)
+
+    do j = 1, ns
+       n(j) = Y_species(j) / wm_tab(j)
+    end do
+    x_species(:) = n(:) / sum(n)
+
+  end function mass2molar
+
+
+  pure function molar2mass(x_species) result(y_species)
+    implicit none
+    real(8), intent(in) :: x_species(ns)
+    real(8)             :: y_species(ns)
+    integer  :: j
+    real(8)  :: n(ns)
+
+    do j = 1, ns
+       n(j) = x_species(j) * wm_tab(j)
+    end do
+    y_species(:) = n(:) / sum(n)
+
+  end function molar2mass
+
+
   subroutine co_fiij(fi,mi)
     implicit none
     real(8), intent(in)  :: mi(ns)
@@ -269,7 +366,7 @@ contains
     implicit none
     real(8), intent(in)     :: rhoi(ns), p, rho, Rtot
     real(8)                 :: mil
-    real(8), dimension(ns)  :: mil_i, mil_den, Xi, mi_fiij
+    real(8), dimension(ns)  :: mil_den, Xi, mi_fiij
     real(8)                 :: fi(ns,ns)
     real(8)                 :: Wmtot, T, Tdiff
     integer                 :: s ,i ,j ,T_i, Tint(2)

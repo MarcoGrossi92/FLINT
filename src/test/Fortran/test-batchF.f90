@@ -120,6 +120,9 @@ program test
   deallocate(AT); deallocate(RT)
   deallocate(wm_tab); deallocate(Ri_tab)
   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
+  deallocate(species_names)
+  if (allocated(elements_names)) deallocate(elements_names)
+  if (allocated(species_composition)) deallocate(species_composition)
   call free_chemistry_data()
 
   !-------------------------------------------------------------------------------------------------
@@ -215,6 +218,9 @@ program test
   deallocate(AT); deallocate(RT)
   deallocate(wm_tab); deallocate(Ri_tab)
   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
+  deallocate(species_names)
+  if (allocated(elements_names)) deallocate(elements_names)
+  if (allocated(species_composition)) deallocate(species_composition)
   call free_chemistry_data()
 
   !-------------------------------------------------------------------------------------------------
@@ -310,6 +316,9 @@ program test
   deallocate(AT); deallocate(RT)
   deallocate(wm_tab); deallocate(Ri_tab)
   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
+  deallocate(species_names)
+  if (allocated(elements_names)) deallocate(elements_names)
+  if (allocated(species_composition)) deallocate(species_composition)
   call free_chemistry_data()
 
   !-------------------------------------------------------------------------------------------------
@@ -405,6 +414,9 @@ program test
   deallocate(AT); deallocate(RT)
   deallocate(wm_tab); deallocate(Ri_tab)
   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
+  deallocate(species_names)
+  if (allocated(elements_names)) deallocate(elements_names)
+  if (allocated(species_composition)) deallocate(species_composition)
   call free_chemistry_data()
 
   !-------------------------------------------------------------------------------------------------
@@ -500,6 +512,9 @@ program test
   deallocate(AT); deallocate(RT)
   deallocate(wm_tab); deallocate(Ri_tab)
   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
+  deallocate(species_names)
+  if (allocated(elements_names)) deallocate(elements_names)
+  if (allocated(species_composition)) deallocate(species_composition)
   call free_chemistry_data()
 
   !-------------------------------------------------------------------------------------------------
@@ -594,6 +609,9 @@ program test
   deallocate(AT); deallocate(RT)
   deallocate(wm_tab); deallocate(Ri_tab)
   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
+  deallocate(species_names)
+  if (allocated(elements_names)) deallocate(elements_names)
+  if (allocated(species_composition)) deallocate(species_composition)
   call free_chemistry_data()
 
   !-------------------------------------------------------------------------------------------------
@@ -688,6 +706,9 @@ program test
   deallocate(AT); deallocate(RT)
   deallocate(wm_tab); deallocate(Ri_tab)
   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
+  deallocate(species_names)
+  if (allocated(elements_names)) deallocate(elements_names)
+  if (allocated(species_composition)) deallocate(species_composition)
   call free_chemistry_data()
 
   !-------------------------------------------------------------------------------------------------
@@ -785,6 +806,9 @@ program test
   deallocate(AT); deallocate(RT)
   deallocate(wm_tab); deallocate(Ri_tab)
   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
+  deallocate(species_names)
+  if (allocated(elements_names)) deallocate(elements_names)
+  if (allocated(species_composition)) deallocate(species_composition)
   call free_chemistry_data()
 
   !-------------------------------------------------------------------------------------------------
@@ -879,6 +903,9 @@ program test
   deallocate(AT); deallocate(RT)
   deallocate(wm_tab); deallocate(Ri_tab)
   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
+  deallocate(species_names)
+  if (allocated(elements_names)) deallocate(elements_names)
+  if (allocated(species_composition)) deallocate(species_composition)
   call free_chemistry_data()
 
   !-------------------------------------------------------------------------------------------------
@@ -973,6 +1000,9 @@ program test
   deallocate(AT); deallocate(RT)
   deallocate(wm_tab); deallocate(Ri_tab)
   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
+  deallocate(species_names)
+  if (allocated(elements_names)) deallocate(elements_names)
+  if (allocated(species_composition)) deallocate(species_composition)
   call free_chemistry_data()
 
   !-------------------------------------------------------------------------------------------------
@@ -1067,6 +1097,9 @@ program test
   deallocate(AT); deallocate(RT)
   deallocate(wm_tab); deallocate(Ri_tab)
   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
+  deallocate(species_names)
+  if (allocated(elements_names)) deallocate(elements_names)
+  if (allocated(species_composition)) deallocate(species_composition)
   call free_chemistry_data()
 
 contains

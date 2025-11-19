@@ -13,7 +13,7 @@
     ! Local
     integer :: is, T_i, Tint(2)
     real(8) :: coi(ns), Tdiff
-    real(8) :: prod1,prod2,prod3,prod4,prod5,prod6
+    real(8) :: prod1,prod2,prod3
 
     do is = 1, ns
       roi(is) = max(roi(is), 0.d0)

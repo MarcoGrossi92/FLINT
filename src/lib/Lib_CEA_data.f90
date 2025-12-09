@@ -59,7 +59,7 @@ MODULE FLINT_CEA_data
 
   INTEGER :: Imat, Iq1, Isv, Jliq, Jsol, Lsave, Msing
 
-  LOGICAL :: Hp, Ions, Massf, Pderiv, Short, Siunit, Tp, Vol
+  LOGICAL :: Hp, Ions, Massf, Pderiv, Short, Tp, Vol
 
   REAL(8) :: R, Size, Trace
   REAL(8), PARAMETER :: Rr=8314.51D0,Pi=3.14159265D0

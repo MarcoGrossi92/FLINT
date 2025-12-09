@@ -98,7 +98,7 @@ contains
 
   !> Computes the values of C_P_0, H_0 and S_0
   pure subroutine COMP_THERMO_QUANTS(temp,N_reac,C_P_0,H_0,S_0)
-    use CEAinc, only: Rr
+    use FLINT_CEA_data, only: Rr
     !! I/O
     real(8), intent(in)          :: temp
     integer, intent(in)           :: N_reac

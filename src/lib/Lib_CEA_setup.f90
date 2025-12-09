@@ -5,7 +5,6 @@ contains
 
   subroutine CEA_initialize_global()
     use FLINT_CEA_data
-    use FLINT_Lib_Composition
     use FLINT_Lib_Thermodynamic
     implicit none
     integer :: i, k, satomic
@@ -16,12 +15,11 @@ contains
     Trace = 0
     Short = .false.
     Massf = .false.
-    Siunit = .true.
     Np = 1
     Trace = 0.
     Lsave = 0
     R = Rr/4184.D0
-    if ( Siunit ) R = Rr/1000.0
+    R = Rr/1000.0
     Tp = .false.
     HP = .true.
     Vol = .true.

@@ -106,7 +106,8 @@ contains
     ! File 1: phase
     open(newunit=unitFile,file=trim(file),status='old',iostat=ios)
     if (ios/=0) then
-      write(*,*) '[WARNING] composition.txt file not found'
+      write(*,*) '[WARNING] Composition data not found'
+      ios = 0
       return
     endif
     read(unitfile,*,iostat=ios) ne

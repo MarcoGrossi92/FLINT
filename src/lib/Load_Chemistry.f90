@@ -29,7 +29,7 @@ contains
       open(newunit=unitfile,file='INPUT/'//trim(FLINT_phase_prefix)//'chemistry-info.txt',form='formatted',status='old',action='read',iostat=ios)
     endif
     if (ios/=0) then
-      write(*,*) '[WARNING] chemistry-info file not found'
+      write(*,*) '[WARNING] Chemistry data not found'
       return
     endif
     ! Read mechanism name

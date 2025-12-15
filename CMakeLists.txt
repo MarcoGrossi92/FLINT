@@ -44,7 +44,7 @@ endif()
 # if FLINT is built as part of hydra, use the hydra's OSlo, otherwise use the FLINT's one
 if ("${MASTER}" STREQUAL "hydra")
   set ( oslosrcD $ENV{HYDRADIR}/lib/OSlo )
-  set ( osloD $ENV{HYDRADIR}/lib/OSlo "${CMAKE_CURRENT_SOURCE_DIR}/build/lib/OSlo")
+  set ( osloD $ENV{HYDRADIR}/lib/OSlo "${CMAKE_SOURCE_DIR}/build/lib/OSlo")
 else()
   set ( osloD ${CMAKE_CURRENT_SOURCE_DIR}/lib/OSlo )
   set ( oslosrcD ${CMAKE_CURRENT_SOURCE_DIR}/lib/OSlo )
@@ -63,7 +63,7 @@ add_subdirectory(${osloD})
 
 # Cantera
 # Cantera is optional and only used by FLINT
-OPTION(USE_CANTERA "Use Canera" ON)
+OPTION(USE_CANTERA "Use Cantera" ON)
 if (USE_CANTERA)
   set(canteraD "${CMAKE_CURRENT_SOURCE_DIR}/lib/cantera")
   # Check if cloned

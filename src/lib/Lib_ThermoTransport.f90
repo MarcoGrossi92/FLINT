@@ -116,7 +116,7 @@ contains
 
 
   !> Function for the perfect gas equation of state
-  function EOS(p,ro,R) result(T)
+  pure function EOS(p,ro,R) result(T)
     implicit none
     real(kind=8), intent(IN):: p      !< Pressure.
     real(kind=8), intent(IN):: ro     !< Density (\f$\rho\f$).
@@ -289,7 +289,7 @@ contains
   endfunction f_cp_expr
 
 
-  function f_ss(rhoi,p,rho,Rtot) result(result)
+  pure function f_ss(rhoi,p,rho,Rtot) result(result)
     implicit none
     real(8), intent(in) :: rhoi(ns)
     real(8), intent(in) :: p, Rtot, rho
@@ -304,7 +304,7 @@ contains
   endfunction f_ss
 
 
-  function f_gamma(rhoi,p,rho,Rtot) result(gam)
+  pure function f_gamma(rhoi,p,rho,Rtot) result(gam)
     implicit none
     real(8), intent(in)  :: rhoi(ns), p, rho, Rtot
     real(8) :: gam
@@ -347,7 +347,7 @@ contains
   end function molar2mass
 
 
-  subroutine co_fiij(fi,mi)
+  pure subroutine co_fiij(fi,mi)
     implicit none
     real(8), intent(in)  :: mi(ns)
     real(8), intent(out) :: fi(ns,ns)
@@ -362,7 +362,7 @@ contains
   endsubroutine co_fiij
 
 
-  function f_laminarViscosity(rhoi,p,rho,Rtot) result(mil)
+  pure function f_laminarViscosity(rhoi,p,rho,Rtot) result(mil)
     implicit none
     real(8), intent(in)     :: rhoi(ns), p, rho, Rtot
     real(8)                 :: mil
@@ -404,7 +404,7 @@ contains
   endfunction f_laminarViscosity
 
 
-  subroutine co_k_mi_lam_Wilke(rhoi,rho,T,milam,klam)
+  pure subroutine co_k_mi_lam_Wilke(rhoi,rho,T,milam,klam)
     implicit none
     real(8), intent(in)  :: rhoi(ns), rho, T
     real(8), intent(out) :: milam, klam
@@ -421,7 +421,7 @@ contains
   endsubroutine co_k_mi_lam_Wilke
 
 
-  subroutine co_k_mi_lam_Wilke_expr(rhoi,rho,Tint,Tdiff,milam,klam)
+  pure subroutine co_k_mi_lam_Wilke_expr(rhoi,rho,Tint,Tdiff,milam,klam)
     implicit none
     integer, intent(in)  :: Tint(2)
     real(8), intent(in)  :: rhoi(ns), rho, Tdiff
@@ -462,7 +462,7 @@ contains
   endsubroutine co_k_mi_lam_Wilke_expr
 
 
-  subroutine co_DS(rhoi,p,rho,Rtot,Dm)
+  pure subroutine co_DS(rhoi,p,rho,Rtot,Dm)
     implicit none
     real(8), intent(in)  :: rhoi(ns), p, rho, Rtot
     real(8), intent(out) :: Dm(ns)

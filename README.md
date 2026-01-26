@@ -1,12 +1,12 @@
-# FLINT – Fortran Library for INTegrated Thermochemistry
+# FLINT – Fortran Library for INtegrated Thermochemistry
+
+![License](https://img.shields.io/github/license/MarcoGrossi92/FLINT)
+![Fortran](https://img.shields.io/badge/Fortran-90%2B-blue)
+![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS-lightgrey)
 
 A lightweight, modular Fortran library for accessing thermodynamic, transport, and chemical source term data with seamless integration into CFD solvers and reactive flow applications.
 
 FLINT provides a clean interface layer that separates thermochemistry concerns from CFD complexity, enabling efficient and maintainable reactive flow simulations. Like the stone it's named after, FLINT is small but powerful — it provides the spark that ignites complex thermochemical simulations.
-
-**Status:** [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](#) | **License:** [GNU GPL v3.0](LICENSE) | **Python Support:** 3.8+
-
----
 
 ## Key Advantages
 
@@ -14,7 +14,7 @@ FLINT provides a clean interface layer that separates thermochemistry concerns f
 - **Modular Architecture** – Build and test chemical models independently
 - **Optional Cantera Backend** – Leverage advanced kinetic models when needed
 - **Production-Ready** – Built-in library of verified chemical models
-- **Developer-Friendly** – Automated YAML-to-Fortran source code generation
+- **Developer-Friendly** – Automated YAML-to-Fortran (YTF) source code generation
 
 ## Features
 
@@ -38,13 +38,9 @@ FLINT provides a clean interface layer that separates thermochemistry concerns f
 - **Cantera:** 2.5+ (for advanced kinetic models and validation)
 - **Sundials:** 5.0+ (for ODE integration with kinetic models)
 
----
-
 ## License
 
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
-
----
 
 ## External Dependencies
 
@@ -84,7 +80,7 @@ cd FLINT
 ./install.sh build --compiler=gnu
 ```
 
-By default, Cantera support is **enabled**. Cantera will be cloned, installed, and linked to the project (see warning above). 
+By default, Cantera support is not **enabled**. If requested, Cantera will be cloned, installed, and linked to the project (see warning above). 
 
 ### Build Options
 
@@ -120,11 +116,6 @@ cmake .. -DCMAKE_BUILD_TYPE=Release \
 # Parallel build
 make -j8
 ```
-
-**CMake Options:**
-- `USE_SUNDIALS` (ON/OFF): Enable SUNDIALS solver suite
-
----
 
 ## Usage
 
@@ -177,11 +168,7 @@ FLINT/
 └── build/           # Build directory (generated)
 ```
 
----
-
 ## Contributing
-
-### Guidelines
 
 1. **Fork** the repository
 2. **Create** a feature branch: `git checkout -b feature/my-feature`
@@ -190,21 +177,15 @@ FLINT/
 5. **Run validation:** `ctest --verbose`
 6. **Push** and create a pull request
 
----
-
 ## Quick Links
 
 - [Documentation](docs/) – Full API documentation
 - [Examples](src/test/) – Example programs and test cases
 - [Issues](../../issues) – Report bugs or request features
 
----
-
 ## References & Resources
 
 - **Cantera Documentation:** [cantera.org](https://cantera.org)
 - **Sundials Documentation:** [sundials.llnl.gov](https://sundials.llnl.gov)
-- **Fortran Standards:** [ISO/IEC 1539-1:2018](https://wg5-fortran.org/)
-- **CMake Guide:** [cmake.org](https://cmake.org/cmake/help/latest/)
 
 ---

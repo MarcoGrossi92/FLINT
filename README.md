@@ -1,9 +1,5 @@
 # FLINT – Fortran Library for INtegrated Thermochemistry
 
-![License](https://img.shields.io/github/license/MarcoGrossi92/FLINT)
-![Fortran](https://img.shields.io/badge/Fortran-90%2B-blue)
-![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS-lightgrey)
-
 A lightweight, modular Fortran library for accessing thermodynamic, transport, and chemical source term data with seamless integration into CFD solvers and reactive flow applications.
 
 FLINT provides a clean interface layer that separates thermochemistry concerns from CFD complexity, enabling efficient and maintainable reactive flow simulations. Like the stone it's named after, FLINT is small but powerful — it provides the spark that ignites complex thermochemical simulations.

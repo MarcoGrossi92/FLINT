@@ -25,8 +25,8 @@ Browse the validation test suite. Each test case shows what is being validated, 
 
 | Document | Status | Purpose |
 |----------|--------|---------|
-| [QUICKSTART.md](QUICKSTART.md) | ✅ Ready | Get started in 5 minutes |
-| [INPUT_FORMATS.md](INPUT_FORMATS.md) | 🔄 Draft | YAML schema reference |
+| [QUICKSTART.md](QUICKSTART.md) | 🔄 Draft | Get started in 5 minutes |
+| [INPUT_FORMATS.md](INPUT_FORMATS.md) | 🔄 Draft | Input files reference |
 | [ALGORITHMS.md](ALGORITHMS.md) | 🔄 Draft | Mathematical foundations |
 | [TEST_CASES.md](TEST_CASES.md) | 🔄 Draft | Validation case library |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | 🔄 Draft | System design |

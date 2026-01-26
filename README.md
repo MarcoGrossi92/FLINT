@@ -55,6 +55,15 @@ repositories and included here as git submodules:
   Chemical kinetics, thermodynamics, and transport tool suite  
   https://github.com/Cantera/cantera
 
+## Acknowledgments
+
+This project incorporates concepts and algorithms from:
+
+- **NASA CEA (Chemical Equilibrium with Applications)**  
+  Reference implementation for the chemical equilibrium solver  
+  Apache License 2.0  
+  https://github.com/nasa/cea
+
 ---
 
 ## Installation

@@ -1,70 +1,210 @@
-# 🔥 FLINT – Fortran Library for INTegrated Thermochemistry
+# FLINT – Fortran Library for INTegrated Thermochemistry
 
-FLINT is a lightweight, modular Fortran library for accessing thermodynamic, transport, and chemical source term data. It optionally uses Cantera as a backend, making it ideal for integration with CFD solvers and reactive flow applications.
+A lightweight, modular Fortran library for accessing thermodynamic, transport, and chemical source term data with seamless integration into CFD solvers and reactive flow applications.
 
-## 🧱 Why FLINT?
+FLINT provides a clean interface layer that separates thermochemistry concerns from CFD complexity, enabling efficient and maintainable reactive flow simulations. Like the stone it's named after, FLINT is small but powerful — it provides the spark that ignites complex thermochemical simulations.
 
-FLINT provides a clean interface layer that lets you:
-
-- Focus on pure thermochemistry, without getting bogged down by unrelated CFD complexities
-- Extend or override functionality without rewriting the entire chemistry module
-- Build and test your chemical models in a modular, maintainable way
-- Use Cantera to compute the chemical source terms when needed
-
-Like the stone it’s named after, FLINT is small but powerful — it provides the spark that ignites complex thermochemical simulations.
-
-## ✨ Features
-
-- **Supports species thermodynamics, chemical source terms, and transport coefficients**
-- **Designed for coupling with CFD solvers**, especially for combustion and reacting flows
-- **Lightweight and fast**, with minimal dependencies
-- **Modular architecture** - plug in your own chemistry or transport data sources
-- **Optional Cantera integration** for advanced kinetic models
-- **Built-in library of chemical models** tested and verified
-- **Source code generator** for converting a yaml file to an F90 source code to be appended to the FLINT library
-- **General routine** for specific kinetic models not contained into FLINT library 
-
-## 📦 Getting Started
-
-```fortran
-use FLINT_Load_ThermoTransport
-use FLINT_Load_Chemistry
-
-err = read_idealgas_thermo(folder='WD/INPUT')
-err = read_idealgas_transport(folder='WD/INPUT')
-err = read_chemistry(folder='WD/INPUT', mech_name=mech_name)
-```
-
-## 🛠️ Contributing: Adding a New Mechanism
-
-Follow these steps to integrate a new chemical mechanism into FLINT:
-
-0. Build FLINT againts Sundials and Cantera. If it is not possible, bypass steps 5 and 6 and use **KAnt** to generate a benchmark.
-
-1. ✅ Verify the YAML Mechanism
-- Ensure your `<mech>.yaml` file is valid and behaves as expected.
-- Use external tools like **KAnT** or **Cantera** for validation.
-
-2. 📁 Create a Dedicated Test Folder
-- In the main test directory, create a subfolder named `<mech>`.
-- Build and store all relevant input, output, and test artifacts in this folder.
-
-3. ⚙️ Generate Source Code Using YTF
-- Use `utils/YTF` (YAML-to-Fortran) to convert the `<mech>.yaml` file into Fortran-compatible source code.
-- Modify or adapt the generated code as needed to integrate with FLINT.
-
-4. 🧪 Update Fortran Batch Tests
-- Add a new test section for `<mech>` in the Fortran test suite.
-- Follow the structure of existing mechanism tests.
-
-5. 🧪 Update C++ Batch Tests
-- Add a corresponding test case for `<mech>` in the C++ batch tests.
-- Follow the structure of existing mechanism tests.
-
-6. 🔍 Verify Consistency
-- Run both Fortran and C++ tests.
-- Confirm that results are consistent across both implementations.
+**Status:** [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](#) | **License:** [GNU GPL v3.0](LICENSE) | **Python Support:** 3.8+
 
 ---
 
-> More detailed setup and examples coming soon.
+## Key Advantages
+
+- **Decoupled Thermochemistry** – Focus on pure thermochemistry without CFD complexity
+- **Modular Architecture** – Build and test chemical models independently
+- **Optional Cantera Backend** – Leverage advanced kinetic models when needed
+- **Production-Ready** – Built-in library of verified chemical models
+- **Developer-Friendly** – Automated YAML-to-Fortran source code generation
+
+## Features
+
+- Species thermodynamics (ideal gas models)
+- Transport coefficients (viscosity, thermal conductivity, diffusion)
+- Chemical source terms with finite-rate kinetic reactions
+- Chemical source terms with equilibrium assumption
+- YAML-based mechanism definitions
+
+---
+
+## Requirements
+
+### System Requirements
+- **Fortran Compiler:** Intel or GNU
+- **C compiler**: For SUNDIALS support
+- **CMake:** >= 3.23
+- **Python:** 3.8+ (for utilities like YTF, optional)
+
+### Optional Requirements
+- **Cantera:** 2.5+ (for advanced kinetic models and validation)
+- **Sundials:** 5.0+ (for ODE integration with kinetic models)
+
+---
+
+## License
+
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## External Dependencies
+
+This project is composed of multiple components maintained as separate
+repositories and included here as git submodules:
+
+- **ORION**  
+  Input/output library for structured multi-block scientific data  
+  https://github.com/MarcoGrossi92/ORION
+
+- **OSlo**  
+  Fortran-based ODE solver toolbox  
+  https://github.com/MarcoGrossi92/OSlo
+
+- **Cantera**  
+  Chemical kinetics, thermodynamics, and transport tool suite  
+  https://github.com/Cantera/cantera
+
+---
+
+## Installation
+
+The installation process provides:
+- A Fortran static library linkable from external projects
+- Test binaries
+
+**WARNING!**  
+Cantera installation and linking to the project may result a bit tricky. It is strongly recommended to try to install Cantera outside of this project and only if succesful, build FLINT with Cantera support.
+
+### Quick Start
+
+Clone the repository and run the installation script:
+
+```bash
+git clone https://github.com/MarcoGrossi92/FLINT.git
+cd FLINT
+./install.sh build --compiler=gnu
+```
+
+By default, Cantera support is **enabled**. Cantera will be cloned, installed, and linked to the project (see warning above). 
+
+### Build Options
+
+The `install.sh` script provides several build options:
+
+```bash
+./install.sh [GLOBAL_OPTIONS] COMMAND [COMMAND_OPTIONS]
+```
+
+**Global Options:**
+- `-v, --verbose`: Enable verbose output
+
+**Commands:**
+
+- **build**: Perform a full build
+  - `--compilers=<name>`: Set compiler suite (intel, gnu)
+  - `--use-sundials`: Use Sundials (via OSlo)
+  - `--use-tecio`: Use TecIO (via ORION)
+  - `--use-cantera`: Use Cantera
+
+### Manual CMake Build
+
+If you prefer to use CMake directly:
+
+```bash
+# With Cantera and Sundials support
+cmake .. -DCMAKE_BUILD_TYPE=Release \
+         -DUSE_CANTERA=ON \
+         -DUSE_SUNDIALS=ON \
+         -DCantera_DIR=/path/to/cantera \
+         -DSUNDIALS_DIR=/path/to/sundials
+
+# Parallel build
+make -j8
+```
+
+**CMake Options:**
+- `USE_SUNDIALS` (ON/OFF): Enable SUNDIALS solver suite
+
+---
+
+## Usage
+
+### Basic Usage
+
+```fortran
+program simple_thermo
+  use FLINT_Load_ThermoTransport
+  use FLINT_Load_Chemistry
+  implicit none
+  integer :: err
+
+  ! Load thermodynamic data
+  err = read_idealgas_thermo(folder='WD/INPUT')
+  if (err /= 0) print *, "Error loading thermo:", err
+
+  ! Load transport properties
+  err = read_idealgas_transport(folder='WD/INPUT')
+  if (err /= 0) print *, "Error loading transport:", err
+
+  ! Load chemical mechanism
+  err = read_chemistry(folder='WD/INPUT', mech_name='gri30')
+  if (err /= 0) print *, "Error loading mechanism:", err
+
+end program simple_thermo
+```
+
+### Example Programs
+
+See the [src/test/](src/test/) directory for:
+- Basic thermodynamic calculations
+- Chemical source term computation
+- 0D batch reactor
+- Equilibrium chemistry
+
+---
+
+## Project Structure
+
+```
+FLINT/
+├── src/              # Main source code
+│   ├── lib/         # Library modules
+│   └── test/        # Fortran tests
+├── lib/             # External libraries (Cantera, OSlo, etc.)
+├── utils/           # Utilities (YTF, etc.)
+├── test/            # Integration and mechanism tests
+├── cmake/           # CMake modules
+├── docs/            # Documentation
+└── build/           # Build directory (generated)
+```
+
+---
+
+## Contributing
+
+### Guidelines
+
+1. **Fork** the repository
+2. **Create** a feature branch: `git checkout -b feature/my-feature`
+3. **Commit** with clear messages
+4. **Add tests** for new functionality
+5. **Run validation:** `ctest --verbose`
+6. **Push** and create a pull request
+
+---
+
+## Quick Links
+
+- [Documentation](docs/) – Full API documentation
+- [Examples](src/test/) – Example programs and test cases
+- [Issues](../../issues) – Report bugs or request features
+
+---
+
+## References & Resources
+
+- **Cantera Documentation:** [cantera.org](https://cantera.org)
+- **Sundials Documentation:** [sundials.llnl.gov](https://sundials.llnl.gov)
+- **Fortran Standards:** [ISO/IEC 1539-1:2018](https://wg5-fortran.org/)
+- **CMake Guide:** [cmake.org](https://cmake.org/cmake/help/latest/)
+
+---

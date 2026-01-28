@@ -1,0 +1,45 @@
+site_name: FLINT Documentation
+
+theme:
+  name: material
+  highlightjs: true
+  code_style: monokai
+  font:
+    text: Roboto
+    code: Fira Code
+  palette:
+    - scheme: default
+      primary: blue grey
+      accent: deep orange
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - scheme: slate
+      primary: blue grey
+      accent: deep orange
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - toc.integrate
+    - content.code.copy
+
+markdown_extensions:
+  - toc:
+      permalink: true
+      toc_depth: 2-3
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+
+nav:
+  - Home: INDEX.md
+  - Theoretical Guide: ALGORITHMS.md
+  - Input Format: INPUT_FORMATS.md
+  - Examples: TEST_CASES.md

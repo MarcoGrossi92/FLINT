@@ -2,25 +2,9 @@
 
 Complete reference for FLINT native file formats (non-Cantera builds).
 
-## Table of Contents
-
-1. [Overview](#overview)
-2. [File Structure](#native-file-structure)
-3. [Detailed Format Specifications](#detailed-format-specifications)
-   - [phase.txt](#1-phasetxt--species-definitions)
-   - [input.ini](#2-inputini--configuration)
-   - [chemistry-info.txt](#3-chemistry-infotxt--mechanism-metadata)
-   - [chemistry-Arrhenius.dat](#4-chemistry-arrheniusdat--reaction-rate-tables)
-   - [chemistry-Troe.dat](#5-chemistry-troedat--fall-off-correction-tables)
-   - [thermo.dat](#6-thermodat--thermodynamic-property-tables)
-4. [Complete Example](#complete-example-coria-mechanism)
-5. [Usage Workflow](#native-input-path-usage)
-
----
-
 ## Overview
 
-When FLINT is compiled **without Cantera support**, input data is loaded from a set of pre-generated native files. This path is designed for **high-performance production use** where pre-computed tables eliminate the need for runtime polynomial evaluation or mechanism parsing.
+When FLINT is compiled **without Cantera support**, input data is loaded from a set of pre-generated native files. This path is designed for **high-performance production use**, where pre-computed tables eliminate runtime polynomial evaluation and mechanism parsing.
 
 ---
 
@@ -40,9 +24,8 @@ INPUT/
 ```
 
 **File Sizes (CORIA 17-species / 44-reaction example):**
-- phase.txt: ~250 bytes (trivial)
-- input.ini: ~40 bytes (trivial)
-- chemistry-info.txt: ~15 KB (metadata)
+- phase.txt: ~250 bytes
+- chemistry-info.txt: ~15 KB
 - chemistry-Arrhenius.dat: ~43 MB (15000 temperature points × 44 reactions)
 - chemistry-Troe.dat: ~8 MB (fall-off reactions only)
 - thermo.dat: ~15 MB (15000 temperature points × 17 species × 5 properties)
@@ -94,7 +77,6 @@ CH3O2  47.033000
 - Subsequent lines: space-separated `<name>` and `<MW>`
 - MW values are floats in g/mol
 - Species **order must match** `chemistry-info.txt` and `.dat` files
-- Typical precision: 6 decimal places
 
 ---
 
@@ -492,7 +474,7 @@ Reaction definition
 
 ---
 
-## Native Input Path Usage
+## Path Usage
 
 To use native files in FLINT:
 

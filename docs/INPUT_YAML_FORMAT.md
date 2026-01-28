@@ -2,21 +2,6 @@
 
 Complete reference for FLINT YAML format (Cantera-enabled builds).
 
-## Table of Contents
-
-1. [Overview](#overview)
-2. [Top-Level Sections](#top-level-sections)
-   - [Units](#units)
-   - [Phases](#phases)
-   - [Elements](#elements)
-   - [Species](#species)
-   - [Reactions](#reactions)
-3. [Complete Example](#complete-example)
-4. [Tips & Best Practices](#tips--best-practices)
-5. [Troubleshooting](#troubleshooting)
-
----
-
 ## Overview
 
 A FLINT input file (`.yaml`) defines a complete chemical system:

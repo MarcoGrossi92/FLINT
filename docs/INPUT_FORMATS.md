@@ -2,10 +2,6 @@
 
 FLINT supports **two distinct input paths** for defining chemical mechanisms and thermodynamic data, depending on your use case and whether Cantera is available.
 
-## Quick Navigation
-
-### 🚀 **Choose Your Path:**
-
 | Path | Format | Best For | See |
 |------|--------|----------|-----|
 | **YAML** | Human-readable | Development, testing, flexibility | [INPUT_YAML_FORMAT.md](INPUT_YAML_FORMAT.md) |
@@ -15,35 +11,35 @@ FLINT supports **two distinct input paths** for defining chemical mechanisms and
 
 ## Path 1: YAML Format (Cantera-Enabled)
 
-**Use this if:**
-- ✅ You have Cantera installed
-- ✅ You're developing or testing mechanisms
-- ✅ You need to modify reaction rates or species properties
-- ✅ You want human-readable input files
-- ✅ You prioritize flexibility over raw speed
+**Use this if:**  
+- You have Cantera installed  
+- You're developing or testing mechanisms  
+- You need to modify reaction rates or species properties  
+- You want human-readable input files  
+- You prioritize flexibility over raw speed  
 
-**Features:**
-- Single file (`.yaml`) format
-- Complete specification in one place
-- Easy to edit and version control
-- Full Cantera interoperability
+**Features:**  
+- Single file (`.yaml`) format  
+- Complete specification in one place  
+- Easy to edit and version control  
+- Full Cantera interoperability  
 
 **→ [Read Full YAML Specification](INPUT_YAML_FORMAT.md)**
 
 ---
 
-## Path 2: Native Files (Non-Cantera)
+## Path 2: Native Files (Cantera-Disabled)
 
-**Use this if:**
-- ✅ You have a production-validated mechanism
-- ✅ You need maximum performance (no parsing overhead)
-- ✅ Cantera is not available or not desired
-- ✅ You want pre-tabulated data for speed
+**Use this if:**  
+- You have a production-validated mechanism  
+- You need maximum performance (no parsing overhead)  
+- Cantera is not available or not desired  
+- You want pre-tabulated data for speed  
 
-**Features:**
-- Four to seven pre-computed files (`.txt`, `.ini`, `.dat`)
-- Fast I/O with pre-tabulated properties
-- Production-ready
+**Features:**  
+- Four to seven pre-computed files (`.txt`, `.ini`, `.dat`)  
+- Fast I/O with pre-tabulated properties  
+- Production-ready  
 
 **→ [Read Full Native Format Specification](INPUT_NATIVE_FORMAT.md)**
 
@@ -62,34 +58,13 @@ FLINT supports **two distinct input paths** for defining chemical mechanisms and
 
 ---
 
-## Documentation Structure
-
-```
-INPUT_FORMATS.md (this file)
-├── INPUT_YAML_FORMAT.md
-│   ├── Units specification
-│   ├── Phases configuration
-│   ├── Species definitions (thermo & transport)
-│   ├── Reactions
-│   └── Complete YAML example
-├── INPUT_NATIVE_FORMAT.md
-│   ├── File structure overview
-│   ├── Detailed format for each of 6 files
-│   ├── Examples (CORIA mechanism)
-│   └── Usage workflow
-├── NATIVE_FILES_SUMMARY.md
-│   └── Quick reference tables and verification
-```
-
----
-
 ## File Structure Overview
 
 ### YAML Format
 ```
 project/
 └── INPUT/
-    └── mechanism.yaml              # Complete definition
+    └── mechanism.yaml          # Complete definition
 ```
 
 ### Native Format

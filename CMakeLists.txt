@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.23)
 
 # -------- Compiler overrides (for macOS) --------
 # if (UNIX AND APPLE)
-#     set(CMAKE_CXX_COMPILER "/opt/homebrew/bin/g++-14")
-#     set(CMAKE_C_COMPILER   "/opt/homebrew/bin/gcc-14")
+#     set(CMAKE_CXX_COMPILER "/opt/homebrew/bin/g++-15")
+#     set(CMAKE_C_COMPILER   "/opt/homebrew/bin/gcc-15")
 # endif ()
 
 # -------- Say my name! --------
@@ -30,36 +30,28 @@ include(LinkDependencies)
 # -------- Git submodules --------
 
 # ORION
-# If FLINT is built as part of another project (assumed that project already has ORION), skip the FLINT's ORION 
-if ("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
-  if ("${MASTER}" STREQUAL "hydra")
-    set ( orionD $ENV{HYDRADIR}/lib/ORION/ "${CMAKE_CURRENT_SOURCE_DIR}/build/lib/ORION/")
-  else()
-    set ( orionD ${CMAKE_SOURCE_DIR}/lib/ORION/ )
-  endif()
+# Only add ORION if it hasn't already been added by the parent project
+if (NOT TARGET ORION)
+  set ( orionD "${ORION_PATH}" "${CMAKE_CURRENT_SOURCE_DIR}/build/lib/ORION/")
   add_subdirectory(${orionD})
 endif()
 
 # OSlo
-# if FLINT is built as part of hydra, use the hydra's OSlo, otherwise use the FLINT's one
-if ("${MASTER}" STREQUAL "hydra")
-  set ( oslosrcD $ENV{HYDRADIR}/lib/OSlo )
-  set ( osloD $ENV{HYDRADIR}/lib/OSlo "${CMAKE_SOURCE_DIR}/build/lib/OSlo")
-else()
-  set ( osloD ${CMAKE_CURRENT_SOURCE_DIR}/lib/OSlo )
-  set ( oslosrcD ${CMAKE_CURRENT_SOURCE_DIR}/lib/OSlo )
+if (NOT TARGET OSlo)
+  set(osloD "${OSLO_PATH}" "${CMAKE_SOURCE_DIR}/build/lib/OSlo")
   # Check if cloned
-  if(NOT EXISTS "${oslosrcD}/README.md")
+  if (NOT EXISTS "${OSLO_PATH}/README.md")
     message(STATUS "OSlo not found. Attempting to initialize...")
-    execute_process(COMMAND git submodule update --init lib/OSlo
-                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-                    RESULT_VARIABLE GIT_SUBMOD_RESULT)
-    if(NOT GIT_SUBMOD_RESULT EQUAL 0)
+    execute_process(
+      COMMAND git submodule update --init lib/OSlo
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      RESULT_VARIABLE GIT_SUBMOD_RESULT)
+    if (NOT GIT_SUBMOD_RESULT EQUAL 0)
       message(FATAL_ERROR "Failed to initialize git submodules.")
     endif()
   endif()
+  add_subdirectory(${osloD})
 endif()
-add_subdirectory(${osloD})
 
 # Cantera
 # Cantera is optional and only used by FLINT

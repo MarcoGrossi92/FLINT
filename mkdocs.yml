@@ -1,5 +1,7 @@
 site_name: FLINT Documentation
 
+site_url: https://MarcoGrossi92.github.io/FLINT/
+
 theme:
   name: material
   highlightjs: true

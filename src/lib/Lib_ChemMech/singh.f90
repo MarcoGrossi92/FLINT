@@ -1,7 +1,6 @@
 module singh_mod
   implicit none
 contains
-
   ! Singh (1994) global mechanism for ethylene combustion.
   ! 10 reversible reactions for 9 species.
   subroutine singh(roi,temp,omegadot)

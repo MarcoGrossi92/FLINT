@@ -66,7 +66,7 @@ MODULE FLINT_CEA_data
   REAL(8) :: Atwt(MAXEL), X(MAXMAT)
   REAL(8) :: A(MAXEL, MAXNGC)
 
-  CHARACTER(2) :: Elmt(MAXEL)
+  CHARACTER(20) :: Elmt(MAXEL)
   CHARACTER(15) :: Prod(0:MAXNGC)
 
   REAL(8) :: Cpr(NCOL), Dlvpt(NCOL), Dlvtp(NCOL), Hsum(NCOL), &

@@ -39,7 +39,6 @@ contains
     Mw = 0
     Mw(1:ns) = wm_tab
 
-    !call build_species_composition(species_names)
     call assign_elemental_weight
 
     Jx = 0

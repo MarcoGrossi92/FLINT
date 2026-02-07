@@ -18,7 +18,6 @@ FLINT provides a clean interface layer that separates thermochemistry concerns f
 - Transport coefficients (viscosity, thermal conductivity, diffusion)
 - Chemical source terms with finite-rate kinetic reactions
 - Chemical source terms with equilibrium assumption
-- YAML-based mechanism definitions
 
 ---
 
@@ -32,7 +31,6 @@ FLINT provides a clean interface layer that separates thermochemistry concerns f
 
 ### Optional Requirements
 - **Cantera:** 2.5+ (for advanced kinetic models and validation)
-- **Sundials:** 5.0+ (for ODE integration with kinetic models)
 
 ## License
 
@@ -73,7 +71,7 @@ The installation process provides:
 - Test binaries
 
 **WARNING!**  
-Cantera installation and linking to the project may result a bit tricky. It is strongly recommended to try to install Cantera outside of this project and only if succesful, build FLINT with Cantera support.
+Cantera installation and linking to the project may result a bit tricky. It is strongly recommended to try to install Cantera outside of this project and, if succesful, build FLINT with Cantera support.
 
 ### Quick Start
 
@@ -102,9 +100,12 @@ The `install.sh` script provides several build options:
 
 - **build**: Perform a full build
   - `--compilers=<name>`: Set compiler suite (intel, gnu)
+  - `--include-orion=<path>`: Set external ORION path
+  - `--include-oslo=<path>`: Set external OSlo path
+  - `--use-cantera`: Use Cantera (Sundials required)
   - `--use-sundials`: Use Sundials (via OSlo)
   - `--use-tecio`: Use TecIO (via ORION)
-  - `--use-cantera`: Use Cantera
+
 
 ### Manual CMake Build
 
@@ -114,9 +115,7 @@ If you prefer to use CMake directly:
 # With Cantera and Sundials support
 cmake .. -DCMAKE_BUILD_TYPE=Release \
          -DUSE_CANTERA=ON \
-         -DUSE_SUNDIALS=ON \
-         -DCantera_DIR=/path/to/cantera \
-         -DSUNDIALS_DIR=/path/to/sundials
+         -DUSE_SUNDIALS=ON
 
 # Parallel build
 make -j8
@@ -142,7 +141,7 @@ program simple_thermo
   if (err /= 0) print *, "Error loading transport:", err
 
   ! Load chemical mechanism
-  err = read_chemistry(folder='WD/INPUT', mech_name='gri30')
+  err = read_chemistry(folder='WD/INPUT')
   if (err /= 0) print *, "Error loading mechanism:", err
 
 end program simple_thermo
@@ -178,9 +177,8 @@ FLINT/
 1. **Fork** the repository
 2. **Create** a feature branch: `git checkout -b feature/my-feature`
 3. **Commit** with clear messages
-4. **Add tests** for new functionality
-5. **Run validation:** `ctest --verbose`
-6. **Push** and create a pull request
+4. **Add and run tests** for new functionality
+5. **Push** and create a pull request
 
 ## Quick Links
 
@@ -191,6 +189,5 @@ FLINT/
 ## References & Resources
 
 - **Cantera Documentation:** [cantera.org](https://cantera.org)
-- **Sundials Documentation:** [sundials.llnl.gov](https://sundials.llnl.gov)
 
 ---

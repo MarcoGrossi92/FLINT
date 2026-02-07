@@ -4,12 +4,12 @@ FLINT supports **two distinct input paths** for defining chemical mechanisms and
 
 | Path | Format | Best For | See |
 |------|--------|----------|-----|
-| **YAML** | Human-readable | Development, testing, flexibility | [INPUT_YAML_FORMAT.md](INPUT_YAML_FORMAT.md) |
-| **Native** | Pre-tabulated | Production, high-performance, no Cantera | [INPUT_NATIVE_FORMAT.md](INPUT_NATIVE_FORMAT.md) |
+| **YAML** | Human-readable | Development, testing, flexibility | [YAML Specification](input_yaml.md) |
+| **Native** | Pre-tabulated | Production, high-performance, no Cantera | [Native Format Specification](input_native.md) |
 
 ---
 
-## Path 1: YAML Format (Cantera-Enabled)
+## YAML Format
 
 **Use this if:**  
 - You have Cantera installed  
@@ -24,11 +24,11 @@ FLINT supports **two distinct input paths** for defining chemical mechanisms and
 - Easy to edit and version control  
 - Full Cantera interoperability  
 
-**→ [Read Full YAML Specification](INPUT_YAML_FORMAT.md)**
+**For detailed formulations, see:** [YAML Specification](input_yaml.md)
 
 ---
 
-## Path 2: Native Files (Cantera-Disabled)
+## Native Files
 
 **Use this if:**  
 - You have a production-validated mechanism  
@@ -37,11 +37,11 @@ FLINT supports **two distinct input paths** for defining chemical mechanisms and
 - You want pre-tabulated data for speed  
 
 **Features:**  
-- Four to seven pre-computed files (`.txt`, `.ini`, `.dat`)  
+- Four to seven pre-computed files (`.txt`, `.dat`)  
 - Fast I/O with pre-tabulated properties  
 - Production-ready  
 
-**→ [Read Full Native Format Specification](INPUT_NATIVE_FORMAT.md)**
+**For detailed formulations, see:** [Native Format Specification](input_native.md)
 
 ---
 
@@ -60,14 +60,14 @@ FLINT supports **two distinct input paths** for defining chemical mechanisms and
 
 ## File Structure Overview
 
-### YAML Format
+**YAML Format**
 ```
 project/
 └── INPUT/
     └── mechanism.yaml          # Complete definition
 ```
 
-### Native Format
+**Native Format**
 ```
 project/
 └── INPUT/
@@ -84,7 +84,7 @@ project/
 
 ## Quick Examples
 
-### YAML Example (snippet)
+**YAML Example**
 ```yaml
 units:
   energy: cal
@@ -109,7 +109,7 @@ reactions:
       Ea: 48000.0
 ```
 
-### Native Example (snippet)
+**Native Example**
 ```
 # phase.txt
 ideal-gas phase

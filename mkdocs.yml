@@ -33,13 +33,24 @@ markdown_extensions:
       toc_depth: 2-3
   - pymdownx.arithmatex:
       generic: true
+  - attr_list
+  - md_in_html
 
 extra_javascript:
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 
-
 nav:
-  - Home: INDEX.md
-  - Theoretical Guide: ALGORITHMS.md
-  - Input Format: INPUT_FORMATS.md
-  - Examples: TEST_CASES.md
+  - Home: index.md
+  - Theoretical Guide: 
+    - Overview: theory.md
+    - Thermodynamic and Transport Properties : theory_thermo.md
+    - Finite-Rate Kinetics: theory_kinetics.md
+    - Chemical Equilibrium: theory_equilibrium.md
+  - Chemistry Database:
+    - Present Mechanisms: database.md
+    - New Mechanisms Generation: YTF.md
+  - Input Format:
+    - Overview: input.md
+    - YAML Format: input_yaml.md
+    - Native Format: input_native.md
+  - Tests & Examples: testing.md

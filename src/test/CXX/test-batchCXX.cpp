@@ -90,13 +90,12 @@ int main()
 
         // Create the solution and thermo object
         auto sol1 = newSolution("WD/INPUT/WD.yaml");
-        auto& gas = *sol1->thermo();
-        gas.setState_TPY(1000.0, 100000.0, "CH4:0.20, O2:0.8");
+        auto gas = sol1->thermo();
+        gas->setState_TPY(1000.0, 100000.0, "CH4:0.20, O2:0.8");
 
         // Reactor setup
-        IdealGasReactor reactor(sol1);
-        ReactorNet sim;
-        sim.addReactor(reactor);
+        auto reactor = newReactorBase("IdealGasReactor", sol1);
+        ReactorNet sim(reactor);
         //sim.setTolerances(1e-7, 1e-7);
 
         // Integration settings
@@ -104,17 +103,24 @@ int main()
 
         // Run the simulation
         t0 = std::chrono::high_resolution_clock::now();
-        auto timeTemp1 = simulateReactorTemperature(sim, gas, nsteps, dt);
+        std::vector<std::pair<double, double>> timeTemp;
+        timeTemp.reserve(nsteps);
+        double time = 0.0;
+        for (int i = 0; i < nsteps; i++) {
+            time += dt;
+            sim.advance(time);
+            double T = reactor->temperature();
+            timeTemp.emplace_back(time, T);
+        }
         t1 = std::chrono::high_resolution_clock::now();
         elapsed = t1 - t0;
         std::cout << "WD Cantera-CXX time = "
-          << std::scientific << elapsed.count()
-          << std::endl;
+          << std::scientific << elapsed.count() << std::endl;
         summaryData.emplace_back("WD", elapsed.count());
 
         // Write results for first simulation
         std::ofstream outFile("WD/OUTPUT/batch-CXX.dat");
-        for (const auto& [time, temp] : timeTemp1) {
+        for (const auto& [time, temp] : timeTemp) {
             outFile << time << "\t" << temp << "\n";
         }
 
@@ -124,26 +130,33 @@ int main()
 
         // Create the solution and thermo object
         auto sol2 = newSolution("Troyes/INPUT/troyes.yaml");
-        auto& gas2 = *sol2->thermo();
-        gas2.setState_TPY(1000.0, 100000.0, "H2:0.00534, CL2:0.18796, N2:0.80670");
+        auto gas2 = sol2->thermo();
 
-        // Reactor setup
-        IdealGasReactor reactor2(sol2);
-        ReactorNet sim2;
-        sim2.addReactor(reactor2);
+        gas2->setState_TPY(1000.0, 100000.0,
+            "H2:0.00534, CL2:0.18796, N2:0.80670");
+
+        auto reactor2 = newReactorBase("IdealGasReactor", sol2);
+        ReactorNet sim2(reactor2);
         sim2.setTolerances(1e-12, 1e-15);
 
-        // Integration settings
         dt = 5.0e-3 / nsteps;
 
-        // Run the simulation
         t0 = std::chrono::high_resolution_clock::now();
-        auto timeTemp2 = simulateReactorTemperature(sim2, gas2, nsteps, dt);
+        std::vector<std::pair<double, double>> timeTemp2;
+        timeTemp2.reserve(nsteps);
+        time = 0.0;
+        for (int i = 0; i < nsteps; i++) {
+            time += dt;
+            sim2.advance(time);
+            double T = reactor2->temperature();
+            timeTemp2.emplace_back(time, T);
+        }
         t1 = std::chrono::high_resolution_clock::now();
+
         elapsed = t1 - t0;
         std::cout << "Troyes Cantera-CXX time = "
-          << std::scientific << elapsed.count()
-          << std::endl;
+                << std::scientific << elapsed.count() << std::endl;
+
         summaryData.emplace_back("Troyes", elapsed.count());
 
         // Write results for second simulation
@@ -158,28 +171,35 @@ int main()
 
         // Create the solution and thermo object
         auto sol3 = newSolution("Ecker/INPUT/ecker.yaml");
-        auto& gas3 = *sol3->thermo();
-        gas3.setState_TPY(1000.0, 100000.0, "H2:0.00534534, CL2:0.18798856, N2:0.8066661");
+        auto gas3 = sol3->thermo();
+        gas3->setState_TPY(1000.0, 100000.0, "H2:0.00534534, CL2:0.18798856, N2:0.8066661");
 
         // Reactor setup
-        IdealGasReactor reactor3(sol3);
-        ReactorNet sim3;
-        sim3.addReactor(reactor3);
+        auto reactor3 = newReactorBase("IdealGasReactor", sol3);
+        ReactorNet sim3(reactor3);
         sim3.setTolerances(1e-7, 1e-7);
 
         // Integration settings
-        dt = 2.0e-2 / nsteps;
+        dt = 5.0e-3 / nsteps;
 
         // Run the simulation
         t0 = std::chrono::high_resolution_clock::now();
-        auto timeTemp3 = simulateReactorTemperature(sim3, gas3, nsteps, dt);
+        std::vector<std::pair<double, double>> timeTemp3;
+        timeTemp3.reserve(nsteps);
+        time = 0.0;
+        for (int i = 0; i < nsteps; i++) {
+            time += dt;
+            sim3.advance(time);
+            double T = reactor3->temperature();
+            timeTemp3.emplace_back(time, T);
+        }
         t1 = std::chrono::high_resolution_clock::now();
+
         elapsed = t1 - t0;
         std::cout << "Ecker Cantera-CXX time = "
-          << std::scientific << elapsed.count()
-          << std::endl;
-        summaryData.emplace_back("Ecker", elapsed.count());
+          << std::scientific << elapsed.count() << std::endl;
 
+        summaryData.emplace_back("Ecker", elapsed.count());
 
         // Write results for second simulation
         std::ofstream outFile3("Ecker/OUTPUT/batch-CXX.dat");
@@ -193,13 +213,12 @@ int main()
 
         // Create the solution and thermo object
         auto sol4 = newSolution("Cross/INPUT/cross.yaml");
-        auto& gas4 = *sol4->thermo();
-        gas4.setState_TPY(1010.0, 100000.0, "H2:0.00534534, CL2:0.18798856, N2:0.8066661");
+        auto gas4 = sol4->thermo();
+        gas4->setState_TPY(1010.0, 100000.0, "H2:0.00534534, CL2:0.18798856, N2:0.8066661");
 
         // Reactor setup
-        IdealGasReactor reactor4(sol4);
-        ReactorNet sim4;
-        sim4.addReactor(reactor4);
+        auto reactor4 = newReactorBase("IdealGasReactor", sol4);
+        ReactorNet sim4(reactor4);
         sim4.setTolerances(1e-7, 1e-7);
         sim4.setMaxSteps(100000);
 
@@ -208,14 +227,21 @@ int main()
 
         // Run the simulation
         t0 = std::chrono::high_resolution_clock::now();
-        auto timeTemp4 = simulateReactorTemperature(sim4, gas4, nsteps, dt);
+        std::vector<std::pair<double, double>> timeTemp4;
+        timeTemp4.reserve(nsteps);
+        time = 0.0;
+        for (int i = 0; i < nsteps; i++) {
+            time += dt;
+            sim4.advance(time);
+            double T = reactor4->temperature();
+            timeTemp4.emplace_back(time, T);
+        }
         t1 = std::chrono::high_resolution_clock::now();
+
         elapsed = t1 - t0;
         std::cout << "Cross Cantera-CXX time = "
-          << std::scientific << elapsed.count()
-          << std::endl;
+          << std::scientific << elapsed.count() << std::endl;
         summaryData.emplace_back("Cross", elapsed.count());
-
 
         // Write results for second simulation
         std::ofstream outFile4("Cross/OUTPUT/batch-CXX.dat");
@@ -230,13 +256,12 @@ int main()
 
         // Create the solution and thermo object
         auto sol5 = newSolution("Smooke/INPUT/smooke.yaml");
-        auto& gas5 = *sol5->thermo();
-        gas5.setState_TPY(1300.0, 100000.0, "CH4:0.0552, O2:0.2201, N2: 0.7247");
+        auto gas5 = sol5->thermo();
+        gas5->setState_TPY(1300.0, 100000.0, "CH4:0.0552, O2:0.2201, N2: 0.7247");
 
         // Reactor setup
-        IdealGasReactor reactor5(sol5);
-        ReactorNet sim5;
-        sim5.addReactor(reactor5);
+        auto reactor5 = newReactorBase("IdealGasReactor", sol5);
+        ReactorNet sim5(reactor5);
         sim5.setTolerances(1e-7, 1e-7);
         sim5.setMaxSteps(1000000);
 
@@ -245,14 +270,21 @@ int main()
 
         // Run the simulation
         t0 = std::chrono::high_resolution_clock::now();
-        auto timeTemp5 = simulateReactorTemperature(sim5, gas5, nsteps, dt);
+        std::vector<std::pair<double, double>> timeTemp5;
+        timeTemp5.reserve(nsteps);
+        time = 0.0;
+        for (int i = 0; i < nsteps; i++) {
+            time += dt;
+            sim5.advance(time);
+            double T = reactor5->temperature();
+            timeTemp5.emplace_back(time, T);
+        }
         t1 = std::chrono::high_resolution_clock::now();
+
         elapsed = t1 - t0;
         std::cout << "Smooke Cantera-CXX time = "
-          << std::scientific << elapsed.count()
-          << std::endl;
+          << std::scientific << elapsed.count() << std::endl;
         summaryData.emplace_back("Smooke", elapsed.count());
-
 
         // Write results for second simulation
         std::ofstream outFile5("Smooke/OUTPUT/batch-CXX.dat");
@@ -267,13 +299,12 @@ int main()
 
         // Create the solution and thermo object
         auto sol6 = newSolution("CORIA/INPUT/coria.yaml");
-        auto& gas6 = *sol6->thermo();
-        gas6.setState_TPY(1300.0, 100000.0, "CH4:0.2, O2:0.8");
+        auto gas6 = sol6->thermo();
+        gas6->setState_TPY(1300.0, 100000.0, "CH4:0.2, O2:0.8");
 
         // Reactor setup
-        IdealGasReactor reactor6(sol6);
-        ReactorNet sim6;
-        sim6.addReactor(reactor6);
+        auto reactor6 = newReactorBase("IdealGasReactor", sol6);
+        ReactorNet sim6(reactor6);
         sim6.setTolerances(1e-7, 1e-7);
         sim6.setMaxSteps(1000000);
 
@@ -282,14 +313,21 @@ int main()
 
         // Run the simulation
         t0 = std::chrono::high_resolution_clock::now();
-        auto timeTemp6 = simulateReactorTemperature(sim6, gas6, nsteps, dt);
+        std::vector<std::pair<double, double>> timeTemp6;
+        timeTemp6.reserve(nsteps);
+        time = 0.0;
+        for (int i = 0; i < nsteps; i++) {
+            time += dt;
+            sim6.advance(time);
+            double T = reactor6->temperature();
+            timeTemp6.emplace_back(time, T);
+        }
         t1 = std::chrono::high_resolution_clock::now();
+
         elapsed = t1 - t0;
         std::cout << "CORIA Cantera-CXX time = "
-          << std::scientific << elapsed.count()
-          << std::endl;
+          << std::scientific << elapsed.count() << std::endl;
         summaryData.emplace_back("CORIA", elapsed.count());
-
 
         // Write results for second simulation
         std::ofstream outFile6("CORIA/OUTPUT/batch-CXX.dat");
@@ -303,13 +341,12 @@ int main()
 
         // Create the solution and thermo object
         auto sol7 = newSolution("TSR-CDF-13/INPUT/TSR-CDF-13.yaml");
-        auto& gas7 = *sol7->thermo();
-        gas7.setState_TPY(1300.0, 500000, "CH4:1, O2:4");
+        auto gas7 = sol7->thermo();
+        gas7->setState_TPY(1300.0, 500000, "CH4:1, O2:4");
 
         // Reactor setup
-        IdealGasReactor reactor7(sol7);
-        ReactorNet sim7;
-        sim7.addReactor(reactor7);
+        auto reactor7 = newReactorBase("IdealGasReactor", sol7);
+        ReactorNet sim7(reactor7);
         sim7.setTolerances(1e-7, 1e-7);
 
         // Integration settings
@@ -317,14 +354,22 @@ int main()
 
         // Run the simulation
         t0 = std::chrono::high_resolution_clock::now();
-        auto timeTemp7 = simulateReactorTemperature(sim7, gas7, nsteps, dt);
+        std::vector<std::pair<double, double>> timeTemp7;
+        timeTemp7.reserve(nsteps);
+        time = 0.0;
+        for (int i = 0; i < nsteps; i++) {
+            time += dt;
+            sim7.advance(time);
+            double T = reactor7->temperature();
+            timeTemp7.emplace_back(time, T);
+        }
         t1 = std::chrono::high_resolution_clock::now();
+
         elapsed = t1 - t0;
         std::cout << "TSR-CDF-13 Cantera-CXX time = "
-          << std::scientific << elapsed.count()
-          << std::endl;
-        summaryData.emplace_back("TSR-CDF-13", elapsed.count());
+          << std::scientific << elapsed.count() << std::endl;
 
+        summaryData.emplace_back("TSR-CDF-13", elapsed.count());
 
         // Write results for second simulation
         std::ofstream outFile7("TSR-CDF-13/OUTPUT/batch-CXX.dat");
@@ -338,14 +383,12 @@ int main()
 
         // Create the solution and thermo object
         auto sol8 = newSolution("Pelucchi/INPUT/pelucchi.yaml");
-        auto& gas8 = *sol8->thermo();
-        gas8.setState_TPY(1250.0, 100000, "CO:0.00859, O2:0.00606, H2O:0.00365, HCL:0.00025, N2:0.98044");
-        //gas7.setState_TPX(1250.0, OneAtm, "CO:0.0086, O2:0.0053, H2O:0.0057, HCL:0.00019, N2:0.98021");
+        auto gas8 = sol8->thermo();
+        gas8->setState_TPY(1250.0, 100000, "CO:0.00859, O2:0.00606, H2O:0.00365, HCL:0.00025, N2:0.98044");
 
         // Reactor setup
-        IdealGasReactor reactor8(sol8);
-        ReactorNet sim8;
-        sim8.addReactor(reactor8);
+        auto reactor8 = newReactorBase("IdealGasReactor", sol8);
+        ReactorNet sim8(reactor8);
         sim8.setTolerances(1e-12, 1e-15);
 
         // Integration settings
@@ -353,14 +396,22 @@ int main()
 
         // Run the simulation
         t0 = std::chrono::high_resolution_clock::now();
-        auto timeTemp8 = simulateReactorTemperature(sim8, gas8, nsteps, dt);
+        std::vector<std::pair<double, double>> timeTemp8;
+        timeTemp8.reserve(nsteps);
+        time = 0.0;
+        for (int i = 0; i < nsteps; i++) {
+            time += dt;
+            sim8.advance(time);
+            double T = reactor8->temperature();
+            timeTemp8.emplace_back(time, T);
+        }
         t1 = std::chrono::high_resolution_clock::now();
+
         elapsed = t1 - t0;
         std::cout << "Pelucchi Cantera-CXX time = "
-          << std::scientific << elapsed.count()
-          << std::endl;
-        summaryData.emplace_back("Pelucchi", elapsed.count());
+          << std::scientific << elapsed.count() << std::endl;
 
+        summaryData.emplace_back("Pelucchi", elapsed.count());
 
         // Write results for second simulation
         std::ofstream outFile8("Pelucchi/OUTPUT/batch-CXX.dat");
@@ -374,28 +425,34 @@ int main()
 
         // Create the solution and thermo object
         auto sol9 = newSolution("ZK/INPUT/ZK.yaml");
-        auto& gas9 = *sol9->thermo();
-        gas9.setState_TPY(1300.0, 500000, "CH4:1, O2:4");
+        auto gas9 = sol9->thermo();
+        gas9->setState_TPY(1300.0, 500000, "CH4:1, O2:4");
 
         // Reactor setup
-        IdealGasReactor reactor9(sol9);
-        ReactorNet sim9;
-        sim9.addReactor(reactor9);
+        auto reactor9 = newReactorBase("IdealGasReactor", sol9);
+        ReactorNet sim9(reactor9);
         sim9.setTolerances(1e-7, 1e-7);
 
         // Integration settings
-        dt = 5.0e-3 / nsteps;
+        dt = 2.0e-3 / nsteps;
 
         // Run the simulation
         t0 = std::chrono::high_resolution_clock::now();
-        auto timeTemp9 = simulateReactorTemperature(sim9, gas9, nsteps, dt);
+        std::vector<std::pair<double, double>> timeTemp9;
+        timeTemp9.reserve(nsteps);
+        time = 0.0;
+        for (int i = 0; i < nsteps; i++) {
+            time += dt;
+            sim9.advance(time);
+            double T = reactor9->temperature();
+            timeTemp9.emplace_back(time, T);
+        }
         t1 = std::chrono::high_resolution_clock::now();
+
         elapsed = t1 - t0;
         std::cout << "ZK Cantera-CXX time = "
-          << std::scientific << elapsed.count()
-          << std::endl;
+          << std::scientific << elapsed.count() << std::endl;
         summaryData.emplace_back("ZK", elapsed.count());
-
 
         // Write results for second simulation
         std::ofstream outFile9("ZK/OUTPUT/batch-CXX.dat");
@@ -409,28 +466,34 @@ int main()
 
         // Create the solution and thermo object
         auto sol10 = newSolution("TSR-GP-24/INPUT/TSR-GP-24.yaml");
-        auto& gas10 = *sol10->thermo();
-        gas10.setState_TPY(1300.0, 500000, "CH4:1, O2:4");
+        auto gas10 = sol10->thermo();
+        gas10->setState_TPY(1300.0, 500000, "CH4:1, O2:4");
 
         // Reactor setup
-        IdealGasReactor reactor10(sol10);
-        ReactorNet sim10;
-        sim10.addReactor(reactor10);
+        auto reactor10 = newReactorBase("IdealGasReactor", sol10);
+        ReactorNet sim10(reactor10);
         sim10.setTolerances(1e-7, 1e-7);
 
         // Integration settings
-        dt = 5.0e-3 / nsteps;
+        dt = 2.0e-3 / nsteps;
 
         // Run the simulation
         t0 = std::chrono::high_resolution_clock::now();
-        auto timeTemp10 = simulateReactorTemperature(sim10, gas10, nsteps, dt);
+        std::vector<std::pair<double, double>> timeTemp10;
+        timeTemp10.reserve(nsteps);
+        time = 0.0;
+        for (int i = 0; i < nsteps; i++) {
+            time += dt;
+            sim10.advance(time);
+            double T = reactor10->temperature();
+            timeTemp10.emplace_back(time, T);
+        }
         t1 = std::chrono::high_resolution_clock::now();
+
         elapsed = t1 - t0;
         std::cout << "TSR-GP-24 Cantera-CXX time = "
-          << std::scientific << elapsed.count()
-          << std::endl;
+          << std::scientific << elapsed.count() << std::endl;
         summaryData.emplace_back("TSR-GP-24", elapsed.count());
-
 
         // Write results for second simulation
         std::ofstream outFile10("TSR-GP-24/OUTPUT/batch-CXX.dat");
@@ -444,13 +507,12 @@ int main()
 
         // Create the solution and thermo object
         auto sol11 = newSolution("TSR-Rich-31/INPUT/TSR-Rich-31.yaml");
-        auto& gas11 = *sol11->thermo();
-        gas11.setState_TPY(1300.0, 500000, "CH4:1, O2:4");
+        auto gas11 = sol11->thermo();
+        gas11->setState_TPY(1300.0, 500000, "CH4:1, O2:4");
 
         // Reactor setup
-        IdealGasReactor reactor11(sol11);
-        ReactorNet sim11;
-        sim11.addReactor(reactor11);
+        auto reactor11 = newReactorBase("IdealGasReactor", sol11);
+        ReactorNet sim11(reactor11);
         sim11.setTolerances(1e-7, 1e-7);
 
         // Integration settings
@@ -458,14 +520,21 @@ int main()
 
         // Run the simulation
         t0 = std::chrono::high_resolution_clock::now();
-        auto timeTemp11 = simulateReactorTemperature(sim11, gas11, nsteps, dt);
+        std::vector<std::pair<double, double>> timeTemp11;
+        timeTemp11.reserve(nsteps);
+        time = 0.0;
+        for (int i = 0; i < nsteps; i++) {
+            time += dt;
+            sim11.advance(time);
+            double T = reactor11->temperature();
+            timeTemp11.emplace_back(time, T);
+        }
         t1 = std::chrono::high_resolution_clock::now();
+
         elapsed = t1 - t0;
         std::cout << "TSR-Rich-31 Cantera-CXX time = "
-          << std::scientific << elapsed.count()
-          << std::endl;
+          << std::scientific << elapsed.count() << std::endl;
         summaryData.emplace_back("TSR-Rich-31", elapsed.count());
-
 
         // Write results for second simulation
         std::ofstream outFile11("TSR-Rich-31/OUTPUT/batch-CXX.dat");
@@ -486,9 +555,10 @@ int main()
         appdelete();
         return 0;
 
-    } catch (CanteraError& err) {
-        std::cout << err.what() << std::endl;
-        appdelete();
-        return -1;
-    }
+    } 
+    
+    catch (CanteraError& err) {
+    std::cout << err.what() << std::endl;
+    appdelete();
+    return -1;}
 }

@@ -180,14 +180,8 @@ FLINT/
 4. **Add and run tests** for new functionality
 5. **Push** and create a pull request
 
-## Quick Links
+## Documentation
 
-- [Documentation](docs/) – Full API documentation
-- [Examples](src/test/) – Example programs and test cases
-- [Issues](../../issues) – Report bugs or request features
-
-## References & Resources
-
-- **Cantera Documentation:** [cantera.org](https://cantera.org)
+Detailed documentation can be found on the [GitHub pages](https://MarcoGrossi92.github.io/FLINT/) of the project.
 
 ---

@@ -182,6 +182,6 @@ FLINT/
 
 ## Documentation
 
-Detailed documentation can be found on the [GitHub pages](https://MarcoGrossi92.github.io/FLINT/) of the project.
+Detailed documentation can be found on the [GitHub pages](https://marcogrossi92.github.io/FLINT/) of the project.
 
 ---

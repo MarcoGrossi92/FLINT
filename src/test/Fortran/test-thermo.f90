@@ -29,7 +29,7 @@ program test
   real(8) :: time1, time2
   integer :: i, j, err
 
-  err = read_idealgas_thermo()
+  err = read_idealgas_thermo('WD/INPUT/')
 # if defined (CANTERA)
   call load_phase(gas, 'WD/INPUT/WD.yaml')
 # endif
@@ -51,7 +51,7 @@ program test
   enddo
   call cpu_time(time2)
 
-  write(*,*) time2-time1
+  write(*,*) 'Native time:', time2-time1
 
 # if defined (CANTERA)
 
@@ -67,9 +67,9 @@ program test
   enddo
   call cpu_time(time2)
 
-  write(*,*) time2-time1
+  write(*,*) 'Cantera time:', time2-time1
 
-  write(*,*) abs(cp_cantera-cp_native)/cp_cantera*100d0
+  write(*,*) 'Relative difference, %:', abs(cp_cantera-cp_native)/cp_cantera*100d0
 
 # endif
 

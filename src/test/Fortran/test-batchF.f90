@@ -240,7 +240,7 @@ program test
   open(300, file='Ecker/OUTPUT/batch-cantera.dat', status='replace', form='formatted')
 # endif
 
-  tlim = 2d-2
+  tlim = 5d-3
   pin = 1.0d+5
   Tin = 1000d0
   dt = tlim/nstep
@@ -828,7 +828,7 @@ program test
   open(300, file='ZK/OUTPUT/batch-cantera.dat', status='replace', form='formatted')
 # endif
 
-  tlim = 0.005
+  tlim = 0.002
   pin = 5.0d+5
   Tin = 1300d0
   dt = tlim/nstep
@@ -925,7 +925,7 @@ program test
   open(300, file='TSR-GP-24/OUTPUT/batch-cantera.dat', status='replace', form='formatted')
 # endif
 
-  tlim = 0.005
+  tlim = 0.002
   pin = 5.0d+5
   Tin = 1300d0
   dt = tlim/nstep

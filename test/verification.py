@@ -1,8 +1,22 @@
 import os
 import matplotlib.pyplot as plt
 
+plt.rcParams.update({
+    "figure.facecolor": "none",
+    "axes.facecolor": "none",
+    "savefig.facecolor": "none",
+    "axes.edgecolor": "#666666",
+    "axes.labelcolor": "#444444",
+    "xtick.color": "#444444",
+    "ytick.color": "#444444",
+    "text.color": "#444444",
+    "grid.color": "#888888",
+    "grid.alpha": 0.3,
+})
+
 # Root directory containing the folders
 root_dir = "./"  # Change this to your root folder path
+output_dir = "../docs/images/"
 
 # Collect all subfolders
 folders = [os.path.join(root_dir, d) for d in os.listdir(root_dir) if os.path.isdir(os.path.join(root_dir, d))]
@@ -16,29 +30,21 @@ custom_ranges = {
 
 # Define styles for up to 4 files per folder
 styles = [
-    {"color": "orange", "linestyle": "--", "marker": None},   # 1st file
-    {"color": "green", "linestyle": "-", "marker": None},         # 2nd file
-    {"color": "black", "linestyle": "None", "marker": "D", "markevery": 50, "markersize": 4},  # 3rd file
-    {"color": "red", "linestyle": "-.", "marker": None},          # 4th file
+    {"color": "black", "linestyle": "None", "marker": "D", "markevery": 50, "markersize": 4},
+    {"color": "orange", "linestyle": "--", "marker": None},
+    {"color": "green", "linestyle": "-", "marker": None},
+    {"color": "red", "linestyle": "-.", "marker": None},
 ]
-
-# Create tiled plots
-n_folders = len(folders)
-
-# Automatically choose a near-square layout for clarity
-cols = int(n_folders**0.5)
-if cols * cols < n_folders:
-    cols += 1
-rows = (n_folders + cols - 1) // cols
-
-# Scale figure size based on rows and cols
-fig, axes = plt.subplots(rows, cols, figsize=(5*cols, 4*rows), sharex=False, sharey=False)
-axes = axes.flatten()
 
 for idx, folder_ in enumerate(folders):
     folder = folder_ + "/OUTPUT/"
-    ax = axes[idx]
+
+    fig, ax = plt.subplots(figsize=(5, 4))
+
+    order = [0, 1, 2, 3]
     files = [f for f in os.listdir(folder) if 'batch' in f]
+    files.sort()
+    files = [files[i] for i in order if i < len(files)]
 
     for i, file in enumerate(files):
         filepath = os.path.join(folder, file)
@@ -62,10 +68,18 @@ for idx, folder_ in enumerate(folders):
 
         # Choose style based on file index
         style = styles[i % len(styles)]
+        legend_labels = [
+            "Cantera",
+            "FLINT Cantera",
+            "FLINT Explicit",
+            "FLINT General",
+        ]
+        label = legend_labels[i] if i < len(legend_labels) else f"Series {i+1}"
+
         ax.plot(
             time,
             temp,
-            label=os.path.splitext(file)[0],
+            label=label,
             color=style["color"],
             linestyle=style.get("linestyle", "-"),
             marker=style.get("marker", None),
@@ -81,14 +95,17 @@ for idx, folder_ in enumerate(folders):
         if "ylim" in custom_ranges[folder_name]:
             ax.set_ylim(custom_ranges[folder_name]["ylim"])
 
+        style = styles[i % len(styles)]
+        ax.plot(time, temp, label=file, **style)
+
     ax.set_title(folder_name)
     ax.set_xlabel("Time")
     ax.set_ylabel("Temperature")
     ax.legend(fontsize=8)
+    ax.grid(True, alpha=0.3)
 
-# Remove unused subplots if any
-for j in range(n_folders, len(axes)):
-    fig.delaxes(axes[j])
+    out_file = os.path.join(output_dir, f"{folder_name}.svg")
+    plt.savefig(out_file, bbox_inches="tight", transparent=True)
+    plt.close(fig)
 
-plt.tight_layout(rect=[0, 0, 1, 0.95])
-plt.show()
+    print(f"Saved {out_file}")

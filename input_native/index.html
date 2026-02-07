@@ -1,0 +1,1520 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://MarcoGrossi92.github.io/FLINT/input_native/">
+      
+      
+        <link rel="prev" href="../input_yaml/">
+      
+      
+        <link rel="next" href="../testing/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Native Format - FLINT Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="blue-grey" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#overview" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="FLINT Documentation" class="md-header__button md-logo" aria-label="FLINT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            FLINT Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Native Format
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="blue-grey" data-md-color-accent="deep-orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="blue-grey" data-md-color-accent="deep-orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="FLINT Documentation" class="md-nav__button md-logo" aria-label="FLINT Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    FLINT Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Theoretical Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Theoretical Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../theory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../theory_thermo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Thermodynamic and Transport Properties
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../theory_kinetics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Finite-Rate Kinetics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../theory_equilibrium/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chemical Equilibrium
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chemistry Database
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Chemistry Database
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../database/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Present Mechanisms
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../YTF/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    New Mechanisms Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Input Format
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Input Format
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../input/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../input_yaml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    YAML Format
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Native Format
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Native Format
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#native-file-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Native File Structure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detailed-format-specifications" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detailed Format Specifications
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Detailed Format Specifications">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-phasetxt-species-definitions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. phase.txt – Species Definitions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-chemistry-infotxt-mechanism-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. chemistry-info.txt – Mechanism Metadata
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-chemistry-arrheniusdat-reaction-rate-tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. chemistry-Arrhenius.dat – Reaction Rate Tables
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-chemistry-troedat-fall-off-correction-tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. chemistry-Troe.dat – Fall-off Correction Tables
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-thermodat-thermodynamic-property-tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. thermo.dat – Thermodynamic Property Tables
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#complete-example-coria-mechanism" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Complete Example: CORIA Mechanism
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Complete Example: CORIA Mechanism">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Files
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#path-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Path Usage
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tests & Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="native-file-format-specification">Native File Format Specification<a class="headerlink" href="#native-file-format-specification" title="Permanent link">&para;</a></h1>
+<p>Complete reference for FLINT native file formats (non-Cantera builds).</p>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>When FLINT is compiled <strong>without Cantera support</strong>, input data is loaded from a set of pre-generated native files. This path is designed for <strong>high-performance production use</strong>, where pre-computed tables eliminate runtime polynomial evaluation and mechanism parsing.</p>
+<hr />
+<h2 id="native-file-structure">Native File Structure<a class="headerlink" href="#native-file-structure" title="Permanent link">&para;</a></h2>
+<p>The complete input consists of up to <strong>seven files</strong> in the same directory:</p>
+<pre><code>INPUT/
+  ├── phase.txt               # Species list
+  ├── chemistry-info.txt      # Chemistry - Metadata &amp; stoichiometry
+  ├── chemistry-Arrhenius.dat # Chemistry - Reaction rates
+  ├── chemistry-Troe.dat      # Chemistry - Fall-off parameters (optional)
+  ├── chemistry-Lindemann.dat # Chemistry - Fall-off parameters (optional)
+  ├── transport.dat           # Transport properties (optional)
+  └── thermo.dat              # Thermodynamic properties
+</code></pre>
+<p><strong>File Sizes (CORIA 17-species / 44-reaction example):</strong>
+- phase.txt: ~250 bytes
+- chemistry-info.txt: ~15 KB
+- chemistry-Arrhenius.dat: ~43 MB (15000 temperature points × 44 reactions)
+- chemistry-Troe.dat: ~8 MB (fall-off reactions only)
+- thermo.dat: ~15 MB (15000 temperature points × 17 species × 5 properties)</p>
+<p><strong>Total: ~81 MB</strong> for a medium-sized mechanism. Pre-tabulation trades memory for speed.</p>
+<hr />
+<h2 id="detailed-format-specifications">Detailed Format Specifications<a class="headerlink" href="#detailed-format-specifications" title="Permanent link">&para;</a></h2>
+<h3 id="1-phasetxt-species-definitions">1. <code>phase.txt</code> – Species Definitions<a class="headerlink" href="#1-phasetxt-species-definitions" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose:</strong> Define species names and molecular weights.</p>
+<p><strong>Format:</strong> ASCII text, one species per line.</p>
+<pre><code>ideal-gas phase
+&lt;species_name&gt; &lt;molecular_weight_g_mol&gt;
+&lt;species_name&gt; &lt;molecular_weight_g_mol&gt;
+...
+</code></pre>
+<p><strong>Example (CORIA mechanism):</strong></p>
+<pre><code>ideal-gas phase
+H2      2.016000
+H       1.008000
+O      15.999000
+O2     31.998000
+OH     17.007000
+H2O    18.015000
+HO2    33.006000
+CH3    15.035000
+CH4    16.043000
+CO     28.010000
+CO2    44.009000
+H2O2   34.014000
+HCO    29.018000
+CH2O   30.026000
+CH3O   31.034000
+C2H6   30.070000
+CH3O2  47.033000
+</code></pre>
+<p><strong>Parsing Notes:</strong>
+- Line 1 is always <code>ideal-gas phase</code> (header)
+- Subsequent lines: space-separated <code>&lt;name&gt;</code> and <code>&lt;MW&gt;</code>
+- MW values are floats in g/mol
+- Species <strong>order must match</strong> <code>chemistry-info.txt</code> and <code>.dat</code> files</p>
+<hr />
+<h3 id="2-chemistry-infotxt-mechanism-metadata">2. <code>chemistry-info.txt</code> – Mechanism Metadata<a class="headerlink" href="#2-chemistry-infotxt-mechanism-metadata" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose:</strong> Provide resume of the chemical mechanism: species/reaction counts, reaction types, and stoichiometry.</p>
+<p><strong>Format:</strong> ASCII text with three sections.</p>
+<pre><code>&lt;mechanism_name&gt;
+N.ro species = &lt;count&gt;
+N.ro reactions = &lt;count&gt;
+
+General loop info. They are not used if the mechanism is exlplicitly defined
+
+Reaction type
+&lt;index&gt; &lt;type&gt;
+&lt;index&gt; &lt;type&gt;
+...
+
+Reaction definition
+&lt;rxn_id&gt; &lt;species_name&gt; &lt;coeff_reactant&gt; &lt;coeff_product&gt; &lt;coeff_thirdbody&gt;
+&lt;rxn_id&gt; &lt;species_name&gt; &lt;coeff_reactant&gt; &lt;coeff_product&gt; &lt;coeff_thirdbody&gt;
+...
+</code></pre>
+<p><strong>Example (CORIA, header section):</strong></p>
+<pre><code>CORIA-CNRS
+N.ro species = 17
+N.ro reactions = 44
+
+General loop info. They are not used if the mechanism is exlplicitly defined
+
+Reaction type
+1 Arrhenius
+2 Arrhenius
+3 Arrhenius
+4 Arrhenius
+5 three-body-Arrhenius
+6 Arrhenius
+7 falloff-Troe
+...
+44 Arrhenius
+
+Reaction definition
+1 H2 1.0 0.0 0.0
+1 H 0.0 1.0 0.0
+1 O 1.0 0.0 0.0
+1 O2 0.0 0.0 0.0
+...
+</code></pre>
+<p><strong>Section 1: Mechanism Header</strong></p>
+<pre><code>&lt;mechanism_name&gt;
+N.ro species = &lt;n_species&gt;
+N.ro reactions = &lt;n_reactions&gt;
+</code></pre>
+<ul>
+<li><code>&lt;mechanism_name&gt;</code>: Arbitrary string (e.g., "CORIA-CNRS", "GRI-MECH3")</li>
+<li><code>n_species</code>: Total number of distinct species</li>
+<li><code>n_reactions</code>: Total number of chemical reactions</li>
+</ul>
+<p><strong>Section 2: Reaction Type List</strong></p>
+<pre><code>Reaction type
+&lt;reaction_index&gt; &lt;reaction_type&gt;
+...
+</code></pre>
+<p>Reaction types:
+- <code>Arrhenius</code> – Standard elementary reaction (2-body, 3-body forms handled by coefficients)
+- <code>three-body-Arrhenius</code> – Three-body reaction (includes third-body collision partner)
+- <code>falloff-Troe</code> – Pressure-dependent reaction with Troe fall-off correction</p>
+<p><strong>Section 3: Reaction Definition (Stoichiometry Matrix)</strong></p>
+<pre><code>&lt;reaction_id&gt; &lt;species_name&gt; &lt;n_reactant&gt; &lt;n_product&gt; &lt;n_thirdbody&gt;
+</code></pre>
+<p>For each reaction <code>&lt;reaction_id&gt;</code>, there are <code>n_species</code> lines (one per species):</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&lt;reaction_id&gt;</code></td>
+<td>int</td>
+<td>Reaction index (1–44 in CORIA)</td>
+</tr>
+<tr>
+<td><code>&lt;species_name&gt;</code></td>
+<td>string</td>
+<td>Species name (must match <code>phase.txt</code>)</td>
+</tr>
+<tr>
+<td><code>&lt;n_reactant&gt;</code></td>
+<td>float</td>
+<td>Stoichiometric coefficient as reactant (0 if product/inert)</td>
+</tr>
+<tr>
+<td><code>&lt;n_product&gt;</code></td>
+<td>float</td>
+<td>Stoichiometric coefficient as product (0 if reactant/inert)</td>
+</tr>
+<tr>
+<td><code>&lt;n_thirdbody&gt;</code></td>
+<td>float</td>
+<td>Third-body efficiency (0 if not involved, 1.0 if collision partner)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example:</strong> Reaction 5 (three-body-Arrhenius):</p>
+<pre><code>5 H2 0.0 0.0 0.0    # H2 is neither reactant nor third body
+5 H 0.0 1.0 0.0     # H is product
+5 O 1.0 0.0 0.0     # O is reactant
+5 O2 0.0 0.0 1.0    # O2 is third body (efficiency 1.0)
+5 OH 0.0 1.0 0.0    # OH is product
+5 H2O 0.0 0.0 1.0   # H2O is third body
+...
+5 M 0.0 0.0 1.0     # Generic third body (efficiency 1.0)
+</code></pre>
+<p><strong>Parsing Notes:</strong>
+- 846 lines total in CORIA (lines 1–4 header + 44 reactions × 18 species ≈ 844 lines)
+- Species appear in <strong>same order</strong> as in <code>phase.txt</code>
+- Third-body coefficients: <code>0.0</code> (not involved), <code>1.0</code> (default), other floats (enhanced efficiency)</p>
+<hr />
+<h3 id="3-chemistry-arrheniusdat-reaction-rate-tables">3. <code>chemistry-Arrhenius.dat</code> – Reaction Rate Tables<a class="headerlink" href="#3-chemistry-arrheniusdat-reaction-rate-tables" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose:</strong> Pre-computed forward and backward Arrhenius rates for all reactions across temperature range.</p>
+<p><strong>Format:</strong> Tecplot ASCII (binary-like structure, not human-readable).</p>
+<pre><code>TITLE = &quot;Arrhenius data&quot;
+VARIABLES = &quot;Temperature&quot;, &quot;kf&quot;, &quot;kb&quot;
+ZONE T=Reaction1
+I=15000, F=POINT
+&lt;T_1&gt;  &lt;kf_1&gt;  &lt;kb_1&gt;
+&lt;T_2&gt;  &lt;kf_2&gt;  &lt;kb_2&gt;
+...
+&lt;T_15000&gt;  &lt;kf_15000&gt;  &lt;kb_15000&gt;
+
+ZONE T=Reaction2
+I=15000, F=POINT
+&lt;T_1&gt;  &lt;kf_1&gt;  &lt;kb_1&gt;
+...
+</code></pre>
+<p><strong>Structure:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TITLE</td>
+<td>File description (fixed: "Arrhenius data")</td>
+</tr>
+<tr>
+<td>VARIABLES</td>
+<td>Column headers (fixed: "Temperature", "kf", "kb")</td>
+</tr>
+<tr>
+<td>ZONE</td>
+<td>Zone header (one per reaction; <code>T=Reaction&lt;N&gt;</code>)</td>
+</tr>
+<tr>
+<td>I=N</td>
+<td>Number of temperature points (e.g., 15000)</td>
+</tr>
+<tr>
+<td>F=POINT</td>
+<td>Data format (always POINT = single values per line)</td>
+</tr>
+<tr>
+<td>Data rows</td>
+<td><code>Temperature  kf  kb</code> (space-separated floats)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example (first reaction, first 6 points):</strong></p>
+<pre><code>ZONE T=Reaction1
+I=15000, F=POINT
+1.0           0.00000000000000000000E+00    0.00000000000000000000E+00
+2.0           0.00000000000000000000E+00    0.00000000000000000000E+00
+3.0           0.00000000000000000000E+00    0.00000000000000000000E+00
+4.0           0.00000000000000000000E+00    0.00000000000000000000E+00
+5.0           4.31541883433268038949E-272    4.26390547350824394621E-194
+6.0           4.65732315911476184290E-226    6.07657342283880940567E-161
+...
+</code></pre>
+<p><strong>Data Format:</strong></p>
+<ul>
+<li><strong>Temperature</strong>: 1.0 to 15000.0 K (in 1 K increments)</li>
+<li><strong>kf</strong>: Forward rate constant (scientific notation, units depend on reaction order)</li>
+<li>For 2-body Arrhenius: cm³/mol/s</li>
+<li>For 3-body: cm⁶/mol²/s</li>
+<li><strong>kb</strong>: Backward rate constant (same units as kf, from reverse reaction)</li>
+<li>Precision: 20 significant decimal places (double precision)</li>
+</ul>
+<p><strong>Temperature Indexing:</strong></p>
+<p>The file contains <strong>one zone per reaction</strong>, with all reactions using the <strong>same temperature grid</strong>:
+- Zone 1 (Reaction 1): T = 1 to 15000 K
+- Zone 2 (Reaction 2): T = 1 to 15000 K
+- ...
+- Zone 44 (Reaction 44): T = 1 to 15000 K</p>
+<p>To access rate for reaction N at temperature T(K):</p>
+<pre><code>line_index = (T - 1)  # Since T starts at 1.0
+value = ZONE[N].data[line_index]
+</code></pre>
+<p><strong>File Size:</strong> ~43 MB (CORIA: 44 reactions × 15000 points × ~65 bytes/line)</p>
+<hr />
+<h3 id="4-chemistry-troedat-fall-off-correction-tables">4. <code>chemistry-Troe.dat</code> – Fall-off Correction Tables<a class="headerlink" href="#4-chemistry-troedat-fall-off-correction-tables" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose:</strong> Pre-computed Troe fall-off correction factors for pressure-dependent reactions.</p>
+<p><strong>Format:</strong> Tecplot ASCII (same as <code>chemistry-Arrhenius.dat</code>).</p>
+<pre><code>TITLE = &quot;Fall-off data&quot;
+VARIABLES = &quot;Temperature&quot;, &quot;k_inf&quot;, &quot;k_0&quot;, &quot;k_c&quot;, &quot;F_cent&quot;
+ZONE T=Reaction7
+I=15000, F=POINT
+&lt;T_1&gt;  &lt;k_inf_1&gt;  &lt;k_0_1&gt;  &lt;k_c_1&gt;  &lt;F_cent_1&gt;
+...
+</code></pre>
+<p><strong>Structure:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TITLE</td>
+<td>File description (fixed: "Fall-off data")</td>
+</tr>
+<tr>
+<td>VARIABLES</td>
+<td>Column headers (5 values: T, k_inf, k_0, k_c, F_cent)</td>
+</tr>
+<tr>
+<td>ZONE</td>
+<td>One zone per <strong>fall-off reaction</strong> (not all reactions)</td>
+</tr>
+<tr>
+<td>I=N</td>
+<td>Number of temperature points (e.g., 15000)</td>
+</tr>
+<tr>
+<td>Data rows</td>
+<td>Pre-computed Troe fall-off parameters</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Troe Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Description</th>
+<th>Formula</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Temperature</code></td>
+<td>Temperature (K)</td>
+<td>1.0 to 15000.0</td>
+</tr>
+<tr>
+<td><code>k_inf</code></td>
+<td>High-pressure limit rate</td>
+<td>Computed from Arrhenius A, b, Ea</td>
+</tr>
+<tr>
+<td><code>k_0</code></td>
+<td>Low-pressure limit rate</td>
+<td>Third-order rate coefficient</td>
+</tr>
+<tr>
+<td><code>k_c</code></td>
+<td>Blending coefficient</td>
+<td>Intermediate value for fall-off</td>
+</tr>
+<tr>
+<td><code>F_cent</code></td>
+<td>Centering factor</td>
+<td>Troe fall-off correction factor</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Troe Fall-off Theory:</strong></p>
+<p>The Troe correction extends the 2-body rate to handle pressure effects:</p>
+<div class="arithmatex">\[k(P) = k_{\infty} \left( \frac{k_0 [M]}{1 + k_0 [M]} \right) F_c^x\]</div>
+<p>where:
+- <span class="arithmatex">\(k_{\infty}\)</span> = high-pressure limit (provided in <code>chemistry-Arrhenius.dat</code>)
+- <span class="arithmatex">\(k_0\)</span> = low-pressure limit (from Troe parameters)
+- <span class="arithmatex">\(F_c\)</span> = centering factor = <span class="arithmatex">\((1-a) \exp(-T/T^*) + a \exp(-T/T^{**}) + \exp(-T^{***}/T)\)</span>
+- <span class="arithmatex">\([M]\)</span> = third-body concentration
+- <span class="arithmatex">\(x\)</span> = fall-off function exponent</p>
+<p>This file provides the <strong>pre-computed</strong> Troe parameters to avoid runtime calculation.</p>
+<p><strong>Parsing Notes:</strong>
+- Only <strong>4 zones</strong> in CORIA (reactions 7, 16, 19, 37 are fall-off types)
+- Zones are labeled with <strong>original reaction index</strong> (e.g., <code>T=Reaction7</code>, <code>T=Reaction16</code>)
+- Zone order in file <strong>may not match</strong> reaction order (must parse zone header)
+- <code>F_cent</code> values ≈ 1.0 at low T, &lt; 1.0 at moderate T (indicates correction strength)</p>
+<p><strong>File Size:</strong> ~8 MB (CORIA: 4 fall-off reactions × 15000 points × ~130 bytes/line)</p>
+<hr />
+<h3 id="5-thermodat-thermodynamic-property-tables">5. <code>thermo.dat</code> – Thermodynamic Property Tables<a class="headerlink" href="#5-thermodat-thermodynamic-property-tables" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose:</strong> Pre-computed thermodynamic properties (Cp, H, S, dCp) for all species across temperature range.</p>
+<p><strong>Format:</strong> Tecplot ASCII (human-readable header, dense numeric data).</p>
+<pre><code>TITLE = &quot;Mass Thermodynamic Properties&quot;
+VARIABLES = &quot;Temperature&quot;, &quot;Cp&quot;, &quot;Enthalpy&quot;, &quot;Entropy&quot;, &quot;dCp&quot;
+ZONE T=H2
+I=15000, F=POINT
+&lt;T_1&gt;  &lt;Cp_1&gt;  &lt;H_1&gt;  &lt;S_1&gt;  &lt;dCp_1&gt;
+&lt;T_2&gt;  &lt;Cp_2&gt;  &lt;H_2&gt;  &lt;S_2&gt;  &lt;dCp_2&gt;
+...
+
+ZONE T=H
+I=15000, F=POINT
+...
+
+ZONE T=O
+I=15000, F=POINT
+...
+</code></pre>
+<p><strong>Structure:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TITLE</td>
+<td>File description (fixed: "Mass Thermodynamic Properties")</td>
+</tr>
+<tr>
+<td>VARIABLES</td>
+<td>Column headers (5 values: T, Cp, Enthalpy, Entropy, dCp)</td>
+</tr>
+<tr>
+<td>ZONE</td>
+<td>One zone per species; <code>T=&lt;species_name&gt;</code></td>
+</tr>
+<tr>
+<td>I=N</td>
+<td>Number of temperature points (e.g., 15000)</td>
+</tr>
+<tr>
+<td>F=POINT</td>
+<td>Data format (always POINT)</td>
+</tr>
+<tr>
+<td>Data rows</td>
+<td>Temperature and properties (space-separated floats)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Properties (per unit mass, not molar):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Unit (SI)</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Temperature</code></td>
+<td>K</td>
+<td>1.0 to 15000.0 K (1 K increments)</td>
+</tr>
+<tr>
+<td><code>Cp</code></td>
+<td>J/(kg·K)</td>
+<td>Heat capacity at constant pressure</td>
+</tr>
+<tr>
+<td><code>Enthalpy</code></td>
+<td>J/kg</td>
+<td>Specific enthalpy (H - H_ref)</td>
+</tr>
+<tr>
+<td><code>Entropy</code></td>
+<td>J/(kg·K)</td>
+<td>Specific entropy</td>
+</tr>
+<tr>
+<td><code>dCp</code></td>
+<td>J/(kg·K)</td>
+<td>Temperature derivative of Cp (usually ~0 for ideal gas)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example (H2 species, first 10 points):</strong></p>
+<pre><code>ZONE T=H2
+I=15000, F=POINT
+1.0 13654.381351 -4093931.342254 -13115.572143 0.000000
+2.0 13654.381351 -4080276.960903 -3651.076207 0.000000
+3.0 13654.381351 -4066622.579552 1885.299003 0.000000
+4.0 13654.381351 -4052968.198202 5813.419728 0.000000
+5.0 13654.381351 -4039313.816851 8860.306874 0.000000
+6.0 13654.381351 -4025659.435500 11349.794939 0.000000
+7.0 13654.381351 -4012005.054150 13454.627107 0.000000
+8.0 13654.381351 -3998350.672799 15277.915664 0.000000
+9.0 13654.381351 -3984696.291448 16886.170149 0.000000
+10.0 13654.381351 -3971041.910098 18324.802809 0.000000
+</code></pre>
+<p><strong>Observations:</strong>
+- <strong>Cp is constant</strong> for each species (ideal gas approximation)
+- <strong>H varies linearly</strong> with T (for ideal gas: <span class="arithmatex">\(H = H_{ref} + C_p (T - T_{ref})\)</span>)
+- <strong>S varies logarithmically</strong> with T (for ideal gas: <span class="arithmatex">\(S = S_{ref} + C_p \ln(T/T_{ref})\)</span>)
+- <strong>dCp ≈ 0</strong> (indicates ideal gas model, no temperature dependence of Cp)</p>
+<p><strong>Zone Ordering:</strong></p>
+<p>Species zones appear in <strong>same order</strong> as in <code>phase.txt</code>:</p>
+<ol>
+<li>H2</li>
+<li>H</li>
+<li>O</li>
+<li>O2</li>
+<li>OH</li>
+<li>...</li>
+<li>CH3O2 (last)</li>
+</ol>
+<p><strong>File Size:</strong> ~15 MB (CORIA: 17 species × 15000 points × ~60 bytes/line)</p>
+<hr />
+<h2 id="complete-example-coria-mechanism">Complete Example: CORIA Mechanism<a class="headerlink" href="#complete-example-coria-mechanism" title="Permanent link">&para;</a></h2>
+<h3 id="files">Files<a class="headerlink" href="#files" title="Permanent link">&para;</a></h3>
+<p><strong>1. phase.txt:</strong></p>
+<pre><code>ideal-gas phase
+H2      2.016000
+H       1.008000
+O      15.999000
+O2     31.998000
+OH     17.007000
+H2O    18.015000
+HO2    33.006000
+CH3    15.035000
+CH4    16.043000
+CO     28.010000
+CO2    44.009000
+H2O2   34.014000
+HCO    29.018000
+CH2O   30.026000
+CH3O   31.034000
+C2H6   30.070000
+CH3O2  47.033000
+</code></pre>
+<p><strong>2. chemistry-info.txt (excerpt):</strong></p>
+<pre><code>CORIA-CNRS
+N.ro species = 17
+N.ro reactions = 44
+
+Reaction type
+1 Arrhenius
+2 Arrhenius
+...
+7 falloff-Troe
+...
+44 Arrhenius
+
+Reaction definition
+1 H2 1.0 0.0 0.0
+1 H 0.0 1.0 0.0
+1 O 1.0 0.0 0.0
+1 O2 0.0 0.0 0.0
+... (repeated for each species)
+</code></pre>
+<p><strong>3. chemistry-Arrhenius.dat:</strong></p>
+<p>44 Tecplot zones with 15000 temperature points each.</p>
+<p><strong>4. chemistry-Troe.dat:</strong></p>
+<p>4 Tecplot zones for fall-off reactions (Reactions 7, 16, 19, 37).</p>
+<p><strong>5. thermo.dat:</strong></p>
+<p>17 Tecplot zones for species with properties at 15000 temperature points each.</p>
+<hr />
+<h2 id="path-usage">Path Usage<a class="headerlink" href="#path-usage" title="Permanent link">&para;</a></h2>
+<p>To use native files in FLINT:</p>
+<ol>
+<li><strong>Ensure Cantera is NOT compiled in</strong> (configure build without Cantera)</li>
+<li><strong>Place all files in the same directory</strong> (e.g., <code>INPUT/</code>)</li>
+<li><strong>Configure FLINT</strong> to point to this directory</li>
+<li><strong>Load mechanism</strong> at runtime:</li>
+</ol>
+<pre><code class="language-fortran">! Pseudo-code
+call load_phase_native(&quot;INPUT/&quot;)          ! Reads phase.txt
+call load_mechanism_native(&quot;INPUT/&quot;)      ! Reads chemistry-info.txt, .dat files
+call load_thermo_native(&quot;INPUT/&quot;)         ! Reads thermo.dat
+</code></pre>
+<hr />
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "toc.integrate", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

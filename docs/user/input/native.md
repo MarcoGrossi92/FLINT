@@ -412,8 +412,6 @@ Species zones appear in **same order** as in `phase.txt`:
 
 ## Complete Example: CORIA Mechanism
 
-### Files
-
 **1. phase.txt:**
 
 ```

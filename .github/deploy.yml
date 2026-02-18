@@ -19,5 +19,6 @@ jobs:
           python-version: '3.x'
 
       - run: pip install mkdocs
+      - run: pip install mkdocs-macros-plugin
 
       - run: mkdocs gh-deploy --force

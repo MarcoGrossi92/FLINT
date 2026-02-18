@@ -130,7 +130,7 @@ $$
 
 For CFD applications, conversions between primitive variables (density, velocity, pressure) and conservative variables (conserved mass, momentum, energy) are essential [6].
 
-### Primitive → Conservative
+**Primitive → Conservative**
 
 $$
 \begin{aligned}
@@ -140,7 +140,7 @@ $$
 \end{aligned}
 $$
 
-### Conservative → Primitive
+**Conservative → Primitive**
 
 The conversion from conservative to primitive variables requires solving for temperature $T$ iteratively:
 
@@ -148,7 +148,7 @@ The conversion from conservative to primitive variables requires solving for tem
 2. Compute total density: $\rho = \sum_{s=1}^{N_s} \rho_s$
 3. Compute velocity: $\mathbf{u} = (\rho \mathbf{u})^\text{cons} / \rho$
 4. Compute specific internal energy: $e = (\rho e_0)^\text{cons}/\rho - \frac{1}{2}|\mathbf{u}|^2$
-5. **Solve for temperature** using Newton–Raphson iteration:
+5. Solve for temperature using Newton–Raphson iteration:
    $$
    e(\rho_s, T) = \sum_{s=1}^{N_s} Y_s h_s(T) - R_\text{mix}(Y_s) T
    $$

@@ -1,0 +1,15 @@
+/* Let SVG inherit text color */
+.md-content svg {
+  color: inherit;
+}
+
+/* Recolor ONLY text */
+.md-content svg text {
+  fill: currentColor !important;
+}
+
+/* Recolor ONLY axes spines and ticks */
+.md-content svg .matplotlib-axis path,
+.md-content svg .matplotlib-axis line {
+  stroke: currentColor !important;
+}

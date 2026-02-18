@@ -1,20 +1,35 @@
-# FLINT Theoretical Guide
+# Theoretical Guide
 
 FLINT is a comprehensive framework for modeling chemically reacting flows with accurate thermodynamic, transport, and kinetic properties. This guide provides the theoretical foundation for FLINT's capabilities in multi-species gas dynamics and chemical kinetics.
 
----
+<div class="grid cards" markdown>
 
-## Document Structure
+-   :material-thermometer:{ .lg .middle } __Thermodynamic and Transport Properties__
 
-This theoretical guide is organized into the following sections:
+    ---
 
-1. **[Thermodynamic and Transport Properties](theory_thermo.md)**: Mixture rules, equation of state, property evaluation
-2. **[Finite-Rate Kinetics](theory_kinetics.md)**: Arrhenius reactions, Lindemann falloff, Troe formulation
-3. **[Chemical Equilibrium](theory_equilibrium.md)**: NASA CEA algorithm for UV problems
+    Mixture rules, equation of state, property evaluation
 
-For implementation details and API documentation, please refer to the FLINT code.
+    [:octicons-arrow-right-24: Explore thermodynamic models](thermo.md)
 
----
+-   :material-chart-bell-curve:{ .lg .middle } __Finite-Rate Kinetics__
+
+    ---
+
+    Arrhenius reactions, Lindemann falloff, Troe formulation
+
+    [:octicons-arrow-right-24: Explore kinetics models](kinetics.md)
+
+-   :material-scale-balance:{ .lg .middle } __Chemical Equilibrium__
+
+    ---
+
+    NASA CEA algorithm for UV problems
+
+    [:octicons-arrow-right-24: Explore equilibrium solver](equilibrium.md)
+
+</div>
+
 
 ## Thermodynamic and Transport Properties
 
@@ -33,7 +48,7 @@ FLINT computes mixture properties from individual species data using established
 - Thermal conductivity via Wilke's mixing rule
 - Species diffusion coefficients (optional)
 
-**For detailed formulations, see:** [Thermodynamic and Transport Properties](theory_thermo.md)
+**For detailed formulations, see:** [Thermodynamic and Transport Properties](thermo.md)
 
 ---
 
@@ -49,7 +64,7 @@ Compute mass source terms for each species, accounting for:
 - Three-body reactions: Collision partners with species-specific efficiencies
 - Pressure-dependent reactions: Lindemann and Troe falloff
 
-**For detailed formulations, see:** [Finite-Rate Kinetics](theory_kinetics.md)
+**For detailed formulations, see:** [Finite-Rate Kinetics](kinetics.md)
 
 **Chemical Equilibrium**
 
@@ -58,6 +73,6 @@ Computes equilibrium compositions by thermodynamic optimization:
 - UV problems, constant internal energy and volume (or density) 
 - NASA CEA methodology
 
-**For detailed formulations, see:** [Chemical Equilibrium](theory_equilibrium.md)
+**For detailed formulations, see:** [Chemical Equilibrium](equilibrium.md)
 
 ---

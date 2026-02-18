@@ -1,6 +1,8 @@
 site_name: FLINT Documentation
-
 site_url: https://MarcoGrossi92.github.io/FLINT/
+site_author: Marco Grossi
+repo_name: MarcoGrossi92/FLINT
+repo_url: https://github.com/MarcoGrossi92/FLINT
 
 theme:
   name: material
@@ -23,36 +25,104 @@ theme:
         icon: material/weather-sunny
         name: Switch to light mode
   features:
+    - navigation.tabs
     - navigation.sections
-    - navigation.expand
     - navigation.top
+    - navigation.tracking
+    - navigation.indexes
     - toc.integrate
     - content.code.copy
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+  icon:
+    repo: fontawesome/brands/github
 
+# Extensions
 markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.details
+  - admonition
+  - tables
+  - attr_list
+  - md_in_html
   - toc:
       permalink: true
       toc_depth: 2-3
   - pymdownx.arithmatex:
       generic: true
-  - attr_list
-  - md_in_html
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+# Plugins
+plugins:
+  - macros
+  - search:
+      lang: en
+
 
 extra_javascript:
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 
+extra_css:
+  - stylesheets/extra.css
+
 nav:
   - Home: index.md
+
+  - Getting Started: 
+    - getting-started/index.md
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quick-start.md
+
+  - User Guide:
+    - user/index.md
+    - Using FLINT: user/using.md
+    - Input Format: 
+      - user/input/index.md
+      - YAML Format: user/input/yaml.md
+      - Native Format: user/input/native.md
+    - Chemistry Database:
+      - Available Mechanisms: user/database.md
+      - Generating New Mechanisms: user/chemistry_routines.md
+
+  # - API Reference:
+  #   - api/index.md
+  #   - Thermodynamics: api/thermo.md
+  #   - Kinetics: api/kinetics.md
+  #   - Equilibrium: api/equilibrium.md
+  #   - I/O: api/io.md
+
+  - Examples & Verification:
+    - examples/index.md
+    - Examples Definition: examples/definition.md
+    - Verification Outcomes: examples/verification.md
+
   - Theoretical Guide: 
-    - Overview: theory.md
-    - Thermodynamic and Transport Properties : theory_thermo.md
-    - Finite-Rate Kinetics: theory_kinetics.md
-    - Chemical Equilibrium: theory_equilibrium.md
-  - Chemistry Database:
-    - Present Mechanisms: database.md
-    - New Mechanisms Generation: YTF.md
-  - Input Format:
-    - Overview: input.md
-    - YAML Format: input_yaml.md
-    - Native Format: input_native.md
-  - Tests & Examples: testing.md
+    - theory/index.md
+    - Thermodynamic and Transport Properties: theory/thermo.md
+    - Finite-Rate Kinetics: theory/kinetics.md
+    - Chemical Equilibrium: theory/equilibrium.md
+
+  - Developer Guide:
+    - development/index.md
+    - Code Structure: development/structure.md
+    - Generating New Mechanisms: development/chemistry_generation.md
+    - Contributing: development/contributing.md
+    - Testing: development/testing.md
+
+  - About:
+    - about/index.md
+    - Acknowledgements: about/acknowledgements.md
+    - License: about/license.md

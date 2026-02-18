@@ -1,11 +1,11 @@
-# FLINT Input File Format
+# Input Format
 
 FLINT supports **two distinct input paths** for defining chemical mechanisms and thermodynamic data, depending on your use case and whether Cantera is available.
 
 | Path | Format | Best For | See |
 |------|--------|----------|-----|
-| **YAML** | Human-readable | Development, testing, flexibility | [YAML Specification](input_yaml.md) |
-| **Native** | Pre-tabulated | Production, high-performance, no Cantera | [Native Format Specification](input_native.md) |
+| **YAML** | Human-readable | Development, testing, flexibility | [YAML Specification](yaml.md) |
+| **Native** | Pre-tabulated | Production, high-performance, no Cantera | [Native Format Specification](native.md) |
 
 ---
 
@@ -24,7 +24,7 @@ FLINT supports **two distinct input paths** for defining chemical mechanisms and
 - Easy to edit and version control  
 - Full Cantera interoperability  
 
-**For detailed formulations, see:** [YAML Specification](input_yaml.md)
+**For detailed formulations, see:** [YAML Specification](yaml.md)
 
 ---
 
@@ -41,7 +41,7 @@ FLINT supports **two distinct input paths** for defining chemical mechanisms and
 - Fast I/O with pre-tabulated properties  
 - Production-ready  
 
-**For detailed formulations, see:** [Native Format Specification](input_native.md)
+**For detailed formulations, see:** [Native Format Specification](native.md)
 
 ---
 

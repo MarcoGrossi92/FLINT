@@ -96,8 +96,8 @@ EOF
 # Default global values
 COMMAND=""
 COMPILERS=""
-ORION_PATH='lib/ORION/'
-OSLO_PATH='lib/OSlo/'
+ORION_PATH=$(pwd)'/lib/ORION/'
+OSLO_PATH=$(pwd)'/lib/OSlo/'
 BUILD_TYPE=RELEASE
 USE_SUNDIALS=false
 USE_CANTERA=false

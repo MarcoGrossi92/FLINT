@@ -3,7 +3,7 @@ module FLINT_CEA_solver
 contains
 
 
-      SUBROUTINE CEA_solve(p_in, T_in, rhoi_in, T_out, rhoi_out)
+      SUBROUTINE CEA_solve(T_in, rhoi_in, T_out, rhoi_out)
 !***********************************************************************
 ! CALCULATE EQUILIBRIUM COMPOSITION AND PROPERTIES.
 !***********************************************************************
@@ -12,34 +12,34 @@ contains
       use FLINT_Lib_Thermodynamic, only: COMP_THERMO_QUANTS
       IMPLICIT NONE
       REAL*8, DIMENSION(:), INTENT(IN) :: rhoi_in
-      REAL*8, INTENT(IN) :: p_in, T_in
+      REAL*8, INTENT(IN) :: T_in
       REAL*8, INTENT(OUT) :: T_out
       REAL*8, DIMENSION(:), INTENT(OUT) :: rhoi_out
 ! LOCAL VARIABLES
       CHARACTER*12 ae,cmp(MAXEL)
-      CHARACTER*16 amb
       LOGICAL cpcalc,i2many,newcom,reduce
       INTEGER i,il,ilamb,ilamb1,inc,ipr,iq2,iter,ix,ixsing,iz,j,ja,jb, &
               jbx,jc,jcondi,jcons,jdelg,jex,jj,jkg,jneg,jsw,k,kc,kg,kk,&
               kneg,l,lc,lcs(MAXEL),le,lelim,lk,ll,lncvg,ls,lsing, &
-              lz,maxitn,ncvg,njc,nn,numb,kmat
+              lz,maxitn,ncvg,njc,nn,numb
       INTEGER IABS
-      REAL*8 aa,ambda,ambda1,bigen,bigneg,delg,dlnt,dpie,ensol,esize, &
+      REAL*8 aa,ambda,ambda1,bigen,bigneg,dlnt,dpie,ensol,esize, &
              gap,gasfrc,pie,pisave(MAXMAT-2),siz9,sizeg,smalno,smnol, &
-             sum,sum1,szgj,tem,tmelt,tsize,ween,xi,xln,xsize,xx(MAXMAT)
+             sum0,sum1,szgj,tem,tmelt,tsize,ween,xi,xln,xsize,xx(MAXMAT)
       REAL*8 DABS,DEXP,DLOG,DMAX1, Tln, Tm
-      REAL*8 Vv, pp, tt, Hsub0
+      REAL*8 rho, Vv, pp, tt, Hsub0
       REAL*8 B0p(MAXEL, 2)
       REAL*8 Enln(MAXNGC), Enn, En(MAXNGC, NCOL), Ennl, Sumn, B0(MAXEL), G(MAXMAT, MAXMAT+1)
-      REAL(8) :: Cp(MAXNGC), H0(MAXNGC), Mu(MAXNGC), S(MAXNGC)
+      REAL*8 Cp(MAXNGC), H0(MAXNGC), Mu(MAXNGC), S(MAXNGC)
       LOGICAL Convg, Gonly
 
       DATA smalno/1.E-6/,smnol/ - 13.815511/
 
-      call CEA_initialize_local(T_in, rhoi_in, Vv, B0p, Hsub0)
+      rho = sum(rhoi_in)
+      Vv = 1d05/rho
+      call CEA_initialize_local(T_in, rhoi_in/rho, B0p, Hsub0)
       B0 = B0p(:,2)
 
-      Pp = p_in
       Tt = T_in
 
       ! INITIAL ESTIMATES
@@ -183,10 +183,10 @@ contains
           IF ( Vol ) X(iq2) = X(Iq1)
           IF ( Tp ) X(iq2) = 0.
           dlnt = X(iq2)
-          sum = X(Iq1)
+          sum0 = X(Iq1)
           IF ( Vol ) THEN
             X(Iq1) = 0.
-            sum = -dlnt
+            sum0 = -dlnt
           ENDIF
           DO 520 j = 1,Ng
             IF ( lelim.NE.0 ) THEN
@@ -195,7 +195,7 @@ contains
                 IF ( A(i,j).NE.0. ) GOTO 520
               ENDDO
             ENDIF
-            Deln(j) = -Mu(j) + H0(j)*dlnt + sum
+            Deln(j) = -Mu(j) + H0(j)*dlnt + sum0
             DO k = 1,Nlm
               Deln(j) = Deln(j) + A(k,j)*X(k)
             ENDDO
@@ -213,8 +213,8 @@ contains
           ambda1 = 1.D0
           ilamb = 0
           ilamb1 = 0
-          sum = DMAX1(DABS(X(Iq1)),DABS(dlnt))
-          sum = sum*5.
+          sum0 = DMAX1(DABS(X(Iq1)),DABS(dlnt))
+          sum0 = sum0*5.
           DO j = 1,Ng
             IF ( Deln(j).GT.0. ) THEN
               IF ( (Enln(j)-Ennl+Size).LE.0. ) THEN
@@ -226,13 +226,13 @@ contains
                     ilamb1 = j
                   ENDIF
                 ENDIF
-              ELSEIF ( Deln(j).GT.sum ) THEN
-                sum = Deln(j)
+              ELSEIF ( Deln(j).GT.sum0 ) THEN
+                sum0 = Deln(j)
                 ilamb = j
               ENDIF
             ENDIF
           ENDDO
-          IF ( sum.GT.2.D0 ) ambda = 2.D0/sum
+          IF ( sum0.GT.2.D0 ) ambda = 2.D0/sum0
           IF ( ambda1.LE.ambda ) THEN
             ambda = ambda1
             ilamb = ilamb1
@@ -341,8 +341,8 @@ contains
               GOTO 1500
             ENDIF
           ELSE
-            sum = (X(Iq1)*Enn/Totn(Npt))
-            IF ( DABS(sum).GT.0.5E-5 ) GOTO 500
+            sum0 = (X(Iq1)*Enn/Totn(Npt))
+            IF ( DABS(sum0).GT.0.5E-5 ) GOTO 500
             DO j = 1,Ng
               IF ( DABS(Deln(j))*En(j,Npt)/Totn(Npt).GT.0.5D-5 )GOTO 500
             ENDDO
@@ -357,11 +357,11 @@ contains
             le = Nlm
             DO i = 1,Nlm
               IF ( DABS(B0(i)).GE.1.D-06 ) THEN
-                sum = 0.
+                sum0 = 0.
                 DO j = 1,Ngc
-                  sum = sum + En(j,Npt)*A(i,j)
+                  sum0 = sum0 + En(j,Npt)*A(i,j)
                 ENDDO
-                IF ( DABS(B0(i)-sum).GT.Bcheck ) GOTO 500
+                IF ( DABS(B0(i)-sum0).GT.Bcheck ) GOTO 500
               ENDIF
             ENDDO
             IF ( Trace.NE.0. ) THEN
@@ -392,7 +392,7 @@ contains
                   X(le) = pie
                 ENDIF
  566            sum1 = 0.
-                sum = 0.
+                sum0 = 0.
                 pie = X(le)
                 DO j = 1,Ng
                   IF ( A(ls,j).NE.0. ) THEN
@@ -404,12 +404,12 @@ contains
                       En(j,Npt) = tem
                     ENDIF
                     aa = A(ls,j)*tem
-                    sum = sum + aa
+                    sum0 = sum0 + aa
                     sum1 = sum1 + aa*A(ls,j)
                   ENDIF
                 ENDDO
                 IF ( sum1.NE.0. ) THEN
-                  dpie = -sum/sum1
+                  dpie = -sum0/sum1
                   DO j = 1,Ng
                     IF ( A(ls,j).NE.0. ) Enln(j) = Enln(j) + A(ls,j)*dpie
                   ENDDO

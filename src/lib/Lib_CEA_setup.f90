@@ -84,13 +84,12 @@ contains
   end subroutine CEA_initialize_global
 
 
-  subroutine CEA_initialize_local(Tt, Pecwt, Vv, B0P, Hsub0)
+  subroutine CEA_initialize_local(Tt, Pecwt, B0P, Hsub0)
     use FLINT_CEA_data
     use FLINT_Lib_Thermodynamic
     implicit none
     real(8), dimension(:), intent(in) :: Pecwt
     real(8), intent(in) :: Tt
-    real(8), intent(out) :: Vv
     real(8), intent(out) :: B0p(:,:)
     real(8), intent(out) :: Hsub0
     integer :: j, kr, n, jj
@@ -99,8 +98,6 @@ contains
     real(8) :: dat(ne)
     logical :: gaseous
     real(8) :: rm, wp, hpp
-
-    Vv = 1d05/sum(Pecwt)
 
     ! IF OXIDANT, KR = 1
     ! IF FUEL, KR = 2

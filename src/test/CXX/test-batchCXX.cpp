@@ -8,7 +8,6 @@
 #include <string>
 #include "cantera/base/global.h"
 
-
 using namespace Cantera;
 using std::cout;
 using std::endl;

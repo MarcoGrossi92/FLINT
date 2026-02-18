@@ -5,7 +5,6 @@ set(exe "test-batchCXX")
 add_executable(${exe} "test-batchCXX.cpp" ${FLINT_SRC})
 
 #Use one Sundials installation
-#include_directories("${canteraDIR}/ext/sundials/include/")
 include_directories("${CMAKE_SOURCE_DIR}/lib/OSlo/sundials-install/include/")
 include_directories("${canteraD}/include/")
 

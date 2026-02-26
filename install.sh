@@ -187,8 +187,8 @@ case "$COMMAND" in
         task "Building $project"
 
         task "Cloning submodules"
-        [[ $ORION_PATH == "./lib/ORION" ]] && git submodule update --init lib/ORION
-        [[ $OSLO_PATH == "./lib/OSlo" ]] && git submodule update --init lib/OSlo
+        [[ $ORION_PATH == $(pwd)'/lib/ORION/' ]] && git submodule update --init lib/ORION
+        [[ $OSLO_PATH == $(pwd)'/lib/OSlo/' ]] && git submodule update --init lib/OSlo
 
         if [[ $COMPILERS == "intel" ]]; then 
             export FC="ifx"

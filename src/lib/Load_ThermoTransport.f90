@@ -1,3 +1,22 @@
+! read_idealgas_thermo ios map:
+! 0 -> no error
+! 1 -> phase.txt not found
+! 2 -> phase.txt found but error reading
+! 3 -> thermo file not found
+! 4 -> thermo file found but error reading
+! 5 -> composition file not found (non-fatal, treated as 0 by caller)
+! 6 -> composition file found but error reading
+!
+! read_idealgas_composition ios map:
+! 0 -> no error
+! 1 -> file not found
+! 2 -> file found but error reading
+!
+! read_idealgas_transport ios map:
+! 0 -> no error
+! 1 -> transport file not found
+! 2 -> error reading transport data
+
 module FLINT_Load_ThermoTransport
   use FLINT_Lib_Thermodynamic
   implicit none
@@ -12,6 +31,7 @@ contains
     character(len=*), intent(in), optional :: folder
     ! Local
     integer           :: ios, i, unitfile, start, dummy1, dummy23
+    logical           :: exists_dat, exists_szplt
     character(256)    :: wholestring, args(2)
     character(512)    :: wmfile, thermofile(2)
     type(ORION_data)  :: orion
@@ -29,11 +49,13 @@ contains
     ! File 1: phase
     open(newunit=unitFile,file=trim(wmfile),status='old',iostat=ios)
     if (ios/=0) then
-      write(*,*) '[ERROR] phase.txt type file not found'
+      ios = 1
       return
     endif
     ios = 0; ns = -1
-    read(unitFile,*)
+    read(unitFile,*,iostat=ios)
+    if (ios/=0) then; close(unitFile); ios = 2; return; endif
+    ios = 0
     do while(ios==0)
       read(unitFile,'(A)',iostat=ios) wholestring
       ns = ns + 1
@@ -54,12 +76,18 @@ contains
     Ri_tab = Runiv/wm_tab
 
     ! File 2: thermo
-    ios = tec_read_points_multivars(orion,4,trim(thermofile(1)))
-    if (ios/=0) then
-      ios = tec_read_structured_multiblock(orion=orion, filename=trim(thermofile(2)))
+    inquire(file=trim(thermofile(1)), exist=exists_dat)
+    inquire(file=trim(thermofile(2)), exist=exists_szplt)
+    if (.not. exists_dat .and. .not. exists_szplt) then
+      ios = 3
+      return
     endif
+    ios = -1
+    if (exists_dat)   ios = tec_read_points_multivars(orion,4,trim(thermofile(1)))
+    if (ios/=0 .and. exists_szplt) &
+      ios = tec_read_structured_multiblock(orion=orion, filename=trim(thermofile(2)))
     if (ios/=0) then
-      write(*,*) '[ERROR] Reading thermo file'
+      ios = 4
       return
     endif
     dummy1  = lbound(orion%block(1)%mesh, dim=2)
@@ -85,6 +113,8 @@ contains
     endif
 
     ios = read_idealgas_composition(folder)
+    if (ios == 1) ios = 5
+    if (ios == 2) ios = 6
 
   end function read_idealgas_thermo
 
@@ -106,11 +136,11 @@ contains
     ! File 1: phase
     open(newunit=unitFile,file=trim(file),status='old',iostat=ios)
     if (ios/=0) then
-      write(*,*) '[WARNING] Composition data not found'
-      ios = 0
+      ios = 1
       return
     endif
     read(unitfile,*,iostat=ios) ne
+    if (ios/=0) then; close(unitFile); ios = 2; return; endif
     allocate(elements_names(1:ne))
     allocate(species_composition(1:ne,1:ns))
     do i = 1, ne
@@ -120,6 +150,7 @@ contains
     read(unitFile,*,iostat=ios) ! composition word
     do i = 1, ns
       read(unitFile,*,iostat=ios) species_composition(:,i)
+      if (ios/=0) then; close(unitFile); ios = 2; return; endif
     end do
     close(unitFile)
 
@@ -134,11 +165,12 @@ contains
     character(len=*), intent(in), optional :: folder
     ! Local
     integer           :: ios, i, start, dummy1, dummy23
-    logical           :: exists
+    logical           :: exists, attempted
     character(512)    :: transfile(2)
     type(ORION_data)  :: orion
 
     ios = 1
+    attempted = .false.
 
     if (present(folder)) then
       transfile(1) = trim(folder)//'/'//trim(FLINT_phase_prefix)//'transport.dat'
@@ -149,10 +181,19 @@ contains
     endif
 
     inquire(file=trim(transfile(1)),exist=exists)
-    if (exists) ios = tec_read_points_multivars(orion,2,trim(transfile(1)))
+    if (exists) then
+      attempted = .true.
+      ios = tec_read_points_multivars(orion,2,trim(transfile(1)))
+    endif
     inquire(file=trim(transfile(2)),exist=exists)
-    if (exists) ios = tec_read_structured_multiblock(orion=orion, filename=trim(transfile(2)))
-    if (ios/=0) return
+    if (exists) then
+      attempted = .true.
+      ios = tec_read_structured_multiblock(orion=orion, filename=trim(transfile(2)))
+    endif
+    if (ios/=0) then
+      if (attempted) ios = 2
+      return
+    endif
     dummy1  = lbound(orion%block(1)%mesh, dim=2)
     dummy23 = lbound(orion%block(1)%mesh, dim=3)
     Tmin = nint(orion%block(1)%mesh(1,dummy1,dummy23,dummy23))

@@ -1,3 +1,10 @@
+! ios map
+! 0 -> no error
+! 1 -> info file not found
+! 2 -> error reading info file
+! 3 -> table file not found
+! 4 -> error reading table file
+
 module FLINT_Load_Chemistry
   use iso_fortran_env, only: I4 => int32, R8 => real64
   implicit none
@@ -29,18 +36,26 @@ contains
       open(newunit=unitfile,file='INPUT/'//trim(FLINT_phase_prefix)//'chemistry-info.txt',form='formatted',status='old',action='read',iostat=ios)
     endif
     if (ios/=0) then
-      write(*,*) '[WARNING] Chemistry data not found'
+      ios = 1
       return
     endif
     ! Read mechanism name
-    read(unitfile,*) mech_name
-    read(unitfile,*)
-    read(unitfile,'(A17,I4)') chardum, nrc
-    do j = 1, 4; read(unitfile,*); enddo
+    if (present(mech_name)) then
+      read(unitfile,*,iostat=ios) mech_name
+      if (ios/=0) then; ios = 2; close(unitfile); return; endif
+    else
+      read(unitfile,*,iostat=ios)
+      if (ios/=0) then; ios = 2; close(unitfile); return; endif
+    endif
+    read(unitfile,*,iostat=ios)
+    read(unitfile,'(A17,I4)',iostat=ios) chardum, nrc
+    if (ios/=0) then; ios = 2; close(unitfile); return; endif
+    do j = 1, 4; read(unitfile,*,iostat=ios); enddo
     ! Read reaction type
     allocate(rxn_type(1:nrc))
     do j = 1, nrc
-      read(unitfile,*) idum, chardum
+      read(unitfile,*,iostat=ios) idum, chardum
+      if (ios/=0) then; ios = 2; close(unitfile); return; endif
       if (index(trim(chardum),'Troe')>0) then
         nrc_troe = nrc_troe + 1
         rxn_type(j) = 1
@@ -67,24 +82,24 @@ contains
       allocate(epsch_lind_tab(1:ns+1,1:nrc_lindemann))
     endif
     ! Read reaction info
-    read(unitfile,*)
-    read(unitfile,*)
+    read(unitfile,*,iostat=ios)
+    read(unitfile,*,iostat=ios)
     j0 = 0; j1 = 0; j2 = 0
     do j = 1, nrc
       if (rxn_type(j)==0) then
         j0 = j0+1
         do i = 1, ns+1
-          read(unitfile,*)idum,chardum,ni1_arrh_tab(i,j0),ni2_arrh_tab(i,j0),epsch_arrh_tab(i,j0)
+          read(unitfile,*,iostat=ios)idum,chardum,ni1_arrh_tab(i,j0),ni2_arrh_tab(i,j0),epsch_arrh_tab(i,j0)
         enddo
       elseif (rxn_type(j)==1) then
         j1 = j1+1
         do i = 1, ns+1
-          read(unitfile,*)idum,chardum,ni1_troe_tab(i,j1),ni2_troe_tab(i,j1),epsch_troe_tab(i,j1)
+          read(unitfile,*,iostat=ios)idum,chardum,ni1_troe_tab(i,j1),ni2_troe_tab(i,j1),epsch_troe_tab(i,j1)
         enddo
       elseif (rxn_type(j)==2) then
         j2 = j2+1
         do i = 1, ns+1
-          read(unitfile,*)idum,chardum,ni1_lind_tab(i,j2),ni2_lind_tab(i,j2),epsch_lind_tab(i,j2)
+          read(unitfile,*,iostat=ios)idum,chardum,ni1_lind_tab(i,j2),ni2_lind_tab(i,j2),epsch_lind_tab(i,j2)
         enddo
       endif
     enddo 
@@ -99,8 +114,8 @@ contains
       if (ios/=0) ios = tec_read_structured_multiblock(orion=orion, filename=trim('INPUT/')//trim(FLINT_phase_prefix)//'chemistry-Arrhenius.szplt')
     endif
     if (ios/=0) then
-      write(*,*) '[ERROR] chemistry-Arrhenius file not found'
-      stop
+      ios = 3
+      return
     endif
     dummy1  = lbound(orion%block(1)%mesh, dim=2)
     dummy23 = lbound(orion%block(1)%mesh, dim=3)
@@ -125,8 +140,8 @@ contains
         if (ios/=0) ios = tec_read_structured_multiblock(orion=orion, filename=trim('INPUT/')//trim(FLINT_phase_prefix)//'chemistry-Troe.szplt')
       endif
       if (ios/=0) then
-        write(*,*) '[ERROR] chemistry-Troe file not found'
-        stop
+        ios = 3
+        return
       endif
       allocate(Fcent_tab(Ti1:Ti2, 1:nrc_troe))
       allocate(k0_troe_tab, kinf_troe_tab, kc_troe_tab, mold=Fcent_tab)
@@ -149,8 +164,8 @@ contains
         if (ios/=0) ios = tec_read_structured_multiblock(orion=orion, filename=trim('INPUT/')//trim(FLINT_phase_prefix)//'chemistry-Lindemann.szplt')
       endif
       if (ios/=0) then
-        write(*,*) '[ERROR] chemistry-Lindemann file not found'
-        stop
+        ios = 3
+        return
       endif
       allocate(kinf_lind_tab(Ti1:Ti2, 1:nrc_lindemann))
       allocate(k0_lind_tab, kc_lind_tab, mold=kinf_lind_tab)

@@ -99,12 +99,10 @@ contains
   !> Computes the values of C_P_0, H_0 and S_0
   pure subroutine COMP_THERMO_QUANTS(temp,N_reac,C_P_0,H_0,S_0)
     use FLINT_CEA_data, only: Rr
-    !! I/O
-    real(8), intent(in)          :: temp
-    integer, intent(in)           :: N_reac
-    real(8), intent(out)         :: C_P_0(N_reac), H_0(N_reac), S_0(N_reac)
-    !! internal
-    integer                       :: i_reac
+    real(8), intent(in)  :: temp
+    integer, intent(in)  :: N_reac
+    real(8), intent(out) :: C_P_0(N_reac), H_0(N_reac), S_0(N_reac)
+    integer :: i_reac
 
     do i_reac = 1, N_reac
       C_P_0(i_reac) = cpi(i_reac,temp) * wm_tab(i_reac) / (Rr)
@@ -116,14 +114,38 @@ contains
 
 
   !> Function for the perfect gas equation of state
-  pure function EOS(p,ro,R) result(T)
+  pure function EOS(p,rho,R) result(T)
     implicit none
     real(kind=8), intent(IN):: p      !< Pressure.
-    real(kind=8), intent(IN):: ro     !< Density (\f$\rho\f$).
+    real(kind=8), intent(IN):: rho    !< Density (\f$\rho\f$).
     real(kind=8), intent(IN):: R      !< Gas constant.
     real(kind=8)            :: T      !< Temperature.
-    T = p/(ro*R)
+    T = p/(rho*R)
   endfunction EOS
+
+
+  !> Check for non-physical states (negative density) and correct them if necessary
+  pure subroutine check_gas_state ( rhoi, p, error )
+    implicit none
+    real(kind=8), intent(inout) :: rhoi(ns)
+    real(kind=8), intent(in) :: p
+    integer, intent(out) :: error
+    integer :: s
+    real(kind=8) :: T
+
+    error = 0
+    
+    ! Set a minimum value for density to avoid numerical issues in the flux computation.
+    do s = 1, ns
+      rhoi(s) = max(rhoi(s),1d-20)
+    end do
+
+    ! Check for negative pressure and temperature out of bounds. Set error flag if non-physical state is detected.
+    if (p < 0d0) error = 1
+    T = EOS(p,sum(rhoi),f_Rtot(rhoi))
+    if (T < Tmin .and. T>Tmax) error = 2
+
+  end subroutine check_gas_state
 
 
   !> Function to compute the conservative variables starting from the primitive ones.

@@ -165,6 +165,7 @@ contains
     character(len=*), intent(in), optional :: folder
     ! Local
     integer           :: ios, i, start, dummy1, dummy23
+    real(8)           :: Tmin_dummy, Tmax_dummy
     logical           :: exists, attempted
     character(512)    :: transfile(2)
     type(ORION_data)  :: orion
@@ -196,8 +197,14 @@ contains
     endif
     dummy1  = lbound(orion%block(1)%mesh, dim=2)
     dummy23 = lbound(orion%block(1)%mesh, dim=3)
-    Tmin = nint(orion%block(1)%mesh(1,dummy1,dummy23,dummy23))
-    Tmax = Tmin + ubound(orion%block(1)%mesh, dim=2) - dummy1
+    Tmin_dummy = nint(orion%block(1)%mesh(1,dummy1,dummy23,dummy23))
+    Tmax_dummy = Tmin_dummy + ubound(orion%block(1)%mesh, dim=2) - dummy1
+
+    if (Tmin_dummy /= Tmin .or. Tmax_dummy /= Tmax) then
+      ios = 3
+      return
+    endif
+
     start = Tmin
     if (Tmin==1) Tmin = 0
     allocate(mi_tab(Tmin:Tmax, 1:ns))

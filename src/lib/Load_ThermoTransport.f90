@@ -165,7 +165,7 @@ contains
     character(len=*), intent(in), optional :: folder
     ! Local
     integer           :: ios, i, start, dummy1, dummy23
-    real(8)           :: Tmin_dummy, Tmax_dummy
+    integer           :: Tmin_dummy, Tmax_dummy
     logical           :: exists, attempted
     character(512)    :: transfile(2)
     type(ORION_data)  :: orion

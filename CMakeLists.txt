@@ -27,29 +27,54 @@ endif()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(LinkDependencies)
 
+# -------- Path fallbacks (standalone or when parent does not define them) --------
+if (NOT DEFINED ORION_PATH)
+  set(ORION_PATH "${CMAKE_CURRENT_SOURCE_DIR}/lib/ORION/")
+endif()
+if (NOT DEFINED OSLO_PATH)
+  set(OSLO_PATH "${CMAKE_CURRENT_SOURCE_DIR}/lib/OSlo/")
+endif()
+
+# -------- Helper: initialize a git submodule from the correct git root --------
+# Works whether the submodule belongs to this project or a parent project.
+macro(ensure_submodule_initialized SUBMOD_PATH)
+  if (NOT EXISTS "${SUBMOD_PATH}/CMakeLists.txt")
+    message(STATUS "Submodule at ${SUBMOD_PATH} not initialized. Attempting git submodule update --init...")
+    get_filename_component(_sm_parent "${SUBMOD_PATH}" DIRECTORY)
+    execute_process(
+      COMMAND git rev-parse --show-toplevel
+      WORKING_DIRECTORY "${_sm_parent}"
+      OUTPUT_VARIABLE _sm_git_root
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      RESULT_VARIABLE _sm_git_result)
+    if(_sm_git_result EQUAL 0)
+      file(RELATIVE_PATH _sm_rel "${_sm_git_root}" "${SUBMOD_PATH}")
+      execute_process(
+        COMMAND git submodule update --init "${_sm_rel}"
+        WORKING_DIRECTORY "${_sm_git_root}"
+        RESULT_VARIABLE _sm_init_result)
+      if(NOT _sm_init_result EQUAL 0)
+        message(FATAL_ERROR "Failed to initialize submodule: ${SUBMOD_PATH}")
+      endif()
+    else()
+      message(FATAL_ERROR "Could not find git root for submodule: ${SUBMOD_PATH}")
+    endif()
+  endif()
+endmacro()
+
 # -------- Git submodules --------
 
 # ORION
-# Only add ORION if it hasn't already been added by the parent project
 if (NOT TARGET ORION)
-  set ( orionD "${ORION_PATH}" "${CMAKE_CURRENT_SOURCE_DIR}/build/lib/ORION/")
+  ensure_submodule_initialized("${ORION_PATH}")
+  set(orionD "${ORION_PATH}" "${CMAKE_BINARY_DIR}/lib/ORION")
   add_subdirectory(${orionD})
 endif()
 
 # OSlo
 if (NOT TARGET OSlo)
-  set(osloD "${OSLO_PATH}" "${CMAKE_SOURCE_DIR}/build/lib/OSlo")
-  # Check if cloned
-  if (NOT EXISTS "${OSLO_PATH}/README.md")
-    message(STATUS "OSlo not found. Attempting to initialize...")
-    execute_process(
-      COMMAND git submodule update --init lib/OSlo
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      RESULT_VARIABLE GIT_SUBMOD_RESULT)
-    if (NOT GIT_SUBMOD_RESULT EQUAL 0)
-      message(FATAL_ERROR "Failed to initialize git submodules.")
-    endif()
-  endif()
+  ensure_submodule_initialized("${OSLO_PATH}")
+  set(osloD "${OSLO_PATH}" "${CMAKE_BINARY_DIR}/lib/OSlo")
   add_subdirectory(${osloD})
 endif()
 

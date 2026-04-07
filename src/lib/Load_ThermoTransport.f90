@@ -165,6 +165,7 @@ contains
     character(len=*), intent(in), optional :: folder
     ! Local
     integer           :: ios, i, start, dummy1, dummy23
+    integer           :: Tmin_dummy, Tmax_dummy
     logical           :: exists, attempted
     character(512)    :: transfile(2)
     type(ORION_data)  :: orion
@@ -196,18 +197,24 @@ contains
     endif
     dummy1  = lbound(orion%block(1)%mesh, dim=2)
     dummy23 = lbound(orion%block(1)%mesh, dim=3)
-    Tmin = nint(orion%block(1)%mesh(1,dummy1,dummy23,dummy23))
-    Tmax = Tmin + ubound(orion%block(1)%mesh, dim=2) - dummy1
-    start = Tmin
-    if (Tmin==1) Tmin = 0
-    allocate(mi_tab(Tmin:Tmax, 1:ns))
-    allocate(k_tab(Tmin:Tmax, 1:ns))
+    Tmin_dummy = nint(orion%block(1)%mesh(1,dummy1,dummy23,dummy23))
+    Tmax_dummy = Tmin_dummy + ubound(orion%block(1)%mesh, dim=2) - dummy1
+
+    if (Tmax_dummy /= Tmax) then
+      ios = 3
+      return
+    endif
+
+    start = Tmin_dummy
+    if (Tmin_dummy==1) Tmin_dummy = 0
+    allocate(mi_tab(Tmin_dummy:Tmax, 1:ns))
+    allocate(k_tab(Tmin_dummy:Tmax, 1:ns))
     dummy23 = lbound(orion%block(1)%vars, dim=3)
     do i = 1, ns
       mi_tab(start:Tmax,i) = orion%block(i)%vars(1,:,dummy23,dummy23)
       k_tab(start:Tmax,i) = orion%block(i)%vars(2,:,dummy23,dummy23)
     enddo
-    if (Tmin==0) then
+    if (Tmin_dummy==0) then
       mi_tab(0,:) = mi_tab(1,:)
       k_tab(0,:) = k_tab(1,:)
     endif

@@ -6,11 +6,16 @@ Complete reference for FLINT native file formats (non-Cantera builds).
 
 When FLINT is compiled **without Cantera support**, input data is loaded from a set of pre-generated native files. This path is designed for **high-performance production use**, where pre-computed tables eliminate runtime polynomial evaluation and mechanism parsing.
 
+FLINT native files support two distinct thermodynamic models:
+
+- **Ideal gas (multi-species)** — 1D tables indexed by temperature
+- **Real fluid (single-species)** — 2D tables indexed by pressure and enthalpy
+
 ---
 
-## Native File Structure
+## Ideal Gas Native File Structure
 
-The complete input consists of up to **seven files** in the same directory:
+The complete input for an ideal-gas mechanism consists of up to **seven files** in the same directory:
 
 ```
 INPUT/
@@ -33,8 +38,6 @@ INPUT/
 **Total: ~81 MB** for a medium-sized mechanism. Pre-tabulation trades memory for speed.
 
 ---
-
-## Detailed Format Specifications
 
 ### 1. `phase.txt` – Species Definitions
 
@@ -410,7 +413,7 @@ Species zones appear in **same order** as in `phase.txt`:
 
 ---
 
-## Complete Example: CORIA Mechanism
+### Complete Example: CORIA Mechanism
 
 **1. phase.txt:**
 
@@ -472,20 +475,97 @@ Reaction definition
 
 ---
 
-## Path Usage
 
-To use native files in FLINT:
 
-1. **Ensure Cantera is NOT compiled in** (configure build without Cantera)
-2. **Place all files in the same directory** (e.g., `INPUT/`)
-3. **Configure FLINT** to point to this directory
-4. **Load mechanism** at runtime:
+## Real Fluid Native Files
+
+When using the real fluid model, the input directory contains a different set of files. Chemistry is not supported for real fluids — only thermodynamic and transport tables are needed.
+
+```
+INPUT/
+  ├── phase.txt        # Single species name
+  ├── thermo.dat       # 2D (p × h) thermodynamic property grid
+  └── transport.dat    # 2D (p × h) transport property grid (optional)
+```
+
+---
+
+### 1. `phase.txt` — Real Fluid Species
+
+The format is similar to the ideal-gas phase file, but the header line must be `real-gas phase` and only one species is listed (without a molecular weight, since real fluid tables are pre-computed for a specific substance):
+
+```
+real-gas phase
+<species_name>
+```
+
+**Example (CO₂):**
+
+```
+real-gas phase
+CO2
+```
+
+---
+
+### 2. `thermo.dat` — 2D Thermodynamic Table
+
+**Purpose:** Tabulate thermodynamic properties as functions of pressure $p$ and specific enthalpy $h$ on a uniform structured grid.
+
+**Format:** Tecplot structured binary or ASCII (`szplt`/`dat`), single block, 8 variables.
+
+The mesh coordinate order is:
+
+- **I-axis** → pressure $p$ (Pa)
+- **J-axis** → specific enthalpy $h$ (J/kg)
+
+**Variables (in order):**
+
+| Index | Symbol | Description | Unit |
+|-------|--------|-------------|------|
+| 1 | $\rho$ | Density | kg/m³ |
+| 2 | $T$ | Temperature | K |
+| 3 | $(\partial\rho/\partial T)_p$ | Density derivative w.r.t. temperature at const. $p$ | kg/(m³·K) |
+| 4 | $c_p = (\partial h/\partial T)_p$ | Heat capacity at constant pressure | J/(kg·K) |
+| 5 | $s$ | Specific entropy | J/(kg·K) |
+| 6 | $(\partial\rho/\partial p)_h$ | Density derivative w.r.t. pressure at const. $h$ | kg/(m³·Pa) |
+| 7 | $a$ | Speed of sound | m/s |
+
+The grid parameters extracted at load time are:
+
+- $p_\text{min}$, $\Delta p$ — from the I-axis mesh coordinates
+- $h_\text{min}$, $\Delta h$ — from the J-axis mesh coordinates
+
+An optional second table (`h_tab2D`) indexed by $(p, T)$ is also read from the same file when present, enabling `pT2h` lookups.
+
+---
+
+### 3. `transport.dat` — 2D Transport Table
+
+**Purpose:** Tabulate transport properties on the same $(p, h)$ grid as `thermo.dat`.
+
+**Format:** Tecplot structured binary or ASCII, single block, 2 variables.
+
+The mesh must have the **same dimensions** as `thermo.dat` (mismatch returns error code 4).
+
+**Variables (in order):**
+
+| Index | Symbol | Description | Unit |
+|-------|--------|-------------|------|
+| 1 | $\mu$ | Dynamic viscosity | Pa·s |
+| 2 | $k$ | Thermal conductivity | W/(m·K) |
+
+---
+
+### Loading Real Fluid Data
 
 ```fortran
-! Pseudo-code
-call load_phase_native("INPUT/")          ! Reads phase.txt
-call load_mechanism_native("INPUT/")      ! Reads chemistry-info.txt, .dat files
-call load_thermo_native("INPUT/")         ! Reads thermo.dat
+use FLINT_Lib_Thermodynamic
+use FLINT_Load_ThermoTransport
+
+integer :: err
+err = read_realfluid_thermo("path/to/INPUT/")
+err = read_realfluid_transport("path/to/INPUT/")  ! optional
 ```
 
 ---

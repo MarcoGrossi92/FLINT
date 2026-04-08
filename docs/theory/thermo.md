@@ -2,41 +2,68 @@
 
 ## Overview
 
-FLINT supports the definition of thermodynamic and transport properties for a mixture of $N_s$ thermally perfect gases following the thermal equation of state:
+FLINT computes thermodynamic and transport properties through pre-tabulated data, covering two complementary models:
+
+**Ideal gas** — a mixture of $N_s$ thermally perfect gases obeying the thermal equation of state
 
 $$
 p = \rho R_\text{mix} T
 $$
 
-where $p$ is pressure, $\rho$ is density, $R_\text{mix}$ is the mixture gas constant, and $T$ is temperature.
+where $p$ is pressure, $\rho$ is density, $R_\text{mix}$ is the mixture gas constant, and $T$ is temperature. All properties depend on temperature only and are evaluated by 1D interpolation of per-species tables. An optional Cantera [1] backend can replace the native tables when advanced kinetic models or validation data are needed.
 
-**Property evaluation methods:**
+**Real fluid** — a single-component fluid where the ideal-gas equation of state is no longer valid (near the critical point, across phase boundaries, or in supercritical regimes). Properties are fully tabulated as functions of pressure and specific enthalpy on a uniform 2D $(p, h)$ grid and retrieved by bilinear interpolation.
 
-- **Cantera integration**: Theoretical background for properties computed via Cantera can be found in the official Cantera documentation [1].
-
-- **Native tabulated data**: The native structure uses temperature-varying tabulated properties for each species: specific heat capacity at constant pressure $c_{p,\text{tab}}$, specific enthalpy $h_{\text{tab}}$, specific entropy $s_{\text{tab}}$, dynamic viscosity $\mu_{\text{tab}}$, and thermal conductivity $k_{\text{tab}}$.
-
-In addition to thermodynamic and transport properties, FLINT provides conversions between primitive and conservative variables for computational fluid dynamics (CFD) applications.
+Both models share the same module interface; the choice between them is made at load time through the appropriate initialisation call. In addition to thermodynamic and transport properties, both models expose the same primitive/conservative variable conversion routines for CFD applications.
 
 ---
 
-## Table Interpolation
+## Property Interpolation
 
-For tabulated properties, linear interpolation is applied between integer temperatures $T_i$ and $T_{i+1}$ surrounding the requested temperature $T$ to retrieve any property $f$ for each species:
+All FLINT properties are pre-tabulated and retrieved by fast table lookups rather than polynomial evaluations at runtime.
 
-$$ 
-f(T) = f(T_i) + \frac{f(T_{i+1}) - f(T_i)}{T_{i+1} - T_i} \cdot (T - T_i) 
-$$
+### Ideal Gas — 1D Temperature Interpolation
 
-For integer-spaced tables where $T_{i+1} - T_i = 1$, this simplifies to:
+For each species, properties are stored at integer temperatures $T_i$. Given a requested temperature $T \in [T_i, T_{i+1}]$, any property $f$ is obtained by linear interpolation:
 
 $$ 
-f(T) = f(T_i) + (f(T_{i+1}) - f(T_i)) \cdot (T - T_i) 
+f(T) = f(T_i) + \big(f(T_{i+1}) - f(T_i)\big)\cdot(T - T_i) 
 $$
+
+where the integer spacing $T_{i+1} - T_i = 1$ K has been assumed.
+
+### Real Fluid — 2D Bilinear Interpolation
+
+For real fluids, properties depend on both pressure and enthalpy. The tables are laid out on a uniform $(p, h)$ grid with spacing $\Delta p$ and $\Delta h$, starting from $p_\text{min}$ and $h_\text{min}$. Given a state $(p, h)$, the surrounding cell indices are
+
+$$
+i = \left\lfloor \frac{p - p_\text{min}}{\Delta p} \right\rfloor, \qquad j = \left\lfloor \frac{h - h_\text{min}}{\Delta h} \right\rfloor
+$$
+
+and any tabulated property $f$ is reconstructed as
+
+$$
+f(p,h) = A + B\,\delta p + C\,\delta h + D\,\delta p\,\delta h
+$$
+
+where $\delta p = p - p_\text{min} - i\,\Delta p$, $\delta h = h - h_\text{min} - j\,\Delta h$, and
+
+$$
+\begin{aligned}
+A &= f_{i,j} \\
+B &= \frac{f_{i+1,j} - f_{i,j}}{\Delta p} \\
+C &= \frac{f_{i,j+1} - f_{i,j}}{\Delta h} \\
+D &= \frac{f_{i,j} + f_{i+1,j+1} - f_{i+1,j} - f_{i,j+1}}{\Delta p\,\Delta h}
+\end{aligned}
+$$
+
+The same scheme is applied to the $(p, T)$ grid when retrieving enthalpy from pressure and temperature, which is needed when initialising from primitive variables.
 
 ---
 
 ## Thermodynamic Properties
+
+### Ideal Gas Mixtures
 
 Once individual species properties are known, mixture thermodynamic quantities are computed using mass-weighted averaging [2,3].
 
@@ -94,9 +121,34 @@ $$
 e_0(\rho_s, T, \mathbf{u}) = e(\rho_s, T) + \frac{1}{2} |\mathbf{u}|^2
 $$
 
+### Real Fluid
+
+Because the ideal-gas equation of state breaks down near the critical point, across phase boundaries, and in supercritical regimes, the real fluid model does not assume any analytical form for the equation of state. Instead, all thermodynamic quantities are treated as general functions of pressure and specific enthalpy,
+
+$$
+f = f(p, h),
+$$
+
+and retrieved from pre-tabulated 2D grids (see [Property Interpolation](#property-interpolation) above for the bilinear interpolation scheme). The variables tabulated on the $(p, h)$ mesh are:
+
+| Property | Symbol | Unit |
+|----------|--------|------|
+| Density | $\rho$ | kg/m³ |
+| Temperature | $T$ | K |
+| Density deriv. at const. $p$ | $(\partial\rho/\partial T)_p$ | kg/(m³·K) |
+| Heat capacity at const. $p$ | $c_p = (\partial h/\partial T)_p$ | J/(kg·K) |
+| Specific entropy | $s$ | J/(kg·K) |
+| Density deriv. at const. $h$ | $(\partial\rho/\partial p)_h$ | kg/(m³·Pa) |
+| Speed of sound | $a$ | m/s |
+
+!!! note "Current scope"
+    The real fluid model supports a **single-component** fluid. Multi-species real fluid mixtures are not yet implemented.
+
 ---
 
 ## Transport Properties
+
+### Ideal Gas Mixtures — Wilke's Mixing Rule
 
 Once individual species transport properties are known, mixture transport properties are computed using **Wilke's mixing rule** [4,5], which accounts for molecular interactions between different species.
 
@@ -123,6 +175,10 @@ where $k_i$ is the thermal conductivity of species $i$.
 $$
 X_s = \frac{Y_s / M_s}{\sum_{j=1}^{N_s} Y_j / M_j}
 $$
+
+### Real Fluid
+
+Dynamic viscosity $\mu$ and thermal conductivity $k$ for a real fluid are pre-tabulated on the same uniform $(p, h)$ grid as the thermodynamic properties and retrieved with the same bilinear interpolation scheme.
 
 ---
 

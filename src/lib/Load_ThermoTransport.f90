@@ -308,13 +308,13 @@ contains
     deltah = h_(1) - h_(0)
     allocate(rho_tab(0:orion%block(1)%Ni, 0:orion%block(1)%Nj))
     allocate(T_tab, dT_tab, rh_tab, hT_tab, s_tab2D, rp_tab, sound_tab, mold=rho_tab)
-    ! rho_tab   = densità
-    ! T_tab     = Temperatura
-    ! dT_tab    = derivata densità rispetto alla temperatura @ P costante
-    ! ht_tab    = derivata entalpia rispetto alla temperatura @ P costante = cp
-    ! s_tab2D   = entropia
-    ! rp_tab    = derivata densità rispetto alla pressione @ entalpia costante
-    ! sound_tab = velocità del suono
+    ! rho_tab   = density
+    ! T_tab     = temperature
+    ! dT_tab    = derivative of density with respect to temperature @ constant pressure
+    ! ht_tab    = derivative of enthalpy with respect to temperature @ constant pressure = cp
+    ! s_tab2D   = entropy
+    ! rp_tab    = derivative of density with respect to pressure @ constant enthalpy
+    ! sound_tab = speed of sound
     do j = 0, orion%block(1)%Nj
       do i = 0, orion%block(1)%Ni
         rho_tab(i, j)   = orion%block(1)%vars(1, i, j, 0)
@@ -331,7 +331,7 @@ contains
   end function read_realfluid_thermo
 
 
-  function read_realgas_transport(folder) result(ios)
+  function read_realfluid_transport(folder) result(ios)
     use Lib_Tecplot
     use Lib_ORION_data
     implicit none
@@ -392,7 +392,7 @@ contains
       enddo
     enddo
 
-  end function read_realgas_transport
+  end function read_realfluid_transport
 
 
 end module FLINT_Load_ThermoTransport

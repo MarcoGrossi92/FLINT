@@ -3,7 +3,7 @@
 FLINT is designed to be embedded inside a Fortran-based reacting-flow solver.
 This section describes the typical workflow for:
 
-* Thermodynamic property evaluation
+* Thermodynamic and transport property evaluation (ideal gas and real fluid)
 * Finite-rate chemistry
 * Chemical equilibrium
 
@@ -13,6 +13,8 @@ For more practical examples on how to use FLINT refers to the [Examples](../exam
 
 ## Thermodynamic Properties
 
+Both the ideal gas and real fluid models share the same module interface. The model is selected implicitly by calling the appropriate load routine; all downstream property functions operate on whichever tables are in memory.
+
 **Required Modules**
 
 ```fortran
@@ -20,7 +22,9 @@ use FLINT_Lib_Thermodynamic
 use FLINT_Load_ThermoTransport
 ```
 
-**Initialization**
+### Ideal Gas
+
+**Loading**
 
 ```fortran
 integer :: err
@@ -28,30 +32,76 @@ err = read_idealgas_thermo("folder")
 err = read_idealgas_transport("folder") ! optional
 ```
 
-This loads:
+This reads species names, molecular weights, temperature-indexed thermodynamic tables ($c_p$, $h$, $s$), and — optionally — transport tables ($\mu$, $k$). Thermodynamics is also required by both finite-rate chemistry and equilibrium calculations.
 
-* Species names
-* Molecular weights
-* Thermodynamic properties tables
-* Transport properties tables (optional)
+**Property evaluation**
 
-**Property Evaluation**
+Typical per-mixture operations: `f_cp`, `f_ss`, `f_gamma`, `f_laminarViscosity`, `co_k_mi_lam_Wilke`. See [Lib_ThermoTransport.f90](../../src/lib/Lib_ThermoTransport.f90) for the full list.
 
-Once loaded, mixture properties can be evaluated using the provided routines.
+### Real Fluid
 
-Typical operations include:
+For single-component fluids at high pressure or near the critical point, FLINT provides a real fluid model backed by uniform 2D $(p, h)$ lookup tables.
 
-* `cp` (specific heat at constant pressure)
-* `h` (enthalpy)
-* `s` (entropy)
-* Gas constant and mixture molecular weight
+**Loading**
 
-Thermodynamics is required by both finite-rate chemistry and equilibrium calculations.
+```fortran
+integer :: err
+err = read_realfluid_thermo("folder")
+err = read_realgas_transport("folder") ! optional
+```
+
+`read_realfluid_thermo` reads the species name from `phase.txt` and populates a $(p, h)$ grid with density, temperature, entropy, speed of sound, $c_p$, and two partial derivatives. `read_realgas_transport` populates the matching viscosity and thermal conductivity grid.
+
+**Error codes**
+
+Both routines signal errors through their integer return value:
+
+| Code | `read_realfluid_thermo` | `read_realgas_transport` |
+|------|------------------------|--------------------------|
+| 0 | No error | No error |
+| 1 | `phase.txt` not found | Transport file not found |
+| 2 | Error reading `phase.txt` | Error reading transport data |
+| 3 | Thermo file not found | More than one block |
+| 4 | Error reading thermo file | Mesh size mismatch with thermo |
+| 5 | More than one block in thermo | — |
+
+**Property evaluation**
+
+Properties at a given state $(p, h)$ are retrieved by bilinear interpolation using `ph2vars`:
+
+```fortran
+real(8) :: rho, T_fluid, spd
+
+rho      = ph2vars(p, h, rho_tab)
+T_fluid  = ph2vars(p, h, T_tab)
+spd      = ph2vars(p, h, sound_tab)
+```
+
+Available tables exposed by `FLINT_Lib_Thermodynamic`:
+
+| Table | Property | Unit |
+|-------|----------|------|
+| `rho_tab` | Density | kg/m³ |
+| `T_tab` | Temperature | K |
+| `dT_tab` | $(\partial\rho/\partial T)_p$ | kg/(m³·K) |
+| `hT_tab` | $c_p = (\partial h/\partial T)_p$ | J/(kg·K) |
+| `s_tab2D` | Specific entropy | J/(kg·K) |
+| `rp_tab` | $(\partial\rho/\partial p)_h$ | kg/(m³·Pa) |
+| `sound_tab` | Speed of sound | m/s |
+| `mi_tab2D` | Dynamic viscosity | Pa·s |
+| `k_tab2D` | Thermal conductivity | W/(m·K) |
+
+To initialise from primitive variables $(p, T)$ rather than $(p, h)$, convert with `pT2h` before querying the tables:
+
+```fortran
+real(8) :: h_init
+h_init = pT2h(p, T)
+```
 
 ### Source Files
 
-- `src/lib/Load_ThermoTransport.f90`
-- `src/lib/Lib_ThermoTransport.f90`
+- [src/lib/Load_ThermoTransport.f90](../../src/lib/Load_ThermoTransport.f90)
+- [src/lib/Lib_ThermoTransport.f90](../../src/lib/Lib_ThermoTransport.f90)
 
 ---
 

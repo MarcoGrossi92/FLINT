@@ -6,23 +6,35 @@ module FLINT_Lib_Thermodynamic
   !-----------------------------------------------------------------------------------------------------------------------------------
 
   character(len=128)      :: FLINT_phase_prefix=''
+  integer, parameter      :: s_str_len = 20
+  real(kind=8), parameter :: Runiv = 8314.51d0  ! Universal gas constant [J/(kmol*K)]
 
   integer                 :: ns                 ! Number of species
   integer                 :: ne                 ! Number of atomic elements
-  integer                 :: Tmin,Tmax          ! Extreme temperatures in tables
-  real(kind=8), parameter :: Runiv = 8314.51d0  ! Universal gas constant [J/(kmol*K)]
-
-  integer, parameter :: s_str_len = 20
   character(len=s_str_len), allocatable :: species_names(:)
   character(len=s_str_len), allocatable :: elements_names(:)
 
+  character(len=s_str_len)              :: real_species_names(1)
+
   real(kind=8), dimension(:,:), allocatable :: species_composition
 
+  ! Ideal gas properties tables limits
+  integer                 :: Tmin, Tmax
+
+  ! Real fluid properties tables limits and step
+  real(kind=8)            :: pmin, deltap, hmin, deltah, Tmin2, deltaT
+
+  ! Ideal gas properties tables (T, specie)
   real(kind=8), dimension(:), allocatable   :: wm_tab, Ri_tab
   real(kind=8), dimension(:,:), allocatable :: cp_tab, dcpi_tab, h_tab, s_tab
   real(kind=8), dimension(:,:), allocatable :: mi_tab, k_tab
-  real(kind=8), dimension(:,:), allocatable :: dij_tab  !> coefficiente di diffusione binaria (T,interazione)
-  integer                                   :: inter    !> numero di interazioni tra le specie in miscela
+
+  ! Real fluid properties tables (p, h). One species only
+  real(kind=8), dimension(:,:), allocatable :: rho_tab, T_tab, dT_tab, rh_tab, hT_tab, rp_tab, sound_tab, s_tab2D, h_tab2D
+  real(kind=8), dimension(:,:), allocatable :: mi_tab2D, k_tab2D
+
+  ! Diffusion coefficients tables (T, specie-specie interaction)
+  real(kind=8), dimension(:,:), allocatable :: dij_tab
 
 contains
 
@@ -568,5 +580,76 @@ contains
     result = Vij+(Viij-Vij)*Tdiff
 
   endfunction f_tabT_expr
+
+
+  ! Real fluid properties interpolation function.
+  ! The input variables are pressure and enthalpy, the output variable is the one stored in the table.
+  pure function ph2vars ( p, h, tab2D ) result(result)
+    implicit none
+
+    ! pressure-entalpy tabulation to have wanted variables 
+    real(8), intent(in) :: p, h
+    real(8),intent(in) :: tab2D(0:, 0:)
+    real(8) :: result
+    ! Local variables
+    integer :: i,j
+    real(8) :: Vij, Viij, Vijj, Viijj
+    real(8) :: A, B, C, D
+    real(8) :: dist_p, dist_h
+
+    i = idint( (p - pmin) / deltap )
+    j = idint( (h - hmin) / deltah )
+
+    Vij   = tab2D ( i   , j   )
+    Viij  = tab2D ( i+1 , j   )
+    Vijj  = tab2D ( i   , j+1 )
+    Viijj = tab2D ( i+1 , j+1 )
+
+    A = Vij
+    B = ( Viij - Vij ) / deltap
+    C = ( Vijj - Vij ) / deltah 
+    D = ( Vij + Viijj - Viij - Vijj ) / ( deltap * deltah )
+
+    dist_p = p - pmin - i*deltap
+    dist_h = h - hmin - j*deltah
+
+    result = A + B*dist_p + C*dist_h + D*dist_p*dist_h
+
+  endfunction ph2vars
+
+
+  ! Real fluid properties interpolation function.
+  ! The input variables are pressure and temperature, the output variable is enthalpy stored in the table.
+  pure function pT2h ( p, T ) result(result)
+    implicit none
+
+    ! pressure-entalpy tabulation to have wanted variables 
+    real(8), intent(in) :: p, T
+    real(8) :: result
+    ! Local variables
+    integer :: i,j
+    real(8) :: Vij, Viij, Vijj, Viijj
+    real(8) :: A, B, C, D
+    real(8) :: dist_p, dist_T
+
+    i = idint( (p - pmin) / deltap )
+    j = idint( (T - Tmin2) / deltaT )
+
+    Vij   = h_tab2D ( i   , j   )
+    Viij  = h_tab2D ( i+1 , j   )
+    Vijj  = h_tab2D ( i   , j+1 )
+    Viijj = h_tab2D ( i+1 , j+1 )
+
+    A = Vij
+    B = ( Viij - Vij ) / deltap
+    C = ( Vijj - Vij ) / deltaT
+    D = ( Vij + Viijj - Viij - Vijj ) / ( deltap * deltaT )
+
+    dist_p = p - pmin - i*deltap
+    dist_T = T - Tmin2 - j*deltaT
+
+    result = A + B*dist_p + C*dist_T + D*dist_p*dist_T
+
+  endfunction pT2h
 
 endmodule FLINT_Lib_Thermodynamic

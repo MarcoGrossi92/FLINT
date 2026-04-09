@@ -26,6 +26,7 @@ Small but powerful — like the stone it’s named after — FLINT provides the 
 ## Capabilities
 
 - Ideal-gas thermodynamics
+- Real-fluid thermodynamics (pressure–enthalpy tables)
 - Transport properties (viscosity, thermal conductivity, diffusion)
 - Finite-rate chemical kinetics
 - Equilibrium chemistry

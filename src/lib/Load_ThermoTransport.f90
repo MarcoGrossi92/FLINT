@@ -17,6 +17,22 @@
 ! 1 -> transport file not found
 ! 2 -> error reading transport data
 
+! read_realfluid_thermo ios map:
+! 0 -> no error
+! 1 -> phase.txt not found
+! 2 -> phase.txt found but error reading
+! 3 -> thermo file not found
+! 4 -> thermo file found but error reading
+! 5 -> too many blocks in thermo file
+!
+! read_realfluid_transport ios map:
+! 0 -> no error
+! 1 -> transport file not found
+! 2 -> error reading transport data
+! 3 -> too many blocks in transport file
+! 4 -> error reading transport data: mesh size mismatch with thermo data
+
+
 module FLINT_Load_ThermoTransport
   use FLINT_Lib_Thermodynamic
   implicit none
@@ -220,6 +236,163 @@ contains
     endif
 
   end function read_idealgas_transport
+
+
+  function read_realfluid_thermo(folder) result(ios)
+    use strings, only: parse
+    use Lib_Tecplot
+    use Lib_ORION_data
+    implicit none
+    character(len=*), intent(in), optional :: folder
+    ! Local
+    integer              :: ios, i, j, unitfile
+    character(256)       :: wholestring, args(2), phasefile, thermofile(2)
+    type(ORION_data)     :: orion
+    logical              :: exists_dat, exists_szplt
+    real(8), allocatable :: p_(:), h_(:)
+
+    if (present(folder)) then
+      phasefile = trim(folder)//'/'//trim(FLINT_phase_prefix)//'phase.txt'
+      thermofile(1) = trim(folder)//'/'//trim(FLINT_phase_prefix)//'thermo.dat'
+      thermofile(2) = trim(folder)//'/'//trim(FLINT_phase_prefix)//'thermo.szplt'
+    else
+      phasefile = 'INPUT/'//trim(FLINT_phase_prefix)//'phase.txt'
+      thermofile(1) = 'INPUT/'//trim(FLINT_phase_prefix)//'thermo.dat'
+      thermofile(2) = 'INPUT/'//trim(FLINT_phase_prefix)//'thermo.szplt'
+    endif
+
+    !! File 1: phase — read name of the phase
+    print*, 'Reading real fluid thermo from phase file: ', trim(phasefile)
+    open(newunit=unitFile,file=trim(phasefile),status='old',iostat=ios)
+    if (ios/=0) then
+      ios = 1
+      return
+    endif
+    ios = 0
+    read(unitfile,*)!skip first line
+    read(unitfile,'(A)',iostat=ios) wholestring
+    if (ios/=0) then; close(unitfile); ios = 2; return; endif
+    call parse(wholestring,' ',args)
+    real_species_names(1) = trim(adjustl(args(1)))
+    close(unitfile)
+
+    !! File 2: thermo — use ORION to get mesh (p, h node coords)
+    inquire(file=trim(thermofile(1)), exist=exists_dat)
+    inquire(file=trim(thermofile(2)), exist=exists_szplt)
+    if (.not. exists_dat .and. .not. exists_szplt) then
+      ios = 3
+      return
+    endif
+    ios = -1
+    if (exists_dat)   ios = tec_read_structured_multiblock(orion=orion, filename=trim(thermofile(1)))
+    if (ios/=0 .and. exists_szplt) ios = tec_read_structured_multiblock(orion=orion, filename=trim(thermofile(2)))
+    if (ios/=0) then
+      ios = 4
+      return
+    endif
+
+    if (size(orion%block) /= 1) then
+      ios = 5
+      return
+    endif
+
+    ! p: I-axis → mesh(2, i=0..Ni, j=0, 0)
+    ! h: J-axis → mesh(1, i=0, j=0..Nj, 0)
+    allocate(p_(0:orion%block(1)%Ni))
+    allocate(h_(0:orion%block(1)%Nj))
+    p_ = orion%block(1)%mesh(1, :, 0, 0)
+    h_ = orion%block(1)%mesh(2, 0, :, 0)
+    pmin = p_(0)
+    hmin = h_(0)
+    deltap = p_(1) - p_(0)
+    deltah = h_(1) - h_(0)
+    allocate(rho_tab(0:orion%block(1)%Ni, 0:orion%block(1)%Nj))
+    allocate(T_tab, dT_tab, rh_tab, hT_tab, s_tab2D, rp_tab, sound_tab, mold=rho_tab)
+    ! rho_tab   = density
+    ! T_tab     = temperature
+    ! dT_tab    = derivative of density with respect to temperature @ constant pressure
+    ! ht_tab    = derivative of enthalpy with respect to temperature @ constant pressure = cp
+    ! s_tab2D   = entropy
+    ! rp_tab    = derivative of density with respect to pressure @ constant enthalpy
+    ! sound_tab = speed of sound
+    do j = 0, orion%block(1)%Nj
+      do i = 0, orion%block(1)%Ni
+        rho_tab(i, j)   = orion%block(1)%vars(1, i, j, 0)
+        T_tab(i, j)     = orion%block(1)%vars(2, i, j, 0)
+        dT_tab(i, j)    = orion%block(1)%vars(3, i, j, 0)
+        rh_tab(i, j)    = orion%block(1)%vars(4, i, j, 0)
+        hT_tab(i, j)    = orion%block(1)%vars(5, i, j, 0)
+        s_tab2D(i, j)   = orion%block(1)%vars(6, i, j, 0)
+        rp_tab(i, j)    = orion%block(1)%vars(7, i, j, 0)
+        sound_tab(i, j) = orion%block(1)%vars(8, i, j, 0)
+      enddo
+    enddo
+
+  end function read_realfluid_thermo
+
+
+  function read_realfluid_transport(folder) result(ios)
+    use Lib_Tecplot
+    use Lib_ORION_data
+    implicit none
+    character(len=*), intent(in), optional :: folder
+    ! Local
+    integer           :: ios, i, j
+    type(ORION_data)  :: orion
+    logical           :: exists, attempted
+    character(512)    :: transfile(2)
+
+    ios = 1
+    attempted = .false.
+
+    !! transport — use ORION to get mesh (p, h node coords)
+    if (present(folder)) then
+      transfile(1) = trim(folder)//'/'//trim(FLINT_phase_prefix)//'transport.dat'
+      transfile(2) = trim(folder)//'/'//trim(FLINT_phase_prefix)//'transport.szplt'
+    else
+      transfile(1) = 'INPUT/'//trim(FLINT_phase_prefix)//'transport.dat'
+      transfile(2) = 'INPUT/'//trim(FLINT_phase_prefix)//'transport.szplt'
+    endif
+
+    inquire(file=trim(transfile(1)),exist=exists)
+    if (exists) then
+      attempted = .true.
+      ios = tec_read_points_multivars(orion,2,trim(transfile(1)))
+    endif
+    inquire(file=trim(transfile(2)),exist=exists)
+    if (exists) then
+      attempted = .true.
+      ios = tec_read_structured_multiblock(orion=orion, filename=trim(transfile(2)))
+    endif
+    if (ios/=0) then
+      if (attempted) ios = 2
+      return
+    endif
+
+    if (size(orion%block) /= 1) then
+      ios = 3
+      return
+    endif
+
+    if (orion%block(1)%Ni /= size(rho_tab,1) .or. orion%block(1)%Nj /= size(rho_tab,2)) then
+      ios = 4
+      return
+    endif
+
+    ! p: I-axis → mesh(2, i=0..Ni, j=0, 0)
+    ! h: J-axis → mesh(1, i=0, j=0..Nj, 0)
+    allocate(mi_tab2D(0:orion%block(1)%Ni, 0:orion%block(1)%Nj))
+    allocate(k_tab2D(0:orion%block(1)%Ni, 0:orion%block(1)%Nj))
+    ! mi_tab2D = viscosità dinamica
+    ! k_tab2D  = conducibilità termica
+    do j = 0, orion%block(1)%Nj
+      do i = 0, orion%block(1)%Ni
+        mi_tab2D(i, j)  = orion%block(1)%vars(1, i, j, 0)
+        k_tab2D(i, j)   = orion%block(1)%vars(2, i, j, 0)
+      enddo
+    enddo
+
+  end function read_realfluid_transport
 
 
 end module FLINT_Load_ThermoTransport

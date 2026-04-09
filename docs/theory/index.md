@@ -40,7 +40,7 @@ FLINT computes mixture properties from individual species data using established
 - Mixture density, gas constant, heat capacities ($c_p$, $c_v$, $\gamma$)
 - Enthalpy, internal energy, entropy (absolute and sensible)
 - Speed of sound
-- Temperature from energy (Newton-Raphson inversion)
+- Partial derivatives with respect to pressure and enthalpy for real fluids
 
 **Transport Properties**
 

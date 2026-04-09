@@ -541,10 +541,12 @@ contains
     integer, intent(in) :: sp
     real(8) :: result
     integer :: Tint(2)
-    real(8) :: Tdiff
-    
-    Tint(1) = idint(T); Tint(2) = Tint(1)+1
-    Tdiff = T-Tint(1)
+    real(8) :: Tdiff, Tc
+
+    ! Clamp to table range to protect against overshoots
+    Tc = max(dble(Tmin), min(T, dble(Tmax-1)))
+    Tint(1) = idint(Tc); Tint(2) = Tint(1)+1
+    Tdiff = Tc-Tint(1)
     result = f_tabT_expr(sp,tab,Tint,Tdiff)
 
   endfunction f_tabT
@@ -556,9 +558,13 @@ contains
     integer, intent(in) :: sp, Tint(2)
     real(8) :: result
     real(8) :: Vij,Viij
+    integer :: Ti1, Ti2
 
-    Vij=tab(Tint(1),sp)       ! int(T)   <- Tint(1)
-    Viij=tab(Tint(2),sp)      ! int(T)+1 <- Tint(2)
+    ! Clamp indices to valid range
+    Ti1 = max(Tmin, min(Tint(1), Tmax))
+    Ti2 = max(Tmin, min(Tint(2), Tmax))
+    Vij=tab(Ti1,sp)
+    Viij=tab(Ti2,sp)
     result = Vij+(Viij-Vij)*Tdiff
 
   endfunction f_tabT_expr

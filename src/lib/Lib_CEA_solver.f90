@@ -9,7 +9,7 @@ contains
 !***********************************************************************
       use FLINT_CEA_data
       use FLINT_CEA_setup, only: CEA_initialize_local
-      use FLINT_Lib_Thermodynamic, only: COMP_THERMO_QUANTS
+      use FLINT_Lib_Thermodynamic, only: COMP_THERMO_QUANTS, Tmin, Tmax
       IMPLICIT NONE
       REAL*8, DIMENSION(:), INTENT(IN) :: rhoi_in
       REAL*8, INTENT(IN) :: T_in
@@ -34,6 +34,10 @@ contains
       LOGICAL Convg, Gonly
 
       DATA smalno/1.E-6/,smnol/ - 13.815511/
+
+      ! Reset Npt to 1 each entry: GOTO 1500 paths skip the Npt++ at label
+      ! 1400, leaving Npt decremented after non-convergent calls.
+      Npt = 1
 
       rho = sum(rhoi_in)
       Vv = 1d05/rho
@@ -120,7 +124,8 @@ contains
       Npr = Npr - 1
  300  k = k + 1
       IF ( k.LE.Npr ) GOTO 100
- 400  Tln = DLOG(Tt)
+ 400  Tt = MAX(DBLE(Tmin+1), MIN(Tt, DBLE(Tmax-1)))
+      Tln = DLOG(Tt)
       IF ( Vol ) Pp = Rr*Enn*Tt/Vv
       CALL COMP_THERMO_QUANTS(Tt,Ng,Cp,H0,S)
       Tm = DLOG(Pp/Enn)
@@ -290,6 +295,9 @@ contains
           IF ( .NOT.Tp ) THEN
             Tln = Tln + ambda*dlnt
             Tt = DEXP(Tln)
+            ! Clamp to table range so COMP_THERMO_QUANTS stays consistent
+            Tt = MAX(DBLE(Tmin+1), MIN(Tt, DBLE(Tmax-1)))
+            Tln = DLOG(Tt)
             cpcalc = .TRUE.
             CALL COMP_THERMO_QUANTS(Tt,Ng,Cp,H0,S)
           ENDIF

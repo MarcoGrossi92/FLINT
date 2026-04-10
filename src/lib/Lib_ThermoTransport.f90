@@ -155,7 +155,7 @@ contains
     ! Check for negative pressure and temperature out of bounds. Set error flag if non-physical state is detected.
     if (p < 0d0) error = 1
     T = EOS(p,sum(rhoi),f_Rtot(rhoi))
-    if (T < Tmin .and. T>Tmax) error = 2
+    if (T < Tmin .or. T>Tmax) error = 2
 
   end subroutine check_gas_state
 

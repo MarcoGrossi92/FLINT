@@ -37,6 +37,7 @@ contains
     use ecker_mod
     use cross_mod
     use pelucchi_mod
+    use sandiego_mod
     implicit none
     character(*), intent(in) :: mad_world
 
@@ -83,6 +84,8 @@ contains
       chemistry_source => Andersen
     case('OSK')
       chemistry_source => OSK
+    case('SanDiego')
+      chemistry_source => sandiego20161214
 
     case default
       write(*,*) "[WARNING] Explicit procedure for "//trim(mad_world)//" not found, defaulting to the general procedure"

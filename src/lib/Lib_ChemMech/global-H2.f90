@@ -28,7 +28,7 @@ contains
     Tint(1) = T_i
     Tint(2) = T_i + 1
 
-    p = sum(roi) * sum(coi * Ri_tab) * temp
+    p = sum(roi * Ri_tab) * temp
 
     ! 2 H2 + O2 --> 2 H2O
     prod1 = -0.5d0 * 8.d11 * ((p / 101325d0)**(-1.15d0)) * coi(2) **2 * coi(5) * exp(-10000d0/temp)

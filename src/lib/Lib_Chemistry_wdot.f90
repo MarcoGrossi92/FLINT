@@ -37,6 +37,7 @@ contains
     use ecker_mod
     use cross_mod
     use pelucchi_mod
+    use ONERA7_mod
     use sandiego_mod
     implicit none
     character(*), intent(in) :: mad_world
@@ -84,6 +85,8 @@ contains
       chemistry_source => Andersen
     case('OSK')
       chemistry_source => OSK
+    case('ONERA-7')
+      chemistry_source => ONERA_7
     case('SanDiego')
       chemistry_source => sandiego20161214
 

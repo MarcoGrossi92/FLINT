@@ -1,6 +1,7 @@
 module FLINT_CEA_setup
 
   real(kind=8), dimension(:), allocatable   :: el_weight
+  !$OMP THREADPRIVATE(el_weight)
 contains
 
   subroutine CEA_initialize_global()
@@ -157,8 +158,9 @@ contains
     implicit none
     integer :: i, j
 
+    if (allocated(el_weight)) deallocate(el_weight)
     allocate(el_weight(1:ne))
-    
+
     do j = 1, ne
       do i = 1, 100
         if (trim(Symbol(i))==trim(elements_names(j))) el_weight(j) = Atmwt(i)

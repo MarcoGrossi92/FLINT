@@ -83,4 +83,25 @@ MODULE FLINT_CEA_data
   INTEGER :: Nm, Nr, Ntape
   INTEGER :: Ind(MAXTR), Jcm(MAXEL)
 
+  ! Flag for lazy per-thread initialization (OpenMP)
+  LOGICAL :: cea_thread_initialized = .false.
+
+  !$OMP THREADPRIVATE( &
+  !$OMP   Deln, Sln, &
+  !$OMP   Ip, Iplt, It, Nc, Ng, Ngp1, Nlm, Nomit, Nonly, Np, Npr, Npt, &
+  !$OMP   Ngc, Nspx, Nt, &
+  !$OMP   Jcond, Jx, Ifz, &
+  !$OMP   Bcheck, &
+  !$OMP   Imat, Iq1, Isv, Jliq, Jsol, Lsave, Msing, &
+  !$OMP   Hp, Ions, Massf, Pderiv, Short, Tp, Vol, &
+  !$OMP   R, Size, Trace, &
+  !$OMP   Atwt, X, A, &
+  !$OMP   Elmt, Prod, &
+  !$OMP   Cpr, Dlvpt, Dlvtp, Hsum, Ppp, Ssum, Totn, Ttt, Wm, &
+  !$OMP   Nreac, Cpsum, Temp, Mw, &
+  !$OMP   Iopt, Npp, &
+  !$OMP   Nm, Nr, Ntape, &
+  !$OMP   Ind, Jcm, &
+  !$OMP   cea_thread_initialized )
+
 END MODULE FLINT_CEA_data

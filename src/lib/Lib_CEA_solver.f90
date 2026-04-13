@@ -8,7 +8,7 @@ contains
 ! CALCULATE EQUILIBRIUM COMPOSITION AND PROPERTIES.
 !***********************************************************************
       use FLINT_CEA_data
-      use FLINT_CEA_setup, only: CEA_initialize_local
+      use FLINT_CEA_setup, only: CEA_initialize_local, CEA_initialize_global
       use FLINT_Lib_Thermodynamic, only: COMP_THERMO_QUANTS, Tmin, Tmax
       IMPLICIT NONE
       REAL*8, DIMENSION(:), INTENT(IN) :: rhoi_in
@@ -34,6 +34,13 @@ contains
       LOGICAL Convg, Gonly
 
       DATA smalno/1.E-6/,smnol/ - 13.815511/
+
+      ! Lazy per-thread initialization for OpenMP thread safety:
+      ! each thread initializes its own private copy of FLINT_CEA_data on first call.
+      if (.not. cea_thread_initialized) then
+        call CEA_initialize_global()
+        cea_thread_initialized = .true.
+      end if
 
       ! Reset Npt to 1 each entry: GOTO 1500 paths skip the Npt++ at label
       ! 1400, leaving Npt decremented after non-convergent calls.
@@ -871,7 +878,6 @@ contains
 ! LOCAL VARIABLES
       INTEGER i,iq,iq2,iq3,isym,j,k,kk,kmat
       REAL*8 energyl,f,h,ss,sss,term,term1
-      SAVE energyl,f,h,i,iq,iq2,iq3,isym,j,k,kk,kmat,ss,sss,term,term1
 
       iq = Nlm + Npr
       Iq1 = iq + 1
@@ -1010,7 +1016,6 @@ contains
       INTEGER i,imatp1,j,k,nn,nnp1
       REAL*8 bigno,coefx(50),tmp
       REAL*8 DABS,DMAX1
-      SAVE coefx,i,imatp1,j,k,nn,nnp1,tmp
 
       DATA bigno/1.E+25/
 ! BEGIN ELIMINATION OF NNTH VARIABLE

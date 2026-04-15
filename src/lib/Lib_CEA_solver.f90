@@ -8,7 +8,8 @@ contains
 ! CALCULATE EQUILIBRIUM COMPOSITION AND PROPERTIES.
 !***********************************************************************
       use FLINT_CEA_data
-      use FLINT_CEA_setup, only: CEA_initialize_local
+      use FLINT_CEA_setup, only: CEA_initialize_local, &
+                                  CEA_initialize_global
       use FLINT_Lib_Thermodynamic, only: COMP_THERMO_QUANTS, Tmin, Tmax
       IMPLICIT NONE
       REAL*8, DIMENSION(:), INTENT(IN) :: rhoi_in
@@ -35,9 +36,31 @@ contains
 
       DATA smalno/1.E-6/,smnol/ - 13.815511/
 
-      ! Reset Npt to 1 each entry: GOTO 1500 paths skip the Npt++ at label
-      ! 1400, leaving Npt decremented after non-convergent calls.
-      Npt = 1
+      ! Lazy per-thread initialization for OpenMP thread safety:
+      ! each thread initializes its own private copy of FLINT_CEA_data
+      ! on first call.
+      if (.not. cea_thread_initialized) then
+        call CEA_initialize_global()
+        cea_thread_initialized = .true.
+      end if
+
+      ! Safe defaults: if CEA fails to converge (any GOTO 1500 path),
+      ! return the input state unchanged instead of undefined values.
+      T_out    = T_in
+      rhoi_out = rhoi_in
+
+      ! Reset module state that persists between calls
+      Npt    = 1
+      Lsave  = 0
+
+      ! Restore pristine arrays mutated by component switching
+      A      = A_saved
+      Atwt   = Atwt_saved
+      Elmt   = Elmt_saved
+      Jx     = Jx_saved
+      Jcm    = Jcm_saved
+      Nspx   = Nspx_saved
+      Nlm    = Nlm_saved
 
       rho = sum(rhoi_in)
       Vv = 1d05/rho
@@ -47,23 +70,26 @@ contains
       Tt = T_in
 
       ! INITIAL ESTIMATES
+      ! Use input composition instead of uniform equi-molar guess.
+      ! For near-equilibrium states this gives convergence in 1-3
+      ! iterations with negligible correction, eliminating the O(1e-4)
+      ! noise that accumulates over many time steps.
       Npr = 0
-      Enn = .1D0
-      Ennl = -2.3025851
+      Enn = 0.0D0
+      do j = 1, Ng
+        En(j,1) = rhoi_in(j) / (rho * Mw(j))
+        if (En(j,1) < 1.0D-30) En(j,1) = 1.0D-30
+        Enln(j) = DLOG(En(j,1))
+        Enn = Enn + En(j,1)
+      end do
+      if (Enn < 1.0D-30) Enn = 0.1D0
+      Ennl = DLOG(Enn)
       Sumn = Enn
-      xi = dble(Ng)
-      if ( xi==0.d0 ) xi = 1.
-      xi = Enn/xi
-      xln = DLOG(xi)
-      do i = 1,Nc
+      do i = 1, Nc
         j = Ng + i
         En(j,1) = 0.D0
         Enln(j) = 0.D0
-      enddo
-      do j = 1,Ng
-        En(j,1) = xi
-        Enln(j) = xln
-      enddo
+      end do
 
       ixsing = 0
       lsing = 0

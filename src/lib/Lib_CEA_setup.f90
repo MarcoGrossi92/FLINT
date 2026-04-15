@@ -1,6 +1,5 @@
 module FLINT_CEA_setup
 
-  real(kind=8), dimension(:), allocatable   :: el_weight
 contains
 
   subroutine CEA_initialize_global()
@@ -38,8 +37,6 @@ contains
 
     Mw = 0
     Mw(1:ns) = wm_tab
-
-    call assign_elemental_weight
 
     Jx = 0
     Deln = 0.d0
@@ -81,6 +78,15 @@ contains
 
     Size = 18.420681D0
 
+    ! Save pristine arrays for restoration in CEA_solve
+    A_saved      = A
+    Atwt_saved   = Atwt
+    Elmt_saved   = Elmt
+    Jx_saved     = Jx
+    Jcm_saved    = Jcm
+    Nspx_saved   = Nspx
+    Nlm_saved    = Nlm
+
   end subroutine CEA_initialize_global
 
 
@@ -109,12 +115,9 @@ contains
 
     do n = 1, Nreac
 
-      ! STORE ATOMIC SYMBOLS IN ELMT ARRAY.
-      ! CALCULATE MOLECULAR WEIGHT.
-      rm = 0.D0
+      rm = wm_tab(n)
       dat = 0
       do jj = 1, ne
-        rm = rm + species_composition(jj,n)*el_weight(jj)
         dat(jj) = dat(jj) + species_composition(jj,n)
       enddo
 
@@ -150,21 +153,5 @@ contains
     Bcheck = bigb*.000001D0
 
   end subroutine CEA_initialize_local
-
-  subroutine assign_elemental_weight()
-    use FLINT_Lib_Thermodynamic
-    use FLINT_CEA_data
-    implicit none
-    integer :: i, j
-
-    allocate(el_weight(1:ne))
-    
-    do j = 1, ne
-      do i = 1, 100
-        if (trim(Symbol(i))==trim(elements_names(j))) el_weight(j) = Atmwt(i)
-      enddo
-    enddo
-
-   end subroutine assign_elemental_weight
 
 end module FLINT_CEA_setup

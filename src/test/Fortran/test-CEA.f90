@@ -70,7 +70,7 @@ program test_eq
   deallocate(wm_tab); deallocate(Ri_tab)
   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
   deallocate(species_names); deallocate(elements_names)
-  deallocate(species_composition); deallocate(el_weight)
+  deallocate(species_composition)
 
   !-------------------------------------------------------------------------------------------------
   ! ZK
@@ -126,7 +126,7 @@ program test_eq
   deallocate(wm_tab); deallocate(Ri_tab)
   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
   deallocate(species_names); deallocate(elements_names)
-  deallocate(species_composition); deallocate(el_weight)
+  deallocate(species_composition)
 
   !-------------------------------------------------------------------------------------------------
   ! TSR-GP-24
@@ -182,7 +182,7 @@ program test_eq
   deallocate(wm_tab); deallocate(Ri_tab)
   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
   deallocate(species_names); deallocate(elements_names)
-  deallocate(species_composition); deallocate(el_weight)
+  deallocate(species_composition)
 
   !-------------------------------------------------------------------------------------------------
   ! Ecker
@@ -245,6 +245,6 @@ program test_eq
   deallocate(wm_tab); deallocate(Ri_tab)
   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
   deallocate(species_names); deallocate(elements_names)
-  deallocate(species_composition); deallocate(el_weight)
+  deallocate(species_composition)
 
 end program test_eq

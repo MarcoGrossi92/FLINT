@@ -64,24 +64,30 @@ endmacro()
 
 # -------- Git submodules --------
 
+if (USE_CANTERA)
+  set ( USE_SUNDIALS ON )
+endif()
+
+# OSlo (needed early for SUNDIALS before Cantera)
+if (NOT TARGET OSlo)
+  ensure_submodule_initialized("${OSLO_PATH}")
+  add_subdirectory("${OSLO_PATH}" "${CMAKE_BINARY_DIR}/lib/OSlo")
+endif()
+
 # ORION
 if (NOT TARGET ORION)
   ensure_submodule_initialized("${ORION_PATH}")
-  set(orionD "${ORION_PATH}" "${CMAKE_BINARY_DIR}/lib/ORION")
-  add_subdirectory(${orionD})
-endif()
-
-# OSlo
-if (NOT TARGET OSlo)
-  ensure_submodule_initialized("${OSLO_PATH}")
-  set(osloD "${OSLO_PATH}" "${CMAKE_BINARY_DIR}/lib/OSlo")
-  add_subdirectory(${osloD})
+  add_subdirectory("${ORION_PATH}" "${CMAKE_BINARY_DIR}/lib/ORION")
 endif()
 
 # Cantera
 # Cantera is optional and only used by FLINT
 OPTION(USE_CANTERA "Use Cantera" ON)
 if (USE_CANTERA)
+  # Find SUNDIALS (created by OSlo subdirectory)
+  set(SUNDIALS_INSTALL_DIR "${OSLO_PATH}/sundials-install")
+  find_package(SUNDIALS REQUIRED PATHS ${SUNDIALS_INSTALL_DIR} NO_DEFAULT_PATH)
+
   set(canteraD "${CMAKE_CURRENT_SOURCE_DIR}/lib/cantera")
   # Check if cloned
   if(NOT EXISTS "${canteraD}/README.rst")

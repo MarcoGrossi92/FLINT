@@ -2,7 +2,7 @@
 set(CMAKE_CXX_STANDARD 17)
 
 set(exe "test-batchCXX")
-add_executable(${exe} "test-batchCXX.cpp" ${FLINT_SRC})
+add_executable(${exe} "test-batchCXX.cpp")
 
 #Use one Sundials installation
 include_directories("${CMAKE_SOURCE_DIR}/lib/OSlo/sundials-install/include/")

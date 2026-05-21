@@ -38,6 +38,7 @@ contains
       roi(s) = max(roi(s), 0.d0)
     end do
 
+    droic = 0.d0
     call Chemistry_Source ( roi, T, droic )
 
     eiroi = 0.d0; rho_cv = 0.d0

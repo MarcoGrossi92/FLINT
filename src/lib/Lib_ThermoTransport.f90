@@ -22,7 +22,8 @@ module FLINT_Lib_Thermodynamic
   integer                 :: Tmin, Tmax
 
   ! Real fluid properties tables limits and step
-  real(kind=8)            :: pmin, deltap, hmin, deltah, Tmin2, deltaT
+  real(kind=8)                            :: pmin, deltap, hmin, deltah
+  real(kind=8), dimension(:), allocatable :: Tmin2, deltaT
 
   ! Ideal gas properties tables (T, specie)
   real(kind=8), dimension(:), allocatable   :: wm_tab, Ri_tab
@@ -618,38 +619,29 @@ contains
   endfunction ph2vars
 
 
-  ! Real fluid properties interpolation function.
-  ! The input variables are pressure and temperature, the output variable is enthalpy stored in the table.
+  ! Interpolate enthalpy at (p, T) from inverse table h_tab2D.
+  ! T grid is uniform per-row (Tmin2(i), deltaT(i)), p grid is uniform global.
+  ! Interpolate in T on rows i and i+1 separately, then in p.
   pure function pT2h ( p, T ) result(result)
     implicit none
-
-    ! pressure-entalpy tabulation to have wanted variables 
     real(8), intent(in) :: p, T
     real(8) :: result
-    ! Local variables
-    integer :: i,j
-    real(8) :: Vij, Viij, Vijj, Viijj
-    real(8) :: A, B, C, D
-    real(8) :: dist_p, dist_T
+    integer :: i, j_lo, j_hi                       ! bracketing indices (j_lo/j_hi use row-specific T grids)
+    real(8) :: alpha_p, alpha_T_lo, alpha_T_hi     ! fractional positions in [0,1] within each interval
+    real(8) :: h_lo, h_hi                          ! enthalpy at (p_i, T) and (p_{i+1}, T)
 
-    i = idint( (p - pmin) / deltap )
-    j = idint( (T - Tmin2) / deltaT )
+    i       = idint( (p - pmin) / deltap )
+    alpha_p = (p - pmin - i*deltap) / deltap
 
-    Vij   = h_tab2D ( i   , j   )
-    Viij  = h_tab2D ( i+1 , j   )
-    Vijj  = h_tab2D ( i   , j+1 )
-    Viijj = h_tab2D ( i+1 , j+1 )
+    j_lo       = idint( (T - Tmin2(i)) / deltaT(i) )
+    alpha_T_lo = (T - Tmin2(i) - j_lo*deltaT(i)) / deltaT(i)
+    h_lo = (1.d0 - alpha_T_lo) * h_tab2D(i, j_lo) + alpha_T_lo * h_tab2D(i, j_lo+1)
 
-    A = Vij
-    B = ( Viij - Vij ) / deltap
-    C = ( Vijj - Vij ) / deltaT
-    D = ( Vij + Viijj - Viij - Vijj ) / ( deltap * deltaT )
+    j_hi       = idint( (T - Tmin2(i+1)) / deltaT(i+1) )
+    alpha_T_hi = (T - Tmin2(i+1) - j_hi*deltaT(i+1)) / deltaT(i+1)
+    h_hi = (1.d0 - alpha_T_hi) * h_tab2D(i+1, j_hi) + alpha_T_hi * h_tab2D(i+1, j_hi+1)
 
-    dist_p = p - pmin - i*deltap
-    dist_T = T - Tmin2 - j*deltaT
-
-    result = A + B*dist_p + C*dist_T + D*dist_p*dist_T
-
+    result = (1.d0 - alpha_p) * h_lo + alpha_p * h_hi
   endfunction pT2h
 
 endmodule FLINT_Lib_Thermodynamic

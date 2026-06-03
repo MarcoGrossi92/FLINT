@@ -31,6 +31,13 @@
 ! 2 -> error reading transport data
 ! 3 -> too many blocks in transport file
 ! 4 -> error reading transport data: mesh size mismatch with thermo data
+!
+! ph2pT ios map:
+! 0 -> no error
+! 1 -> h_tab2D already allocated
+! 2 -> table dimensions too small (Nh<1 or Np<0)
+! 3 -> T_tab not allocated
+! 4 -> found = .false. (interpolation failed); fatal errors override warnings
 
 
 module FLINT_Load_ThermoTransport
@@ -339,11 +346,8 @@ contains
     ! Local
     integer           :: ios, i, j
     type(ORION_data)  :: orion
-    logical           :: exists, attempted
+    logical           :: exists_dat, exists_szplt
     character(512)    :: transfile(2)
-
-    ios = 1
-    attempted = .false.
 
     !! transport — use ORION to get mesh (p, h node coords)
     if (present(folder)) then
@@ -354,18 +358,17 @@ contains
       transfile(2) = 'INPUT/'//trim(FLINT_phase_prefix)//'transport.szplt'
     endif
 
-    inquire(file=trim(transfile(1)),exist=exists)
-    if (exists) then
-      attempted = .true.
-      ios = tec_read_points_multivars(orion,2,trim(transfile(1)))
+    inquire(file=trim(transfile(1)), exist=exists_dat)
+    inquire(file=trim(transfile(2)), exist=exists_szplt)
+    if (.not. exists_dat .and. .not. exists_szplt) then
+      ios = 1
+      return
     endif
-    inquire(file=trim(transfile(2)),exist=exists)
-    if (exists) then
-      attempted = .true.
-      ios = tec_read_structured_multiblock(orion=orion, filename=trim(transfile(2)))
-    endif
+    ios = -1
+    if (exists_dat)                  ios = tec_read_structured_multiblock(orion=orion, filename=trim(transfile(1)))
+    if (ios/=0 .and. exists_szplt)   ios = tec_read_structured_multiblock(orion=orion, filename=trim(transfile(2)))
     if (ios/=0) then
-      if (attempted) ios = 2
+      ios = 2
       return
     endif
 
@@ -374,7 +377,7 @@ contains
       return
     endif
 
-    if (orion%block(1)%Ni /= size(rho_tab,1) .or. orion%block(1)%Nj /= size(rho_tab,2)) then
+    if (orion%block(1)%Ni+1 /= size(rho_tab,1) .or. orion%block(1)%Nj+1 /= size(rho_tab,2)) then
       ios = 4
       return
     endif
@@ -394,5 +397,83 @@ contains
 
   end function read_realfluid_transport
 
+
+  function ph2pT( ) result(ios)
+
+    use Lib_Tecplot
+    use Lib_ORION_data
+
+    implicit none
+
+    integer :: ios
+    integer :: i, j, k
+    integer :: Np, Nh
+    real(8) :: T_target, frac, dT_row
+    logical :: found
+
+    ios = -1 ! preallocation
+
+    ! Pre-flight checks
+    if (.not. allocated(T_tab)) then
+      ios = 3
+      return
+    end if
+    if (allocated(h_tab2D) .or. allocated(Tmin2) .or. allocated(deltaT)) then
+      ios = 1
+      return
+    end if
+
+    Np = ubound(T_tab, 1)
+    Nh = ubound(T_tab, 2)
+
+    if (Nh < 1 .or. Np < 0) then
+      ios = 2
+      return
+    end if
+
+    allocate(h_tab2D, mold=T_tab)
+    allocate(Tmin2(0:Np))
+    allocate(deltaT(0:Np))
+
+    ! Building inverse table
+    do i = 0, Np
+      Tmin2(i)   = T_tab(i, 0)
+      deltaT(i) = (T_tab(i, Nh) - T_tab(i, 0)) / dble(Nh)
+
+      do k = 0, Nh
+        T_target = Tmin2(i) + k * deltaT(i)
+        found = .false.
+
+        do j = 0, Nh - 1
+          if (T_target >= T_tab(i, j) .and. T_target <= T_tab(i, j+1)) then
+            dT_row = T_tab(i, j+1) - T_tab(i, j)
+            frac   = (T_target - T_tab(i, j)) / dT_row
+            h_tab2D(i, k) = (hmin + j * deltah) + frac * deltah
+            found = .true.
+            exit
+          end if
+        end do
+
+        ! Clamp @ boundary (k=0 e k=Nh are limit cases)
+        if (.not. found) then
+          if (k == 0) then
+            h_tab2D(i, k) = hmin
+            found = .true.
+          else if (k == Nh) then
+            h_tab2D(i, k) = hmin + Nh * deltah
+            found = .true.
+          end if
+        end if
+
+        if (.not. found) then
+          deallocate(h_tab2D, Tmin2, deltaT)
+          ios = 4
+          return
+        end if
+      end do
+    end do
+
+    ios = 0
+  endfunction ph2pT
 
 end module FLINT_Load_ThermoTransport

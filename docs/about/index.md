@@ -33,7 +33,7 @@ This project is licensed under the GNU General Public License v3.0. See [License
 FLINT builds upon the work of:
 
 - **ORION** contributors
-- **OSlo** contributors
+- **OSLO** contributors
 - **CEA** contributors
 - The broader Fortran and scientific computing community
 

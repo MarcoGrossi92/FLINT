@@ -14,7 +14,7 @@ Before installing FLINT, ensure you have the required dependencies:
 
 The following public repositories are included as Git submodules and are automatically configured during installation:
 
-- [OSlo](https://github.com/MarcoGrossi92/OSlo): Provides ODE solvers. SUNDIALS is included
+- [OSLO](https://github.com/MarcoGrossi92/OSLO): Provides ODE solvers. SUNDIALS is included
 - [ORION](https://github.com/MarcoGrossi92/ORION): Provides the input routines to load the lookup tables in native format
 
 (both hosted under [Marco Grossi](https://github.com/MarcoGrossi92))
@@ -89,7 +89,7 @@ Perform a complete build from scratch:
 |--------|--------|-------------|
 | `--compiler` | `gnu`, `intel` | Select compiler suite (default: `gnu`) |
 | `--use-cantera` | — | Enable Cantera |
-| `--use-sundials` | — | Enable SUNDIALS solvers (via OSlo) |
+| `--use-sundials` | — | Enable SUNDIALS solvers (via OSLO) |
 | `--use-tecio` | — | Enable TecIO for binary Tecplot formats (via ORION) |
 
 !!! warning "SUNDIALS & Cantera"

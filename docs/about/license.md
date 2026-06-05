@@ -72,7 +72,7 @@ FLINT uses several dependencies, each with its own license:
 | Dependency | License | Compatibility |
 |------------|---------|---------------|
 | **CEA** | Apache 2.0 | ✅ Compatible |
-| **OSlo** | GPL v3.0 | ✅ Same license |
+| **OSLO** | GPL v3.0 | ✅ Same license |
 | **ORION** | GPL v3.0 | ✅ Same license |
 
 See [Acknowledgements](acknowledgements.md) for full attribution.

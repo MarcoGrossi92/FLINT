@@ -30,13 +30,13 @@ The procedure relies on the following steps:
   ! Initialize tollerances and state
   ! ...
 
-  ! Initialize ODE solver (OSlo)
+  ! Initialize ODE solver (OSLO)
   call setup_odesolver(N=neq,solver=solver,RT=RT,AT=AT,iopt=iopt)
 
   ! Initialize chemical mechanism specific routine
   call Assign_Mechanism(mech_name)
 
-  ! Run the solver (OSlo)
+  ! Run the solver (OSLO)
   call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
 
   ! Output stored in Y (N species + temperature)
@@ -51,7 +51,7 @@ The procedure relies on the following steps:
 
 - Load thermodynamic data.
 - Definition of initial state.
-- Inizialization of the solver.
+- Initialization of the solver.
 - Run the solver.
 
 **Pseudo-code**
@@ -65,10 +65,10 @@ use FLINT_CEA_solver
 ! Load data
 err = read_idealgas_thermo('mechanism-folder')
 
-! Inizialize solver
+! Initialize solver
 call CEA_initialize_global()
 
-! Inizialize state values of p, T, rhoi
+! Initialize state values of p, T, rhoi
 ! ...
 
 ! Run the solver

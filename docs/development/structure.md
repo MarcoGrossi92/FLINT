@@ -224,7 +224,7 @@ development/chemistry_generation.md
 ## External Dependencies (`lib/`)
 
 ```
-lib/OSlo
+lib/OSLO
 lib/ORION
 lib/cantera
 ```

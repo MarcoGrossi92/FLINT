@@ -11,20 +11,20 @@ FLINT is built upon several projects.
 
 ORION provides built-in functions to read files in different formats. FLINT uses ORION to import thermodynamic, transport, and chemistry tabulated data.
 
-## OSlo
+## OSLO
 
 **ODE solvers for Fortran**
 
-- **Repository:** [github.com/MarcoGrossi92/OSlo](https://github.com/MarcoGrossi92/OSlo)
+- **Repository:** [github.com/MarcoGrossi92/OSLO](https://github.com/MarcoGrossi92/OSLO)
 - **License:** GPL v3.0
 
-OSlo provides a state-of-the-art Fortran framework to solve ODE systems. FLINT uses OSlo to build code drivers to test chemistry integration.
+OSLO provides a state-of-the-art Fortran framework to solve ODE systems. FLINT uses OSLO to build code drivers to test chemistry integration.
 
 ## CEA
 
 **Chemical Equilibrium Solver**
 
-- **Repository:** [github.com/MarcoGrossi92/ORION](https://github.com/MarcoGrossi92/ORION)
+- **Repository:** [github.com/nasa/cea](https://github.com/nasa/cea)
 - **License:** Apache 2.0
 
 Developed by NASA, CEA is the reference code for chemical equilibrium computations.

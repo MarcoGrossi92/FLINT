@@ -32,7 +32,7 @@ if (NOT DEFINED ORION_PATH)
   set(ORION_PATH "${CMAKE_CURRENT_SOURCE_DIR}/lib/ORION/")
 endif()
 if (NOT DEFINED OSLO_PATH)
-  set(OSLO_PATH "${CMAKE_CURRENT_SOURCE_DIR}/lib/OSlo/")
+  set(OSLO_PATH "${CMAKE_CURRENT_SOURCE_DIR}/lib/OSLO/")
 endif()
 
 # -------- Helper: initialize a git submodule from the correct git root --------
@@ -68,10 +68,10 @@ if (USE_CANTERA)
   set ( USE_SUNDIALS ON )
 endif()
 
-# OSlo (needed early for SUNDIALS before Cantera)
-if (NOT TARGET OSlo)
+# OSLO (needed early for SUNDIALS before Cantera)
+if (NOT TARGET OSLO)
   ensure_submodule_initialized("${OSLO_PATH}")
-  add_subdirectory("${OSLO_PATH}" "${CMAKE_BINARY_DIR}/lib/OSlo")
+  add_subdirectory("${OSLO_PATH}" "${CMAKE_BINARY_DIR}/lib/OSLO")
 endif()
 
 # ORION
@@ -84,7 +84,7 @@ endif()
 # Cantera is optional and only used by FLINT
 OPTION(USE_CANTERA "Use Cantera" ON)
 if (USE_CANTERA)
-  # Find SUNDIALS (created by OSlo subdirectory)
+  # Find SUNDIALS (created by OSLO subdirectory)
   set(SUNDIALS_INSTALL_DIR "${OSLO_PATH}/sundials-install")
   find_package(SUNDIALS REQUIRED PATHS ${SUNDIALS_INSTALL_DIR} NO_DEFAULT_PATH)
 

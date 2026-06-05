@@ -6,7 +6,7 @@ foreach(TEST ${TESTS})
   add_executable(${EXE_NAME} ${TEST} ${FLINT_SRC})
   target_include_directories(${EXE_NAME} INTERFACE $<BUILD_INTERFACE:${CMAKE_Fortran_MODULE_DIRECTORY}>)
 
-  # FLINT dependencies (see cmake/LinkDependencies.cmake): OSlo and Cantera (optional)
+  # FLINT dependencies (see cmake/LinkDependencies.cmake): OSLO and Cantera (optional)
   link_FLINT_dependencies(${EXE_NAME})
 
   # ORION

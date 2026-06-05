@@ -26,7 +26,7 @@ function(link_FLINT_dependencies target_name)
     endif()
   endif()
 
-  # OSlo
-  target_link_libraries(${target_name} PRIVATE OSlo)
+  # OSLO
+  target_link_libraries(${target_name} PRIVATE OSLO)
 
 endfunction()

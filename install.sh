@@ -24,15 +24,10 @@ Commands:
   build                     Perform a full build
     --compilers=<name>      Set compilers suite (intel,gnu)
     --include-orion=<path>  Set external ORION path
-    --include-oslo=<path>   Set external OSlo path
+    --include-oslo=<path>   Set external OSLO path
     --use-cantera           Use Cantera (Sundials required)
-    --use-sundials          Use Sundials (via OSlo)
+    --use-sundials          Use Sundials (via OSLO)
     --use-tecio             Use TecIO (via ORION)
-
-  compile                   Compile the program using the CMakePresets file
-
-  update                    Download git submodules
-    --remote                Use the latest remote commit
 
 EOF
     exit 1
@@ -97,17 +92,15 @@ EOF
 COMMAND=""
 COMPILERS=""
 ORION_PATH=$(pwd)'/lib/ORION/'
-OSLO_PATH=$(pwd)'/lib/OSlo/'
+OSLO_PATH=$(pwd)'/lib/OSLO/'
 BUILD_TYPE=RELEASE
 USE_SUNDIALS=false
 USE_CANTERA=false
 USE_TECIO=false
-REMOTE=false
 
 # Define allowed options for each command using regular arrays
-CMD=("build" "compile" "update")
+CMD=("build")
 CMD_OPTIONS_build=("--compilers --include-orion --include-oslo --use-sundials --use-cantera --use-tecio")
-CMD_OPTIONS_update=("--remote")
 
 # Parse global options
 while getopts "v-:" opt; do
@@ -167,10 +160,6 @@ while [[ $# -gt 0 ]]; do
             [[ "$COMMAND" == "build" ]] || { error " --use-tecio is only valid for 'build' command"; exit 1; }
             USE_TECIO=true
             ;;
-        --remote)
-            [[ "$COMMAND" == "update" ]] || { error " --remote is only valid for 'update' command"; exit 1; }
-            REMOTE=true
-            ;;
         *)
             eval "opts=(\"\${CMD_OPTIONS_${COMMAND}[@]}\")"
             error "Unknown option '$1' for command '$COMMAND'. Valid options: ${opts[@]}"
@@ -188,7 +177,7 @@ case "$COMMAND" in
 
         task "Cloning submodules"
         [[ $ORION_PATH == $(pwd)'/lib/ORION/' ]] && git submodule update --init lib/ORION
-        [[ $OSLO_PATH == $(pwd)'/lib/OSlo/' ]] && git submodule update --init lib/OSlo
+        [[ $OSLO_PATH == $(pwd)'/lib/OSLO/' ]] && git submodule update --init lib/OSLO
 
         if [[ $COMPILERS == "intel" ]]; then 
             export FC="ifx"
@@ -202,7 +191,7 @@ case "$COMMAND" in
         log "Build dir: $BUILD_DIR"
         log "Build type: $BUILD_TYPE"
         log "ORION path: $ORION_PATH"
-        log "OSlo path: $OSLO_PATH"        
+        log "OSLO path: $OSLO_PATH"        
         log "Use Cantera: $USE_CANTERA"
         log "Use Sundials: $USE_SUNDIALS"
         log "Use TecIO: $USE_TECIO"
@@ -219,23 +208,6 @@ case "$COMMAND" in
         task "Write CMakePresets.json"
         write_presets
         log "[OK] CMakePresets.json created"
-        ;;
-    compile)
-        task "Compiling $project using CMakePresets"
-        cmake --preset default || exit 1
-        cmake --build $BUILD_DIR || exit 1
-        log "[OK] Compilation successful"
-        ;;
-    update)
-        task "Updating git submodules"
-        if [[ "$REMOTE" == "true" ]]; then
-            log "Updating submodules to latest remote commit"
-            git submodule update --init --remote
-        else
-            log "Updating submodules to current commit"
-            git submodule update --init
-        fi
-        log "[OK] Submodules updated"
         ;;
     *)
         error "Unknown command '$COMMAND'"

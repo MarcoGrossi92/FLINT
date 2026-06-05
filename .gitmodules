@@ -1,9 +1,9 @@
 [submodule "lib/cantera"]
 	path = lib/cantera
 	url = https://github.com/Cantera/cantera.git
-[submodule "lib/OSlo"]
-	path = lib/OSlo
-	url = https://github.com/MarcoGrossi92/OSlo.git
 [submodule "lib/ORION"]
 	path = lib/ORION
 	url = https://github.com/MarcoGrossi92/ORION.git
+[submodule "lib/OSLO"]
+	path = lib/OSLO
+	url = https://github.com/MarcoGrossi92/OSLO.git

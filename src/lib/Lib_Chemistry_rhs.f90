@@ -50,8 +50,8 @@ contains
     eiroi = 0.d0; rho_cv = 0.d0
     do s = 1, ns
         ! Enthalpy and Cp lookups now use the hoisted T_idx / T_frac
-        h_val  = h_tab(T_idx, s) + T_frac * (h_tab(T_idx+1, s) - h_tab(T_idx, s))
-        cp_val = cp_tab(T_idx, s) + T_frac * (cp_tab(T_idx+1, s) - cp_tab(T_idx, s))
+        h_val  = h_tabT(s, T_idx) + T_frac * (h_tabT(s, T_idx+1) - h_tabT(s, T_idx))
+        cp_val = cp_tabT(s, T_idx) + T_frac * (cp_tabT(s, T_idx+1) - cp_tabT(s, T_idx))
 
         eiroi  = eiroi + (h_val - Ri_tab(s) * T) * droic(s)
         rho_cv = rho_cv + roi(s) * (cp_val - Ri_tab(s))
@@ -113,10 +113,10 @@ contains
 
     ! 2) Thermo lookups + analytical T-derivatives (same linear-interp table).
     do s = 1, ns
-      h_vec(s)      = h_tab(T_idx,s)  + T_frac * (h_tab(T_idx+1,s)  - h_tab(T_idx,s))
-      cp_vec(s)     = cp_tab(T_idx,s) + T_frac * (cp_tab(T_idx+1,s) - cp_tab(T_idx,s))
-      dh_dT(s)  = h_tab(T_idx+1,s)  - h_tab(T_idx,s)
-      dcp_dT(s) = cp_tab(T_idx+1,s) - cp_tab(T_idx,s)
+      h_vec(s)      = h_tabT(s,T_idx)  + T_frac * (h_tabT(s,T_idx+1)  - h_tabT(s,T_idx))
+      cp_vec(s)     = cp_tabT(s,T_idx) + T_frac * (cp_tabT(s,T_idx+1) - cp_tabT(s,T_idx))
+      dh_dT(s)  = h_tabT(s,T_idx+1)  - h_tabT(s,T_idx)
+      dcp_dT(s) = cp_tabT(s,T_idx+1) - cp_tabT(s,T_idx)
     end do
 
     ! 3) G = eiroi, D = rho_cv (mirrors rhs_native).

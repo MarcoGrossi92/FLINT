@@ -21,6 +21,11 @@ module FLINT_Lib_Thermodynamic
   real(kind=8), dimension(:), allocatable   :: wm_tab, Ri_tab
   real(kind=8), dimension(:,:), allocatable :: cp_tab, dcpi_tab, h_tab, s_tab
   real(kind=8), dimension(:,:), allocatable :: mi_tab, k_tab
+  ! Species-contiguous transposed companions, tabT(species, T) = tab(T, species),
+  ! filled once by build_transposed_tables() after the loaders. The hot per-species
+  ! interpolation loops read these so the gather over species is unit-stride
+  ! (vectorizable). Values are identical to the originals -> bit-identical.
+  real(kind=8), dimension(:,:), allocatable :: cp_tabT, h_tabT, mi_tabT, k_tabT
   real(kind=8), dimension(:,:), allocatable :: dij_tab  !> coefficiente di diffusione binaria (T,interazione)
   integer                                   :: inter    !> numero di interazioni tra le specie in miscela
 
@@ -207,7 +212,7 @@ contains
     real(8), intent(in)  :: rhoi(ns)
     real(8) :: result
     integer :: s
-    real(8) :: rho
+    real(8) :: rho, inv_rho
 
     rho = sum(rhoi)
     result = 0.d0
@@ -224,7 +229,7 @@ contains
     real(8), intent(in)  :: rhoi(ns)
     real(8) :: result
     integer :: s
-    real(8) :: rho
+    real(8) :: rho, inv_rho
 
     rho = sum(rhoi)
     result = 0.d0
@@ -248,7 +253,7 @@ contains
     Tint(1) = T_i
     Tint(2) = T_i + 1
 
-    result = f_tabT_expr(i,cp_tab,Tint,Tdiff)
+    result = cp_tabT(i,Tint(1)) + (cp_tabT(i,Tint(2))-cp_tabT(i,Tint(1)))*Tdiff  ! = f_tabT_expr(i,cp_tab,...)
 
   endfunction cpi
 
@@ -269,7 +274,7 @@ contains
 
     result = 0.d0
     do s = 1, ns
-      cpi(s) = f_tabT_expr(s,cp_tab,Tint,Tdiff)
+      cpi(s) = cp_tabT(s,Tint(1)) + (cp_tabT(s,Tint(2))-cp_tabT(s,Tint(1)))*Tdiff  ! = f_tabT_expr(s,cp_tab,...), unit-stride
       result = result+rhoi(s)/rho*cpi(s)
     enddo
 
@@ -287,7 +292,7 @@ contains
 
     result = 0.d0
     do s = 1, ns
-      cpi(s) = f_tabT_expr(s,cp_tab,Tint,Tdiff)
+      cpi(s) = cp_tabT(s,Tint(1)) + (cp_tabT(s,Tint(2))-cp_tabT(s,Tint(1)))*Tdiff  ! = f_tabT_expr(s,cp_tab,...), unit-stride
       result = result+rhoi(s)/rho*cpi(s)
     enddo
 
@@ -395,7 +400,7 @@ contains
     !calcolo delle frazioni molari Xi, viscosità laminare da tabella, mi(s)
     do s = 1, ns
       Xi(s) = (rhoi(s)*Wmtot)/(rho*Wm_tab(s))
-      mi_fiij(s) = f_tabT_expr(s,mi_tab,Tint,Tdiff)
+      mi_fiij(s) = mi_tabT(s,Tint(1)) + (mi_tabT(s,Tint(2))-mi_tabT(s,Tint(1)))*Tdiff  ! = f_tabT_expr(s,mi_tab,...)
     enddo
 
     ! calcolo del denominatore della legge di Wilke
@@ -449,8 +454,8 @@ contains
     ! calcolo delle frazioni molari Xi, viscosità laminare da tabella, mi(s)
     do s = 1, ns
       Xi(s) = rhoi(s)*Wmtot/(rho*Wm_tab(s))
-      milam_i(s) = f_tabT_expr(s,mi_tab,Tint,Tdiff)
-      klam_i(s)  = f_tabT_expr(s,k_tab,Tint,Tdiff)
+      milam_i(s) = mi_tabT(s,Tint(1)) + (mi_tabT(s,Tint(2))-mi_tabT(s,Tint(1)))*Tdiff  ! = f_tabT_expr(s,mi_tab,...)
+      klam_i(s)  = k_tabT(s,Tint(1))  + (k_tabT(s,Tint(2)) -k_tabT(s,Tint(1))) *Tdiff  ! = f_tabT_expr(s,k_tab,...)
     enddo
 
     ! calcolo del denominatore della legge di Wilke (same for k and mi computations)
@@ -553,5 +558,27 @@ contains
     result = Vij+(Viij-Vij)*Tdiff
 
   endfunction f_tabT_expr
+
+  ! Build the species-contiguous transposed companions from the freshly-loaded
+  ! (T, species) tables. Called once after the thermo+transport loaders (either
+  ! the ideal-gas ORION path or the legacy reader). An explicit element copy --
+  ! tabT(s,T) = tab(T,s) -- so it is trivially correct and the hot loops that read
+  ! tabT get identical values to the originals (bit-identical), just unit-stride.
+  subroutine build_transposed_tables()
+    implicit none
+    integer :: s, T
+    if (.not. allocated(cp_tab)) return
+    if (allocated(cp_tabT)) deallocate(cp_tabT, h_tabT, mi_tabT, k_tabT)
+    allocate(cp_tabT(1:ns, Tmin:Tmax))
+    allocate(h_tabT, mi_tabT, k_tabT, mold=cp_tabT)
+    do T = Tmin, Tmax
+      do s = 1, ns
+        cp_tabT(s,T) = cp_tab(T,s)
+        h_tabT (s,T) = h_tab (T,s)
+        mi_tabT(s,T) = mi_tab(T,s)
+        k_tabT (s,T) = k_tab (T,s)
+      end do
+    end do
+  end subroutine build_transposed_tables
 
 endmodule FLINT_Lib_Thermodynamic

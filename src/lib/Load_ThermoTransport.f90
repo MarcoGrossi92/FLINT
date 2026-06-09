@@ -53,6 +53,21 @@ contains
 
     Ri_tab = Runiv/wm_tab
 
+    ! Precompute species-pair constants used by co_fiij (Wilke mixing rule)
+    allocate(Mi_Mj_pow_m025(1:ns, 1:ns))
+    allocate(inv_sqrt8_1p  (1:ns, 1:ns))
+    block
+      integer :: si, sj
+      real(kind=8) :: ratio
+      do sj = 1, ns
+        do si = 1, ns
+          ratio = wm_tab(si) / wm_tab(sj)
+          Mi_Mj_pow_m025(si,sj) = ratio**(-0.25d0)
+          inv_sqrt8_1p  (si,sj) = 1.d0 / dsqrt(8.d0 * (1.d0 + ratio))
+        end do
+      end do
+    end block
+
     ! File 2: thermo
     ios = tec_read_points_multivars(orion,4,trim(thermofile(1)))
     if (ios/=0) then

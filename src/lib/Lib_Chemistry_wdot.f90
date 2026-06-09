@@ -5,6 +5,11 @@ module FLINT_Lib_Chemistry_wdot
   !> Concrete procedure pointing to one of the subroutine realizations
   procedure(chemsource_if), pointer, public :: chemistry_source
 
+  !> Concrete procedure pointing to the analytical Jacobian of `chemistry_source`
+  !> (null when the active mechanism has no analytical Jacobian yet; callers
+  !> must fall back to finite-difference Jacobian in that case).
+  procedure(chemjac_if), pointer, public :: chemistry_jacobian => null()
+
   !> Abstract interface relative to the finite-rate reactions source procedure
   abstract interface
   subroutine chemsource_if(roi,temp,omegadot)
@@ -13,10 +18,23 @@ module FLINT_Lib_Chemistry_wdot
     implicit none
     integer :: is, T_i, Tint(2)
     real(8), intent(inout) :: roi(ns)
-    real(8), intent(in) :: temp 
+    real(8), intent(in) :: temp
     real(8), intent(out) :: omegadot(ns)
     real(8) :: coi(ns+1), Tdiff
   end subroutine chemsource_if
+  end interface
+
+  !> Abstract interface for the analytical chemistry Jacobian.
+  !>   dwdr(i,j) = d omegadot(i) / d roi(j)
+  !>   dwdT(i)   = d omegadot(i) / d T
+  abstract interface
+  subroutine chemjac_if(roi,temp,dwdr,dwdT)
+    use FLINT_Lib_Thermodynamic
+    implicit none
+    real(8), intent(in)  :: roi(ns), temp
+    real(8), intent(out) :: dwdr(ns,ns)
+    real(8), intent(out) :: dwdT(ns)
+  end subroutine chemjac_if
   end interface
 
 contains
@@ -37,8 +55,16 @@ contains
     use ecker_mod
     use cross_mod
     use pelucchi_mod
+    use ONERA7_mod
+    use sandiego_mod
+    use FFCMy_12_mod
+    use Frolov_nopressure_mod
     implicit none
     character(*), intent(in) :: mad_world
+
+    ! Default: no analytical Jacobian available. Each mechanism that has one
+    ! overrides this below.
+    chemistry_jacobian => null()
 
     select case(mad_world)
     case('WD')
@@ -83,6 +109,16 @@ contains
       chemistry_source => Andersen
     case('OSK')
       chemistry_source => OSK
+    case('ONERA-7')
+      chemistry_source   => ONERA_7
+      chemistry_jacobian => ONERA_7_jac
+    case('Frolov_nopressure')
+      chemistry_source   => Frolov_nopressure
+      chemistry_jacobian => Frolov_nopressure_jac
+    case('SanDiego')
+      chemistry_source => sandiego20161214
+    case('FFCMy-12')
+      chemistry_source => FFCMy_12
 
     case default
       write(*,*) "[WARNING] Explicit procedure for "//trim(mad_world)//" not found, defaulting to the general procedure"

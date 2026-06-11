@@ -62,6 +62,16 @@ contains
     implicit none
     character(*), intent(in) :: mad_world
 
+# if defined (_OPENACC)
+    ! Device build: rhs_native/jac_native are devirtualized to direct
+    ! ONERA_7/ONERA_7_jac calls (procedure pointers cannot run on the GPU).
+    ! Any other mechanism would silently integrate the wrong kinetics.
+    if (trim(mad_world) /= 'ONERA-7') then
+      write(*,*) '[OPENACC] device build supports only ONERA-7, got: '//trim(mad_world)
+      stop 1
+    end if
+# endif
+
     ! Default: no analytical Jacobian available. Each mechanism that has one
     ! overrides this below.
     chemistry_jacobian => null()

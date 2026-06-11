@@ -1,6 +1,12 @@
 module FLINT_Lib_Chemistry_rhs
   use OSLo
   use FLINT_Lib_Chemistry_wdot
+# if defined (_OPENACC)
+  ! Device build: procedure-pointer calls cannot run on the GPU, so the
+  ! mechanism dispatch is devirtualized to direct ONERA-7 calls below.
+  ! Assign_Mechanism hard-stops if the input selects any other mechanism.
+  use ONERA7_mod
+# endif
 # if defined (CANTERA)
   use cantera
 # endif
@@ -45,7 +51,11 @@ contains
     ! Vectorizable Loop
     roi(1:ns) = max(Z(1:ns), 0.d0)
 
+# if defined (_OPENACC)
+    call ONERA_7 ( roi, T, droic )
+# else
     call Chemistry_Source ( roi, T, droic )
+# endif
 
     eiroi = 0.d0; rho_cv = 0.d0
     do s = 1, ns
@@ -108,8 +118,13 @@ contains
     roi(1:ns) = max(Z(1:ns), 0.d0)
 
     ! 1) Species block: ∂omegadot/∂(roi,T) from the mechanism.
+# if defined (_OPENACC)
+    call ONERA_7     ( roi, T, droic )
+    call ONERA_7_jac ( roi, T, dwdr, dwdT )
+# else
     call chemistry_source   ( roi, T, droic )
     call chemistry_jacobian ( roi, T, dwdr, dwdT )
+# endif
 
     ! 2) Thermo lookups + analytical T-derivatives (same linear-interp table).
     do s = 1, ns

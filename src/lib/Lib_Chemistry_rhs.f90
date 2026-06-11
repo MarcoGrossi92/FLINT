@@ -1,5 +1,7 @@
 module FLINT_Lib_Chemistry_rhs
   use OSLo
+  ! ieee_is_nan instead of the non-standard isnan() extension (nvfortran has no isnan)
+  use, intrinsic :: ieee_arithmetic
   use FLINT_Lib_Chemistry_wdot
 # if defined (_OPENACC)
   ! Device build: procedure-pointer calls cannot run on the GPU, so the
@@ -40,7 +42,7 @@ contains
     
     T = Z(nz)
 
-    if (T < Tmin .or. T >= Tmax .or. isnan(T)) then
+    if (T < Tmin .or. T >= Tmax .or. ieee_is_nan(T)) then
        F(:) = -1.0d0
        return
     end if
@@ -108,7 +110,7 @@ contains
     ! Mirror rhs_native's bail-out: out-of-range T → F is the constant -1 there,
     ! whose Jacobian is zero. Returning zero keeps Newton in a benign state until
     ! the step is rejected and the integrator retries with smaller H.
-    if (T < Tmin .or. T >= Tmax .or. isnan(T)) then
+    if (T < Tmin .or. T >= Tmax .or. ieee_is_nan(T)) then
       DFY(1:nz, 1:nz) = 0.d0
       return
     end if

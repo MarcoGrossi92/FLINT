@@ -26,34 +26,39 @@ contains
     real(8), intent(out) :: F(nz)
     ! Local
     real(8) :: roi(nz-1)
-    real(8) :: T
+    real(8) :: T, T_frac
     real(8) :: droic(nz-1)
     real(8) :: eiroi,rho_cv
-    integer :: s
-
-    roi(1:ns) = Z(1:ns)
+    integer :: s, T_idx
+    real(8) :: h_val, cp_val
+    
     T = Z(nz)
-    if (T < Tmin .or. T > Tmax .or. isnan(T)) then
-      F(:) = -1.d0
-      return
+
+    if (T < Tmin .or. T >= Tmax .or. isnan(T)) then
+       F(:) = -1.0d0
+       return
     end if
 
-    ! Avoid negative rho_i
-    do s = 1, ns
-      roi(s) = max(roi(s), 0.d0)
-    end do
+    T_idx  = idint(T)
+    T_frac = T - dble(T_idx)
+   
+    ! Vectorizable Loop
+    roi(1:ns) = max(Z(1:ns), 0.d0)
 
     call Chemistry_Source ( roi, T, droic )
 
     eiroi = 0.d0; rho_cv = 0.d0
     do s = 1, ns
-      eiroi = eiroi + ( f_tabT(T,s,h_tab) - Ri_tab(s)*T ) * droic(s)
-      rho_cv = rho_cv + roi(s)*( f_tabT(T,s,cp_tab) - Ri_tab(s) )
-    enddo
+        ! Enthalpy and Cp lookups now use the hoisted T_idx / T_frac
+        h_val  = h_tab(T_idx, s) + T_frac * (h_tab(T_idx+1, s) - h_tab(T_idx, s))
+        cp_val = cp_tab(T_idx, s) + T_frac * (cp_tab(T_idx+1, s) - cp_tab(T_idx, s))
+
+        eiroi  = eiroi + (h_val - Ri_tab(s) * T) * droic(s)
+        rho_cv = rho_cv + roi(s) * (cp_val - Ri_tab(s))
+    end do
 
     F(1:ns) = droic
     F(nz) = -eiroi / rho_cv
-
   end subroutine rhs_native
 
 
@@ -160,18 +165,16 @@ contains
   ! jac_native. Not called in the hot path. Uses central differences with a
   ! state-relative perturbation. Returns DFY in the same layout as jac_native.
   !----------------------------------------------------------------------------
-  subroutine jac_native_fd(nz, time, Z, DFY, eps_in)
+  subroutine jac_native_fd(nz, time, Z, DFY)
     implicit none
     integer, intent(in)  :: nz
     real(8), intent(in)  :: time, Z(nz)
     real(8), intent(out) :: DFY(nz, nz)
-    real(8), intent(in), optional :: eps_in   ! relative FD step (default sqrt(eps))
     real(8) :: Zp(nz), Zm(nz), Fp(nz), Fm(nz)
     real(8) :: eps, h
     integer :: j
 
     eps = sqrt(epsilon(1.d0))
-    if (present(eps_in)) eps = eps_in
     do j = 1, nz
       h = eps * max(1.d-30, abs(Z(j)))
       Zp = Z; Zm = Z
@@ -221,75 +224,22 @@ contains
     RPAR_dummy = 0.d0
 
     call jac_native(ns+1, 0.d0, Z, DFY_an, ns+1, RPAR_dummy, IPAR_dummy)
+    call jac_native_fd(ns+1, 0.d0, Z, DFY_fd)
 
-    ! ---- DIAGNOSTIC SWEEP: vary FD step. If max_rel_err moves with the step,
-    ! the discrepancy is FD truncation/roundoff (analytical is fine). If it
-    ! stays pinned, there is a genuine error in an analytical term. ----------
-    block
-      real(8) :: eps_list(6), e, worst_an, worst_fd
-      integer :: ie, wi, wj
-      eps_list = [1.d-8, 1.49d-8, 1.d-7, 1.d-6, 1.d-5, 1.d-4]
-      write(*,'(A)') ' [JAC] FD-step sweep (relerr = elementwise max vs central-diff FD):'
-      do ie = 1, 6
-        e = eps_list(ie)
-        call jac_native_fd(ns+1, 0.d0, Z, DFY_fd, eps_in=e)
-        max_rel_err = 0.d0; wi = 0; wj = 0
-        do j = 1, ns+1
-          do i = 1, ns+1
-            scale = max(abs(DFY_an(i,j)), abs(DFY_fd(i,j)), 1.d-30)
-            abs_err = abs(DFY_an(i,j) - DFY_fd(i,j))
-            if (abs_err/scale > max_rel_err) then
-              max_rel_err = abs_err/scale; wi = i; wj = j
-            end if
-          end do
-        end do
-        worst_an = DFY_an(wi,wj); worst_fd = DFY_fd(wi,wj)
-        write(*,'(A,ES9.2,A,ES10.2,A,I2,A,I2,A,ES12.4,A,ES12.4,A)') &
-          '   eps=', e, '   max_relerr=', max_rel_err, &
-          '   @(', wi, ',', wj, ')  an=', worst_an, '  fd=', worst_fd
+    max_rel_err = 0.d0
+    do j = 1, ns+1
+      do i = 1, ns+1
+        scale = max(abs(DFY_an(i,j)), abs(DFY_fd(i,j)), 1.d-30)
+        abs_err = abs(DFY_an(i,j) - DFY_fd(i,j))
+        if (abs_err/scale > max_rel_err) max_rel_err = abs_err/scale
       end do
-    end block
+    end do
 
-    ! ---- Dynamically-weighted metric: how much does the inexact Jacobian
-    ! perturb the Newton iteration matrix (I - h*gamma*J) at a representative
-    ! chemistry step?  ||(I-hgJ_an)^-1 (I-hgJ_fd) - I||_inf  is the contraction
-    ! the inaccuracy adds.  Far below the elementwise relerr if the off entries
-    ! are dynamically small. -------------------------------------------------
-    block
-      real(8) :: hg, A_an(ns+1,ns+1), A_fd(ns+1,ns+1), Minv_B(ns+1,ns+1)
-      real(8) :: rownorm, wnorm
-      integer :: i2, j2, k2, ip(ns+1), info
-      call jac_native_fd(ns+1, 0.d0, Z, DFY_fd)         ! default sqrt(eps) ref
-      hg = 1.d-7                                        ! representative h*gamma
-      A_an = -hg*DFY_an; A_fd = -hg*DFY_fd
-      do i2 = 1, ns+1
-        A_an(i2,i2) = A_an(i2,i2) + 1.d0
-        A_fd(i2,i2) = A_fd(i2,i2) + 1.d0
-      end do
-      Minv_B = A_fd
-      call dgesv(ns+1, ns+1, A_an, ns+1, ip, Minv_B, ns+1, info)  ! A_an \ A_fd
-      wnorm = 0.d0
-      if (info == 0) then
-        do i2 = 1, ns+1
-          rownorm = 0.d0
-          do j2 = 1, ns+1
-            if (i2 == j2) then
-              rownorm = rownorm + abs(Minv_B(i2,j2) - 1.d0)
-            else
-              rownorm = rownorm + abs(Minv_B(i2,j2))
-            end if
-          end do
-          if (rownorm > wnorm) wnorm = rownorm
-        end do
-        write(*,'(A,ES10.2,A)') &
-          ' [JAC] dynamically-weighted Newton-matrix error ||M^-1 B - I||_inf = ', &
-          wnorm, '   (at h*gamma=1e-7)'
-      else
-        write(*,'(A)') ' [JAC] weighted metric skipped (dgesv info /= 0)'
-      end if
-    end block
-
-    write(*,'(A)') ' [JAC] (interpret: relerr moving with eps => FD error, not analytical)'
+    write(*,'(A,ES10.2)') ' [JAC] analytical-vs-FD max relative error = ', max_rel_err
+    if (max_rel_err > 1.d-3) then
+      write(*,'(A)') ' [JAC] WARNING: analytical Jacobian disagrees with FD by >1e-3.'
+      write(*,'(A)') ' [JAC]          Consider disabling use_analytical_jacobian.'
+    end if
   end subroutine validate_analytical_jacobian
 
 

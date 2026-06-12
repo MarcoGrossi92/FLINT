@@ -223,6 +223,7 @@ contains
 
 
   pure function f_Rtot(rhoi) result(result)
+    !$acc routine seq
     implicit none
     real(8), intent(in)  :: rhoi(ns)
     real(8) :: result

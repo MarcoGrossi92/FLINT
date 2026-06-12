@@ -32,7 +32,25 @@ module FLINT_Lib_Radau5_dev
   !> Max system size for the fixed per-thread work arrays (ns+1; ONERA-7 -> 8)
   integer, parameter, public :: NSMX = 16
 
+  !> Solver tolerances for the device cell loop (set once at MOSE setup from
+  !> the same RT/AT given to setup_odesolver; OSlo keeps its copies private).
+  real(8), public :: rtol_dev(NSMX) = 1d-5
+  real(8), public :: atol_dev(NSMX) = 1d-5
+  !$acc declare create(rtol_dev, atol_dev)
+  public :: set_radau5_dev_tols
+
 contains
+
+  subroutine set_radau5_dev_tols(n, rt, at)
+    implicit none
+    integer, intent(in) :: n
+    real(8), intent(in) :: rt(n), at(n)
+    rtol_dev(1:n) = rt(1:n)
+    atol_dev(1:n) = at(1:n)
+#   if defined (_OPENACC)
+    !$acc update device(rtol_dev, atol_dev)
+#   endif
+  end subroutine set_radau5_dev_tols
 
   !----------------------------------------------------------------------------
   ! Copy the read-only chemistry/thermo tables to the device. Host-only;

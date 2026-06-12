@@ -2,6 +2,7 @@ module ONERA7_mod
 implicit none
 contains
 subroutine ONERA_7(roi,temp,omegadot)
+!$acc routine seq
 use FLINT_Lib_Thermodynamic
 use FLINT_Lib_Chemistry_data
 use FLINT_Lib_Chemistry_falloff
@@ -97,6 +98,7 @@ end subroutine ONERA_7
 !     used in the RHS above; do NOT change without updating ONERA_7).
 !------------------------------------------------------------------------------
 subroutine ONERA_7_jac(roi, temp, dwdr, dwdT)
+!$acc routine seq
 use FLINT_Lib_Thermodynamic
 use FLINT_Lib_Chemistry_data
 implicit none

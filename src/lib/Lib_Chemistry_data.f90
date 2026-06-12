@@ -7,6 +7,9 @@ module FLINT_Lib_Chemistry_data
   integer                              :: nrc_arrh
   real(8), dimension(:,:), allocatable :: kf_tab
   real(8), dimension(:,:), allocatable :: kb_tab
+  ! Device copies for the OpenACC chemistry port (uploaded once by
+  ! flint_acc_upload_tables; referenced from acc-routine device code).
+  !$acc declare create(kf_tab, kb_tab)
   ! Falloff-Troe
   integer                              :: nrc_troe
   real(8), dimension(:,:), allocatable :: kinf_troe_tab
@@ -48,6 +51,7 @@ contains
   end function comp_ch_tabT
 
   pure function f_kf(ireact,Tint,Tdiff) result(result)
+    !$acc routine seq
     implicit none
     integer, intent(in) :: ireact, Tint(2)
     real(8), intent(in) :: Tdiff
@@ -61,6 +65,7 @@ contains
   end function f_kf
 
   pure function f_kb(ireact,Tint,Tdiff) result(result)
+    !$acc routine seq
     implicit none
     integer, intent(in) :: ireact, Tint(2)
     real(8), intent(in) :: Tdiff

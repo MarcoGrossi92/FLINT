@@ -26,6 +26,7 @@ module FLINT_Lib_Chemistry_rhs
 contains
     
   subroutine rhs_native ( nz, time, Z, F )
+    !$acc routine seq
     use FLINT_Lib_Thermodynamic
     implicit none
     integer, intent(in)  :: nz
@@ -88,6 +89,7 @@ contains
   ! Bottom row (T-equation) is differentiated here using h_tab / cp_tab.
   !----------------------------------------------------------------------------
   subroutine jac_native(nz, time, Z, DFY, LDFY, RPAR, IPAR)
+    !$acc routine seq
     use FLINT_Lib_Thermodynamic
     implicit none
     integer, intent(in)  :: nz, LDFY

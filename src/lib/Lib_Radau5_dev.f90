@@ -29,8 +29,12 @@ module FLINT_Lib_Radau5_dev
   private
   public :: radau5_dev, flint_acc_upload_tables
 
-  !> Max system size for the fixed per-thread work arrays (ns+1; ONERA-7 -> 8)
-  integer, parameter, public :: NSMX = 16
+  !> Max system size for the fixed per-thread work arrays (ns+1; ONERA-7 -> 8,
+  !> Frolov_nopressure -> 5). Keep TIGHT: the four NSMX x NSMX matrices live in
+  !> per-thread (CUDA local) memory, and every process context on a GPU
+  !> reserves local backing for its max resident threads -- at NSMX=16 that is
+  !> ~1.4 GB *per MPI rank*, which OOMed 40 ranks sharing one 24 GB A30.
+  integer, parameter, public :: NSMX = 8
 
   !> Solver tolerances for the device cell loop (set once at MOSE setup from
   !> the same RT/AT given to setup_odesolver; OSlo keeps its copies private).

@@ -10,6 +10,12 @@ module FLINT_Lib_Chemistry_wdot
   !> must fall back to finite-difference Jacobian in that case).
   procedure(chemjac_if), pointer, public :: chemistry_jacobian => null()
 
+  !> Device-build mechanism id: procedure pointers cannot be called on the
+  !> GPU, so rhs_native/jac_native dispatch on this id with direct calls.
+  !> 1 = ONERA-7, 2 = Frolov_nopressure, 0 = unsupported on device.
+  integer, public :: mech_dev = 0
+  !$acc declare create(mech_dev)
+
   !> Abstract interface relative to the finite-rate reactions source procedure
   abstract interface
   subroutine chemsource_if(roi,temp,omegadot)
@@ -62,14 +68,24 @@ contains
     implicit none
     character(*), intent(in) :: mad_world
 
+    ! Device-build dispatch id for rhs_native/jac_native (direct calls).
+    select case(mad_world)
+    case('ONERA-7')
+      mech_dev = 1
+    case('Frolov_nopressure')
+      mech_dev = 2
+    case default
+      mech_dev = 0
+    end select
 # if defined (_OPENACC)
-    ! Device build: rhs_native/jac_native are devirtualized to direct
-    ! ONERA_7/ONERA_7_jac calls (procedure pointers cannot run on the GPU).
-    ! Any other mechanism would silently integrate the wrong kinetics.
-    if (trim(mad_world) /= 'ONERA-7') then
-      write(*,*) '[OPENACC] device build supports only ONERA-7, got: '//trim(mad_world)
+    ! Device build: rhs_native/jac_native are devirtualized to direct calls
+    ! (procedure pointers cannot run on the GPU). Any unsupported mechanism
+    ! would silently integrate the wrong kinetics -> hard stop.
+    if (mech_dev == 0) then
+      write(*,*) '[OPENACC] device build supports only ONERA-7 / Frolov_nopressure, got: '//trim(mad_world)
       stop 1
     end if
+    !$acc update device(mech_dev)
 # endif
 
     ! Default: no analytical Jacobian available. Each mechanism that has one

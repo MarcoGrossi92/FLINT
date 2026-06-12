@@ -5,9 +5,10 @@ module FLINT_Lib_Chemistry_rhs
   use FLINT_Lib_Chemistry_wdot
 # if defined (_OPENACC)
   ! Device build: procedure-pointer calls cannot run on the GPU, so the
-  ! mechanism dispatch is devirtualized to direct ONERA-7 calls below.
-  ! Assign_Mechanism hard-stops if the input selects any other mechanism.
+  ! mechanism dispatch is devirtualized to direct calls on mech_dev below.
+  ! Assign_Mechanism hard-stops if the input selects an unsupported one.
   use ONERA7_mod
+  use Frolov_nopressure_mod
 # endif
 # if defined (CANTERA)
   use cantera
@@ -55,7 +56,11 @@ contains
     roi(1:ns) = max(Z(1:ns), 0.d0)
 
 # if defined (_OPENACC)
-    call ONERA_7 ( roi, T, droic )
+    if (mech_dev == 2) then
+      call Frolov_nopressure ( roi, T, droic )
+    else
+      call ONERA_7 ( roi, T, droic )
+    end if
 # else
     call Chemistry_Source ( roi, T, droic )
 # endif
@@ -123,8 +128,13 @@ contains
 
     ! 1) Species block: ∂omegadot/∂(roi,T) from the mechanism.
 # if defined (_OPENACC)
-    call ONERA_7     ( roi, T, droic )
-    call ONERA_7_jac ( roi, T, dwdr, dwdT )
+    if (mech_dev == 2) then
+      call Frolov_nopressure     ( roi, T, droic )
+      call Frolov_nopressure_jac ( roi, T, dwdr, dwdT )
+    else
+      call ONERA_7     ( roi, T, droic )
+      call ONERA_7_jac ( roi, T, dwdr, dwdT )
+    end if
 # else
     call chemistry_source   ( roi, T, droic )
     call chemistry_jacobian ( roi, T, dwdr, dwdT )

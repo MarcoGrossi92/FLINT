@@ -27,6 +27,7 @@ contains
   ! RHS: species mass production rate (kg/m^3/s)
   !--------------------------------------------------------------------------
   subroutine Frolov_nopressure(roi, temp, omegadot)
+    !$acc routine seq
     use FLINT_Lib_Thermodynamic
     use FLINT_Lib_Chemistry_data
     implicit none
@@ -73,6 +74,7 @@ contains
   ! interpolated in T from kf_tab / kb_tab, so dk/dT is a free table lookup.
   !--------------------------------------------------------------------------
   subroutine Frolov_nopressure_jac(roi, temp, dwdr, dwdT)
+    !$acc routine seq
     use FLINT_Lib_Thermodynamic
     use FLINT_Lib_Chemistry_data
     implicit none

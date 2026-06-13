@@ -1,6 +1,14 @@
 module FLINT_Lib_Chemistry_data
   implicit none
 
+  !> Fixed upper bounds for the device chemistry work arrays. The GPU build
+  !> cannot use runtime-sized (ns-dependent) automatics — each would be a
+  !> per-thread per-call device-heap malloc through a serializing allocator.
+  !> Sized for the mechanisms allowed on the device (mech_dev guard):
+  !> ONERA-7 (ns=7) is the largest. Bump if a bigger device mechanism is added.
+  integer, parameter, public :: NSMAX = 7        !> max species on the device path
+  integer, parameter, public :: NZMAX = NSMAX+1  !> max ODE system size (ns+1)
+
   integer                              :: nrc
   integer, dimension(:), allocatable   :: rxn_type ! 0 -> Arrhenius, 1 -> Troe, 2 -> Lindemann
   ! Arrhenius

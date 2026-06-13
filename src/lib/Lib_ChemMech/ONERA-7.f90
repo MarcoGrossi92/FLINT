@@ -9,9 +9,9 @@ use FLINT_Lib_Chemistry_falloff
 implicit none
 real(8), intent(inout)  :: roi(ns)
 real(8), intent(in)  :: temp
-real(8), intent(out) :: omegadot(ns) 
+real(8), intent(out) :: omegadot(ns)
 
-real(8) :: coi(ns), Tdiff 
+real(8) :: coi(NSMAX), Tdiff   ! fixed-size local (device: no malloc); 1:ns used
 real(8) :: M !< Third body
 integer :: is, T_i, Tint(2)
 real(8) :: prodf(1:14), prodb(1:14)
@@ -103,18 +103,20 @@ use FLINT_Lib_Thermodynamic
 use FLINT_Lib_Chemistry_data
 implicit none
 real(8), intent(in)  :: roi(ns), temp
-real(8), intent(out) :: dwdr(ns,ns)
+! dwdr: fixed leading dimension NSMAX to match jac_native/chemjac_if storage
+! (sequence association); only (1:ns,1:ns) written.
+real(8), intent(out) :: dwdr(NSMAX,ns)
 real(8), intent(out) :: dwdT(ns)
 
-! Local
-real(8) :: coi(ns), Tdiff
+! Local (fixed-size: device builds avoid per-call heap malloc; 1:ns used)
+real(8) :: coi(NSMAX), Tdiff
 integer :: T_i, j
 real(8) :: kf_r(14), kb_r(14)
 real(8) :: dkf_dT(14), dkb_dT(14)
-real(8) :: M, dM_dc(ns)
-real(8) :: dRf_dc(ns), dRb_dc(ns), dnet_dc(ns)
+real(8) :: M, dM_dc(NSMAX)
+real(8) :: dRf_dc(NSMAX), dRb_dc(NSMAX), dnet_dc(NSMAX)
 real(8) :: dRf_dT_r, dRb_dT_r, dnet_dT_r
-real(8) :: dwdr_c(ns,ns)     ! wrt coi; converted to wrt roi at the end
+real(8) :: dwdr_c(NSMAX,NSMAX)     ! wrt coi; converted to wrt roi at the end
 real(8), parameter :: epsM(7) = [1.d0, 12.d0, 2.5d0, 1.d0, 1.d0, 1.d0, 1.d0]
 
 ! 1) coi and T setup ---------------------------------------------------------

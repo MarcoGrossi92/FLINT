@@ -31,6 +31,9 @@ module FLINT_Lib_Thermodynamic
   ! only on molecular weights, so are precomputed once after wm_tab is loaded.
   real(kind=8), dimension(:,:), allocatable :: Mi_Mj_pow_m025 !> (Wm(i)/Wm(j))**(-0.25)
   real(kind=8), dimension(:,:), allocatable :: inv_sqrt8_1p   !> 1 / sqrt(8 * (1 + Wm(i)/Wm(j)))
+  ! Transport tables for the device thermo-cache kernel (GPU Phase 2). Declared
+  ! after all four arrays exist (declare must follow the declarations).
+  !$acc declare create(mi_tab, k_tab, Mi_Mj_pow_m025, inv_sqrt8_1p)
 
 contains
 
@@ -206,6 +209,7 @@ contains
 
 
   pure function f_molecularWeight(rhoi) result(result)
+    !$acc routine seq
     implicit none
     real(8), intent(in)  :: rhoi(ns)
     real(8) :: result
@@ -546,6 +550,7 @@ contains
 
 
   pure function f_tabT_expr(sp,tab,Tint,Tdiff) result(result)
+    !$acc routine seq
     implicit none
     real(8), intent(in) :: Tdiff, tab(Tmin:Tmax,ns)
     integer, intent(in) :: sp, Tint(2)

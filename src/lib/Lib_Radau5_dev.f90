@@ -65,13 +65,19 @@ contains
   !----------------------------------------------------------------------------
   subroutine flint_acc_upload_tables()
     use FLINT_Lib_Thermodynamic, only: ns, Tmin, Tmax, wm_tab, Ri_tab, &
-                                       cp_tab, h_tab
+                                       cp_tab, h_tab, mi_tab, k_tab, &
+                                       Mi_Mj_pow_m025, inv_sqrt8_1p
     use FLINT_Lib_Chemistry_data, only: kf_tab, kb_tab
     implicit none
 #   if defined (_OPENACC)
     !$acc update device(ns, Tmin, Tmax)
     !$acc update device(wm_tab, Ri_tab, cp_tab, h_tab)
     !$acc update device(kf_tab, kb_tab)
+    ! Transport tables for the device thermo-cache kernel (VISC cases only;
+    ! allocated by read_idealgas_transport before this routine runs).
+    if (allocated(mi_tab)) then
+      !$acc update device(mi_tab, k_tab, Mi_Mj_pow_m025, inv_sqrt8_1p)
+    end if
 #   endif
   end subroutine flint_acc_upload_tables
 

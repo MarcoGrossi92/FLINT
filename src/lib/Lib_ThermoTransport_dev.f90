@@ -17,9 +17,26 @@ module FLINT_Lib_ThermoTransport_dev
   use FLINT_Lib_Chemistry_data, only: NSMAX
   implicit none
   private
-  public :: co_rotot_Rtot_dev, co_k_mi_lam_Wilke_dev, f_cp_dev
+  public :: co_rotot_Rtot_dev, co_k_mi_lam_Wilke_dev, f_cp_dev, f_ss_dev
 
 contains
+
+  !> Frozen speed of sound, device version. Mirror of f_ss (Lib_ThermoTransport)
+  !> but uses the fixed-size f_cp_dev (the original f_cp has a general-ns cpi(ns)
+  !> automatic that would malloc on the device).
+  pure function f_ss_dev(rhoi, p, rho, Rtot) result(res)
+    !$acc routine seq
+    implicit none
+    real(8), intent(in) :: rhoi(ns), p, rho, Rtot
+    real(8) :: res, T, cp, gam, Tdiff
+    integer :: T_i, Tint(2)
+    T = p/(Rtot*rho)
+    T_i = idint(T); Tdiff = T - T_i
+    Tint(1) = T_i; Tint(2) = T_i + 1
+    cp  = f_cp_dev(rhoi, Tint, Tdiff, rho)
+    gam = cp/(cp - Rtot)
+    res = dsqrt(gam*Rtot*T)
+  end function f_ss_dev
 
   !> rho = sum(roi), R = f_Rtot(roi). (co_rotot_Rtot has no array automatic; a
   !> thin device wrapper for symmetry / a single call site.)

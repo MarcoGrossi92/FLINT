@@ -37,6 +37,11 @@ module FLINT_Lib_Thermodynamic
   ! Diffusion coefficients tables (T, specie-specie interaction)
   real(kind=8), dimension(:,:), allocatable :: dij_tab
 
+  ! Species-pair constants used by co_fiij (Wilke mixing rule). They depend
+  ! only on molecular weights, so are precomputed once after wm_tab is loaded.
+  real(kind=8), dimension(:,:), allocatable :: Mi_Mj_pow_m025 !> (Wm(i)/Wm(j))**(-0.25)
+  real(kind=8), dimension(:,:), allocatable :: inv_sqrt8_1p   !> 1 / sqrt(8 * (1 + Wm(i)/Wm(j)))
+
 contains
 
   !> Function for computing the total specific entalpy (per unit of mass)
@@ -386,13 +391,21 @@ contains
     implicit none
     real(8), intent(in)  :: mi(ns)
     real(8), intent(out) :: fi(ns,ns)
-    real(8) :: Mi_Mj
+    real(8) :: sqrt_mi_num(ns), inv_sqrt_mi_den(ns), ratio, one_plus
     integer :: i, j
 
-    do j = 1, ns; do i = 1, ns
-        Mi_Mj = Wm_tab(i)/Wm_tab(j)
-        fi(i,j)= (1+dsqrt(mi(i)/(mi(j)+1d-20))/(Mi_Mj**0.25d0))**2/dsqrt(8*(1+Mi_Mj))
-    enddo; enddo
+    do i = 1, ns
+      sqrt_mi_num(i)     = dsqrt(mi(i))
+      inv_sqrt_mi_den(i) = 1.d0 / dsqrt(mi(i) + 1d-20)
+    enddo
+
+    do j = 1, ns
+      do i = 1, ns
+        ratio    = sqrt_mi_num(i) * inv_sqrt_mi_den(j) * Mi_Mj_pow_m025(i,j)
+        one_plus = 1.d0 + ratio
+        fi(i,j)  = one_plus * one_plus * inv_sqrt8_1p(i,j)
+      enddo
+    enddo
 
   endsubroutine co_fiij
 

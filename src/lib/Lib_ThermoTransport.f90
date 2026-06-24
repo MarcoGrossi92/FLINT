@@ -22,7 +22,7 @@ module FLINT_Lib_Thermodynamic
   real(kind=8), dimension(:,:), allocatable :: cp_tab, dcpi_tab, h_tab, s_tab
   ! Device copies for the OpenACC chemistry port (uploaded once by
   ! flint_acc_upload_tables; referenced from acc-routine device code).
-  !$acc declare create(ns, Tmin, Tmax, wm_tab, Ri_tab, cp_tab, h_tab)
+  !$acc declare create(ns, Tmin, Tmax, wm_tab, Ri_tab, cp_tab, dcpi_tab, h_tab)
   real(kind=8), dimension(:,:), allocatable :: mi_tab, k_tab
   real(kind=8), dimension(:,:), allocatable :: dij_tab  !> coefficiente di diffusione binaria (T,interazione)
   integer                                   :: inter    !> numero di interazioni tra le specie in miscela
@@ -535,6 +535,7 @@ contains
 
 
   pure function f_tabT(T,sp,tab) result(result)
+    !$acc routine seq
     implicit none
     real(8), intent(in) :: T, tab(Tmin:Tmax,ns)
     integer, intent(in) :: sp

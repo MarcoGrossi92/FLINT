@@ -28,7 +28,7 @@ module FLINT_Lib_Radau5_dev
   use FLINT_Lib_Chemistry_data, only: NZMAX
   implicit none
   private
-  public :: radau5_dev, flint_acc_upload_tables
+  public :: radau5_dev, flint_acc_upload_tables, flint_acc_upload_thermo
 
   !> Max system size for the fixed per-thread work arrays (ns+1). Single source
   !> of truth = NZMAX (Lib_Chemistry_data); ONERA-7 -> 8. Keep TIGHT: the four
@@ -59,25 +59,43 @@ contains
   end subroutine set_radau5_dev_tols
 
   !----------------------------------------------------------------------------
-  ! Copy the read-only chemistry/thermo tables to the device. Host-only;
-  ! call once after read_idealgas_thermo + read_chemistry. The matching
-  ! "!$acc declare create" directives live in the table modules.
+  ! Upload ONLY the read-only thermo/transport scalars + tables (ns, Tmin, Tmax,
+  ! wm_tab, Ri_tab, cp_tab, h_tab + transport tables). These back the device
+  ! convective/diffusive/thermo kernels and are needed by EVERY device run,
+  ! including FROZEN (no-mechanism) cases. Kept separate from the rate-table
+  ! upload because kf_tab/kb_tab are allocatable and stay UNALLOCATED when no
+  ! mechanism is read -> updating them then would fault. Host-only; call once
+  ! after read_idealgas_thermo (+ read_idealgas_transport for VISC).
   !----------------------------------------------------------------------------
-  subroutine flint_acc_upload_tables()
+  subroutine flint_acc_upload_thermo()
     use FLINT_Lib_Thermodynamic, only: ns, Tmin, Tmax, wm_tab, Ri_tab, &
-                                       cp_tab, h_tab, mi_tab, k_tab, &
+                                       cp_tab, dcpi_tab, h_tab, mi_tab, k_tab, &
                                        Mi_Mj_pow_m025, inv_sqrt8_1p
-    use FLINT_Lib_Chemistry_data, only: kf_tab, kb_tab
     implicit none
 #   if defined (_OPENACC)
     !$acc update device(ns, Tmin, Tmax)
-    !$acc update device(wm_tab, Ri_tab, cp_tab, h_tab)
-    !$acc update device(kf_tab, kb_tab)
+    !$acc update device(wm_tab, Ri_tab, cp_tab, dcpi_tab, h_tab)
     ! Transport tables for the device thermo-cache kernel (VISC cases only;
     ! allocated by read_idealgas_transport before this routine runs).
     if (allocated(mi_tab)) then
       !$acc update device(mi_tab, k_tab, Mi_Mj_pow_m025, inv_sqrt8_1p)
     end if
+#   endif
+  end subroutine flint_acc_upload_thermo
+
+  !----------------------------------------------------------------------------
+  ! Copy the read-only chemistry/thermo tables to the device. Host-only;
+  ! call once after read_idealgas_thermo + read_chemistry. The matching
+  ! "!$acc declare create" directives live in the table modules. Reactive path
+  ! only (kf_tab/kb_tab are the chemistry rate tables); frozen runs must call
+  ! flint_acc_upload_thermo instead.
+  !----------------------------------------------------------------------------
+  subroutine flint_acc_upload_tables()
+    use FLINT_Lib_Chemistry_data, only: kf_tab, kb_tab
+    implicit none
+#   if defined (_OPENACC)
+    call flint_acc_upload_thermo()
+    !$acc update device(kf_tab, kb_tab)
 #   endif
   end subroutine flint_acc_upload_tables
 

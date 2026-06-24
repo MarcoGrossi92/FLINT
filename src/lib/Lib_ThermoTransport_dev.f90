@@ -17,9 +17,33 @@ module FLINT_Lib_ThermoTransport_dev
   use FLINT_Lib_Chemistry_data, only: NSMAX
   implicit none
   private
-  public :: co_rotot_Rtot_dev, co_k_mi_lam_Wilke_dev, f_cp_dev, f_ss_dev
+  public :: co_rotot_Rtot_dev, co_k_mi_lam_Wilke_dev, f_cp_dev, f_ss_dev, H0_dev
 
 contains
+
+  !> Total specific enthalpy, device version. Mirror of H0/H (Lib_ThermoTransport)
+  !> built from the already device-safe leaves f_Rtot + f_tabT_expr (h_tab is
+  !> `declare create`'d). Kept here in the _dev module so the SHARED CPU thermo
+  !> functions stay 100% untouched (annotating them with acc routine seq broke
+  !> the FLINT chemistry modules' device globals -> mech_dev declare-create).
+  pure function H0_dev(p, rhoi, u) result(entalpy)
+    !$acc routine seq
+    implicit none
+    real(8), intent(in) :: p, rhoi(ns), u
+    real(8) :: entalpy, rho, Rgas, T, Tdiff, h_
+    integer :: s, T_i, Tint(2)
+    rho  = sum(rhoi(1:ns))
+    Rgas = f_Rtot(rhoi)
+    T    = p/(Rgas*rho)
+    T_i  = idint(T); Tdiff = T - T_i
+    Tint(1) = T_i; Tint(2) = T_i + 1
+    entalpy = 0d0
+    do s = 1, ns
+      h_ = f_tabT_expr(s, h_tab, Tint, Tdiff)
+      entalpy = entalpy + h_*rhoi(s)/rho
+    end do
+    entalpy = entalpy + 0.5d0*u*u
+  end function H0_dev
 
   !> Frozen speed of sound, device version. Mirror of f_ss (Lib_ThermoTransport)
   !> but uses the fixed-size f_cp_dev (the original f_cp has a general-ns cpi(ns)

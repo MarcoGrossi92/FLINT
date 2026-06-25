@@ -8,7 +8,8 @@ FLINT includes a curated collection of chemical reaction mechanisms for combusti
 
 | Mechanism | Type | Species | Reactions | Primary Application |
 |-----------|------|---------|-----------|---------------------|
-| **global-H2** | Global | – | 1 | Hydrogen combustion (ultra-fast) |
+| **Frolov** | Global | 3 | 1 | Hydrogen combustion (ultra-fast) |
+| **Nassini** | Global | 3 | 1 | Hydrogen combustion (ultra-fast) |
 | **WD** | Global | 5 | 3 | CH₄ global reaction, CFD |
 | **JLR** | Global | 9 | 7 | CH₄ rocket engines |
 | **ONERA-7** | Reduced | 7 | 14 | H₂/air scramjet |
@@ -20,7 +21,7 @@ FLINT includes a curated collection of chemical reaction mechanisms for combusti
 | **TSR-GP-24** | Skeletal | 24 | 110 | CH₄ general purpose |
 | **TSR-Rich-31** | Skeletal | 31 | 197 | CH₄ rich combustion |
 | **FFCMy_12** | Detailed | 38 | 291 | CH₄ detailed chemistry |
-| **sandiego20161214** | Detailed | – | – | Hydrocarbon detailed mechanism |
+| **San Diego** | Detailed | – | – | Hydrocarbon detailed mechanism |
 | **Coronetti** | Global | 9 | 6 | C₄H₆ HTPB hybrid rockets |
 | **Singh** | Global | 10 | 11 | C₃₂H₆₆ paraffin wax hybrid rockets |
 | **Cross** | Reduced | 20 | 33 | SRM plume (HCl/HCN) |
@@ -30,26 +31,26 @@ FLINT includes a curated collection of chemical reaction mechanisms for combusti
 
 ---
 
-## H₂/O₂ Mechanisms
+## Hydrogen Mechanisms
 
 ### ONERA-7
 
 A reduced H₂/O₂ mechanism with 7 species developed for supersonic combustion applications.
 
-**Characteristics:**
-- **Species / Reactions**: 7 / 14
-- **Temperature**: High-temperature hydrogen combustion
-- **Application**: Scramjet, supersonic combustor, hypersonic flow
-- **Accuracy**: Reduced mechanism, suitable for hypersonic simulations
+**Characteristics:**  
+- **Species / Reactions**: 7 / 14  
+- **Temperature**: High-temperature hydrogen combustion   
+- **Application**: Scramjet, supersonic combustor, hypersonic flow  
+- **Accuracy**: Reduced mechanism, suitable for hypersonic simulations  
 - **File**: `ONERA-7.f90`
 
 ---
 
-## Methane (CH₄) Mechanisms
+## Methane Mechanisms
 
-### Global Mechanisms (Ultra-Fast)
+### Global Mechanisms
 
-#### WD (Westbrook-Dryer)
+#### Westbrook-Dryer
 
 A simplified global reaction model for methane combustion with minimal species.
 
@@ -264,10 +265,6 @@ A mechanism combining HCl and HCN formation in SRM exhaust.
 - **Application**: Detailed SRM plume chemistry, exhaust analysis
 - **File**: `cross.f90`
 
----
-
-## Specialty Mechanisms
-
 ### Pelucchi (Chlorine / HCl Oxidation)
 
 A detailed mechanism for HCl and Cl₂ chemistry at high temperatures.
@@ -279,17 +276,6 @@ A detailed mechanism for HCl and Cl₂ chemistry at high temperatures.
 - **Application**: Chlorine chemistry studies, safety analysis, specialized combustion
 - **Accuracy**: Detailed mechanism
 - **File**: `pelucchi.f90`
-
----
-
-### global-H2 (Simplified Hydrogen)
-
-A global mechanism for hydrogen combustion (ultra-simplified).
-
-**Characteristics:**
-- **Application**: Preliminary hydrogen combustion estimates, testing
-- **Accuracy**: Global reaction, minimal representation
-- **File**: `global-H2.f90`
 
 ---
 

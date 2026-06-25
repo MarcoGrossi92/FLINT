@@ -176,6 +176,35 @@ $$
 X_s = \frac{Y_s / M_s}{\sum_{j=1}^{N_s} Y_j / M_j}
 $$
 
+### Ideal Gas Mixtures — Species Diffusion
+
+FLINT provides two closures for the species mass-diffusion coefficient $D_s$ that enters Fick's law, $\mathbf{j}_s = -\rho D_s \nabla Y_s$.
+
+**Constant Schmidt number.** The simplest closure assigns every species the *same* diffusivity, tied to the mixture viscosity through a prescribed laminar Schmidt number $Sc$:
+
+$$
+D_s = \frac{\mu_\text{mix}}{\rho\,Sc}, \qquad s = 1,\dots,N_s .
+$$
+
+This is inexpensive and adequate when differential diffusion is unimportant, but it cannot represent species diffusing at different rates.
+
+**Mixture-averaged multicomponent diffusion.** For differential diffusion, FLINT computes a per-species diffusivity from the **binary (pair) diffusion coefficients** using the Curtiss–Hirschfelder mixture-averaged approximation [3,7]:
+
+$$
+D_s = \frac{1 - X_s}{\displaystyle\sum_{j \ne s} X_j / \mathcal{D}_{sj}}
+$$
+
+where $\mathcal{D}_{sj}$ is the binary diffusion coefficient of the pair $(s,j)$. The binary coefficients depend on temperature and are pre-tabulated per species pair (see [`diffusion.dat`](../user/input/native.md#6-diffusiondat-binary-diffusion-coefficient-tables)). Because $\mathcal{D}_{sj} = \mathcal{D}_{js}$, only the $N_s(N_s-1)/2$ unique pairs are stored; each is interpolated once and reused for both partners.
+
+!!! note "Near-pure mixtures"
+    As $X_s \to 1$ the expression becomes the indeterminate $0/0$. FLINT falls back to the mean binary diffusivity of species $s$. This limit is harmless: $\nabla Y_s \to 0$ there, and the species flux is in any case closed by the mass-conservation correction $\sum_s \mathbf{j}_s = 0$ applied by the host solver.
+
+!!! note "Pressure dependence"
+    Binary diffusion coefficients scale as $\mathcal{D}_{sj} \propto 1/p$ (exactly, from kinetic theory). The table stores temperature-only coefficients at a reference pressure $p_\text{ref}$ embedded in the [`diffusion.dat`](../user/input/native.md#6-diffusiondat-binary-diffusion-coefficient-tables) `TITLE`; FLINT rescales them to the local pressure $p$ with the uniform factor $p_\text{ref}/p$, so $D_s$ is correct at any pressure:
+    $$
+    D_s(T,p) = \frac{p_\text{ref}}{p}\,D_s(T,\,p_\text{ref}) .
+    $$
+
 ### Real Fluid
 
 Dynamic viscosity $\mu$ and thermal conductivity $k$ for a real fluid are pre-tabulated on the same uniform $(p, h)$ grid as the thermodynamic properties and retrieved with the same bilinear interpolation scheme.
@@ -226,3 +255,5 @@ The conversion from conservative to primitive variables requires solving for tem
 [5] Bird, R. B., Stewart, W. E., and Lightfoot, E. N. *Transport Phenomena*, 2nd edition. John Wiley & Sons, 2002.
 
 [6] Blazek, J. *Computational Fluid Dynamics: Principles and Applications*, 3rd edition. Butterworth-Heinemann, 2015.
+
+[7] Hirschfelder, J. O., Curtiss, C. F., and Bird, R. B. *Molecular Theory of Gases and Liquids*. John Wiley & Sons, 1954.

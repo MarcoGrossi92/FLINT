@@ -15,7 +15,7 @@ FLINT native files support two distinct thermodynamic models:
 
 ## Ideal Gas Native File Structure
 
-The complete input for an ideal-gas mechanism consists of up to **seven files** in the same directory:
+The complete input for an ideal-gas mechanism consists of up to **eight files** in the same directory:
 
 ```
 INPUT/
@@ -25,6 +25,7 @@ INPUT/
   ├── chemistry-Troe.dat      # Chemistry - Fall-off parameters (optional)
   ├── chemistry-Lindemann.dat # Chemistry - Fall-off parameters (optional)
   ├── transport.dat           # Transport properties (optional)
+  ├── diffusion.dat           # Binary diffusion coefficients (optional)
   └── thermo.dat              # Thermodynamic properties
 ```
 
@@ -410,6 +411,64 @@ Species zones appear in **same order** as in `phase.txt`:
 7. CH3O2 (last)
 
 **File Size:** ~15 MB (CORIA: 17 species × 15000 points × ~60 bytes/line)
+
+---
+
+### 6. `diffusion.dat` – Binary Diffusion Coefficient Tables
+
+**Purpose:** Pre-computed binary (pair) diffusion coefficients $\mathcal{D}_{ij}(T)$ for every unique species pair, consumed by the mixture-averaged multicomponent diffusion model (see [Species Diffusion](../../theory/thermo.md#ideal-gas-mixtures-species-diffusion)). **Optional** — required only when the multicomponent diffusion closure is selected; the constant-Schmidt closure needs no diffusion table.
+
+**Format:** Tecplot ASCII (same structure as `transport.dat`), one zone per species pair, a single property variable per zone.
+
+```
+TITLE = "Binary Diffusion Coefficients (Pref=101325.000000 Pa)"
+VARIABLES = "Temperature", "Dij"
+ZONE T="H2-H"
+I=15000, F=POINT
+<T_1>  <Dij_1>
+<T_2>  <Dij_2>
+...
+
+ZONE T="H2-O"
+I=15000, F=POINT
+...
+```
+
+The `TITLE` carries the **reference pressure** `Pref` (in Pa) at which the coefficients were tabulated, as `(Pref=<value> Pa)`. FLINT parses it and rescales each coefficient to the local pressure by $p_\text{ref}/p$ (since $\mathcal{D}\propto 1/p$). If the tag is absent, FLINT defaults to 1 atm (101325 Pa).
+
+**Structure:**
+
+| Component | Description |
+|-----------|-------------|
+| TITLE | File description (e.g. "Binary Diffusion Coefficients") |
+| VARIABLES | Column headers ("Temperature", "Dij") |
+| ZONE | One zone per **unique unordered species pair** |
+| I=N | Number of temperature points (must match `thermo.dat`) |
+| F=POINT | Data format (always POINT) |
+| Data rows | `Temperature  Dij` (space-separated floats) |
+
+**Variable:**
+
+| Column | Unit (SI) | Description |
+|--------|-----------|-------------|
+| `Temperature` | K | Same grid as `thermo.dat` (1 K increments) |
+| `Dij` | m²/s | Binary diffusion coefficient of the pair, at the reference pressure `Pref` (see TITLE) |
+
+**Zone ordering (upper-triangular):**
+
+For $N_s$ species the file holds $N_s(N_s-1)/2$ zones, ordered with the first pair index running outermost and using the species order from `phase.txt`:
+
+$$
+(1,2),\,(1,3),\,\dots,\,(1,N_s),\,(2,3),\,(2,4),\,\dots,\,(N_s-1,N_s)
+$$
+
+Only one of $(i,j)$ / $(j,i)$ is stored, since $\mathcal{D}_{ij} = \mathcal{D}_{ji}$.
+
+**Parsing Notes:**
+- The temperature range **must match** `thermo.dat` (mismatch returns error code 3).
+- The number of zones **must equal** $N_s(N_s-1)/2$ (mismatch returns error code 4).
+- Coefficients are tabulated against temperature at the reference pressure `Pref` from the TITLE; FLINT rescales them to the local pressure by $p_\text{ref}/p$ (exact, since $\mathcal{D}\propto 1/p$), so the model is valid at any pressure.
+- Single-species phases have no pairs and require no `diffusion.dat`.
 
 ---
 

@@ -34,10 +34,6 @@ err = read_idealgas_transport("folder") ! optional
 
 This reads species names, molecular weights, temperature-indexed thermodynamic tables ($c_p$, $h$, $s$), and — optionally — transport tables ($\mu$, $k$). Thermodynamics is also required by both finite-rate chemistry and equilibrium calculations.
 
-**Property evaluation**
-
-Typical per-mixture operations: `f_cp`, `f_ss`, `f_gamma`, `f_laminarViscosity`, `co_k_mi_lam_Wilke`. See [Lib_ThermoTransport.f90](../../src/lib/Lib_ThermoTransport.f90) for the full list.
-
 ### Real Fluid
 
 For single-component fluids at high pressure or near the critical point, FLINT provides a real fluid model backed by uniform 2D $(p, h)$ lookup tables.
@@ -100,8 +96,8 @@ h_init = pT2h(p, T)
 
 ### Source Files
 
-- [src/lib/Load_ThermoTransport.f90](../../src/lib/Load_ThermoTransport.f90)
-- [src/lib/Lib_ThermoTransport.f90](../../src/lib/Lib_ThermoTransport.f90)
+- `src/lib/Load_ThermoTransport.f90`
+- `src/lib/Lib_ThermoTransport.f90`
 
 ---
 
@@ -149,15 +145,15 @@ This subroutine is built upon an abstract interface and a pointer concretization
 
 - a general routine:  
 
-  -- mechanism loaded at runtime
-  -- flexible
-  -- slightly slower
+  -- mechanism loaded at runtime  
+  -- flexible  
+  -- slightly slower  
 
 - several explicit routines:
 
-        - Hard-coded Fortran kernels
-        - Maximum performance
-        - Recommended for production
+  - hard-coded Fortran kernels  
+  - maximum performance  
+  - recommended for production  
 
 Explicit routines are generated using the mechanism generation tool. See [Chemistry Database](database.md) and [Chemistry Generation](chemistry_routines.md) for more details.
 

@@ -245,6 +245,92 @@ contains
   end function read_idealgas_transport
 
 
+  ! Reads binary diffusion coefficients D_ij(T) from <prefix>diffusion.dat.
+  ! One ZONE per unique unordered species pair, upper-triangular order
+  ! (1,2),(1,3),..,(1,ns),(2,3),..  Each zone holds a single variable (Dij) vs T,
+  ! on the same temperature grid as the thermo/transport tables.
+  ! Populates dij_tab(Tmin:Tmax, 1:ndij) with ndij = ns*(ns-1)/2.
+  function read_idealgas_diffusion(folder) result(ios)
+    use Lib_Tecplot
+    use Lib_ORION_data
+    implicit none
+    character(len=*), intent(in), optional :: folder
+    ! Local
+    integer           :: ios, i, start, dummy1, dummy23
+    integer           :: Tmin_dummy, Tmax_dummy
+    integer           :: u, ios2, ip
+    logical           :: exists, attempted
+    character(512)    :: difffile(2), titleline
+    type(ORION_data)  :: orion
+
+    ios = 1
+    attempted = .false.
+    dij_pref = 101325.d0   ! default reference pressure (1 atm) if TITLE has no Pref tag
+
+    ! Single-species mixtures have no pairs: nothing to load.
+    ndij = ns*(ns-1)/2
+    if (ndij < 1) return
+
+    if (present(folder)) then
+      difffile(1) = trim(folder)//'/'//trim(FLINT_phase_prefix)//'diffusion.dat'
+      difffile(2) = trim(folder)//'/'//trim(FLINT_phase_prefix)//'diffusion.szplt'
+    else
+      difffile(1) = 'INPUT/'//trim(FLINT_phase_prefix)//'diffusion.dat'
+      difffile(2) = 'INPUT/'//trim(FLINT_phase_prefix)//'diffusion.szplt'
+    endif
+
+    inquire(file=trim(difffile(1)),exist=exists)
+    if (exists) then
+      attempted = .true.
+      ! Parse the reference pressure from the TITLE line: "... (Pref=<value> Pa)".
+      open(newunit=u, file=trim(difffile(1)), status='old', iostat=ios2)
+      if (ios2==0) then
+        read(u,'(A)',iostat=ios2) titleline
+        if (ios2==0) then
+          ip = index(titleline,'Pref=')
+          if (ip>0) read(titleline(ip+5:),*,iostat=ios2) dij_pref
+        endif
+        close(u)
+      endif
+      ios = tec_read_points_multivars(orion,1,trim(difffile(1)))
+    endif
+    inquire(file=trim(difffile(2)),exist=exists)
+    if (exists) then
+      attempted = .true.
+      ios = tec_read_structured_multiblock(orion=orion, filename=trim(difffile(2)))
+    endif
+    if (ios/=0) then
+      if (attempted) ios = 2
+      return
+    endif
+
+    if (size(orion%block) /= ndij) then
+      ios = 4
+      return
+    endif
+
+    dummy1  = lbound(orion%block(1)%mesh, dim=2)
+    dummy23 = lbound(orion%block(1)%mesh, dim=3)
+    Tmin_dummy = nint(orion%block(1)%mesh(1,dummy1,dummy23,dummy23))
+    Tmax_dummy = Tmin_dummy + ubound(orion%block(1)%mesh, dim=2) - dummy1
+
+    if (Tmax_dummy /= Tmax) then
+      ios = 3
+      return
+    endif
+
+    start = Tmin_dummy
+    if (Tmin_dummy==1) Tmin_dummy = 0
+    allocate(dij_tab(Tmin_dummy:Tmax, 1:ndij))
+    dummy23 = lbound(orion%block(1)%vars, dim=3)
+    do i = 1, ndij
+      dij_tab(start:Tmax,i) = orion%block(i)%vars(1,:,dummy23,dummy23)
+    enddo
+    if (Tmin_dummy==0) dij_tab(0,:) = dij_tab(1,:)
+
+  end function read_idealgas_diffusion
+
+
   function read_realfluid_thermo(folder) result(ios)
     use strings, only: parse
     use Lib_Tecplot

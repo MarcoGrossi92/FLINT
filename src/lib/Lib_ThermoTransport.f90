@@ -34,8 +34,13 @@ module FLINT_Lib_Thermodynamic
   real(kind=8), dimension(:,:), allocatable :: rho_tab, T_tab, dT_tab, rh_tab, hT_tab, rp_tab, sound_tab, s_tab2D, h_tab2D
   real(kind=8), dimension(:,:), allocatable :: mi_tab2D, k_tab2D
 
-  ! Diffusion coefficients tables (T, specie-specie interaction)
+  ! Binary diffusion coefficient table (T, unique species pair).
+  ! Stored upper-triangular: ndij = ns*(ns-1)/2 columns, ordered (1,2),(1,3),..,(1,ns),(2,3),..
+  ! Binary diffusivities scale as D ~ 1/p, so the table is built at a reference pressure
+  ! dij_pref [Pa] (parsed from the diffusion.dat TITLE) and rescaled by dij_pref/p at use.
   real(kind=8), dimension(:,:), allocatable :: dij_tab
+  integer :: ndij = 0
+  real(kind=8) :: dij_pref = 101325.d0
 
 contains
 
@@ -497,40 +502,101 @@ contains
   endsubroutine co_k_mi_lam_Wilke_expr
 
 
+  !> Mixture-averaged (Wilke/Wassiljewa) multicomponent diffusion coefficients.
+  !> Thin wrapper: derives temperature from the EOS and forwards to co_DS_expr.
   pure subroutine co_DS(rhoi,p,rho,Rtot,Dm)
     implicit none
     real(8), intent(in)  :: rhoi(ns), p, rho, Rtot
     real(8), intent(out) :: Dm(ns)
-    real(8), dimension(ns)     :: Xi, Dm_den
-    real(8), dimension(ns,ns) :: Dij
-    real(8) :: Wmtot
-    integer :: s, i, j, iter
+    real(8) :: T, Tdiff
+    integer :: T_i, Tint(2)
+
+    T = p/(rho*Rtot)
+    T_i = idint(T)
+    Tdiff = T-T_i
+    Tint(1) = T_i
+    Tint(2) = T_i + 1
+
+    call co_DS_expr(rhoi,rho,Tint,Tdiff,p,Dm)
+
+  endsubroutine co_DS
+
+
+  !> Mixture-averaged diffusion coefficients from the (Tint,Tdiff) bracket, so callers
+  !> that already hold the temperature indices (e.g. the diffusive flux) avoid recomputing.
+  !>   Dm(s) = (1 - X_s) / sum_{j/=s} X_j / D_sj ,  with a near-pure-cell guard.
+  !> The (1 - Y_s) Chemkin/Kee/Cantera variant is kept as commented reference in the
+  !> final loop; edit the source there to switch the active formulation.
+  !>
+  !> Single sweep over the unique species pairs in the upper-triangular storage order of
+  !> dij_tab, (1,2),(1,3),..,(1,ns),(2,3),..  Each binary D_ij is interpolated and inverted
+  !> exactly once and scattered to both partners, so the cost is O(ns^2/2) with no ns x ns
+  !> matrix and half the divisions of a naive double loop. The T-bracket is clamped once.
+  pure subroutine co_DS_expr(rhoi,rho,Tint,Tdiff,pres,Dm)
+    implicit none
+    integer, intent(in)  :: Tint(2)
+    real(8), intent(in)  :: rhoi(ns), rho, Tdiff, pres
+    real(8), intent(out) :: Dm(ns)
+    real(8), dimension(ns) :: Xi, Dm_den, Dsum
+    real(8) :: Wmtot, Dval, invD, d0, d1
+    integer :: s, i, j, p, Ti1, Ti2
+
+    if (ns < 2) then
+      Dm = 0.d0   ! single species: molecular diffusion is undefined / irrelevant
+      return
+    endif
 
     Wmtot = f_molecularWeight(rhoi)
-
-    ! calcolo delle frazioni molari Xi
     do s = 1, ns
       Xi(s) = rhoi(s)*Wmtot/(rho*Wm_tab(s))
     enddo
 
-    ! creazione matrice di coefficienti di diffusione
-    iter = 0
-    do j = 1, ns; do i = 1, ns
-        if (i/=j) then
-          iter = iter+1
-          Dij(i,j) = f_tab(p,rho,Rtot,iter,dij_tab)
-        endif
-    enddo; enddo
+    ! Clamp the temperature bracket once: it is shared by every species pair.
+    Ti1 = max(Tmin, min(Tint(1), Tmax))
+    Ti2 = max(Tmin, min(Tint(2), Tmax))
 
-    !c calcolo del coefficiente di miscela
-    do s = 1, ns
-      do j=1,ns
-        if (j/=s) Dm_den(s)=Dm_den(s)+Xi(j)/Dij(s,j)
+    ! One pass over unique pairs; p tracks the dij_tab column (same storage order).
+    Dm_den = 0.d0
+    Dsum   = 0.d0
+    p = 0
+    do i = 1, ns
+      do j = i+1, ns
+        p = p + 1
+        d0 = dij_tab(Ti1,p)
+        d1 = dij_tab(Ti2,p)
+        Dval = d0 + (d1-d0)*Tdiff
+        invD = 1.d0 / Dval
+        Dm_den(i) = Dm_den(i) + Xi(j)*invD   ! Wilke denominator (D_ij shared by i and j)
+        Dm_den(j) = Dm_den(j) + Xi(i)*invD
+        Dsum(i)   = Dsum(i) + Dval           ! running sum for the near-pure fallback
+        Dsum(j)   = Dsum(j) + Dval
       enddo
-      Dm(s) = (1-Xi(s))/Dm_den(s)
     enddo
 
-  endsubroutine co_DS
+    ! Mixture-averaged numerator. Two literature forms share the same Wilke denominator
+    ! Dm_den(s) = sum_{j/=s} X_j/D_sj; they differ only in the numerator:
+    !   (1 - X_s)  Curtiss-Hirschfelder, mole-fraction form  -- ACTIVE below
+    !   (1 - Y_s)  Chemkin/Kee, mass-fraction form (== Cantera mix_diff_coeffs)
+    ! with Y_s = rhoi(s)/rho. The two diverge by ~10-20% per species in light/heavy
+    ! mixtures (light species diffuse faster under the (1-Y_s) form). To match the
+    ! Chemkin/Cantera standard instead, swap the active lines for the commented ones.
+    do s = 1, ns
+      if (1.d0 - Xi(s) < 1.d-10) then
+        ! near-pure cell: D_s is ill-defined (0/0) but barely matters since grad(Y_s)
+        ! is tiny and the flux is closed by the mass-conservation correction.
+        ! Fall back to the mean binary diffusivity of species s.
+        Dm(s) = Dsum(s) / dble(ns-1)
+      else
+        Dm(s) = (1.d0 - Xi(s)) / Dm_den(s)             ! (1 - X_s)  Curtiss-Hirschfelder [active]
+        ! Dm(s) = (1.d0 - rhoi(s)/rho) / Dm_den(s)     ! (1 - Y_s)  Chemkin/Kee == Cantera mix_diff_coeffs
+      endif
+    enddo
+
+    ! Correct from the table reference pressure to the local pressure: D ~ 1/p exactly
+    ! (kinetic theory). The factor is uniform, so D_s scales linearly with it.
+    Dm(1:ns) = Dm(1:ns) * ( dij_pref / pres )
+
+  endsubroutine co_DS_expr
 
 
   pure function f_tab(p,rho,Rtot,s,tab) result(result)

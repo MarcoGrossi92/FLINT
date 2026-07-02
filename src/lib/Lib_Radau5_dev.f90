@@ -26,6 +26,18 @@
 module FLINT_Lib_Radau5_dev
   use FLINT_Lib_Chemistry_rhs, only: rhs_native, jac_native
   use FLINT_Lib_Chemistry_data, only: NZMAX
+# if defined (MOSE_CHEM_INLINE)
+  ! MOSE_CHEM_INLINE: same-module device copies of the whole per-cell chemistry
+  ! chain (rhs/jac + ONERA-7/Frolov mechanisms + kf/kb lookups) so nvfortran can
+  ! inline them into radau5_dev -- cross-module acc-routine calls are never
+  ! inlined (-Minfo confirmed), costing ~7-10 ABI calls per cell per Newton
+  ! sweep. Bodies are VERBATIM copies (suffix _m); KEEP IN SYNC with
+  ! Lib_Chemistry_rhs.f90 / Lib_ChemMech/{ONERA-7,Frolov_nopressure}.f90.
+  use FLINT_Lib_Thermodynamic, only: ns, Tmin, Tmax, wm_tab, Ri_tab, cp_tab, h_tab
+  use FLINT_Lib_Chemistry_data, only: NSCHEM, kf_tab, kb_tab
+  use FLINT_Lib_Chemistry_wdot, only: mech_dev
+  use, intrinsic :: ieee_arithmetic
+# endif
   implicit none
   private
   public :: radau5_dev, flint_acc_upload_tables, flint_acc_upload_thermo
@@ -45,16 +57,52 @@ module FLINT_Lib_Radau5_dev
   !$acc declare create(rtol_dev, atol_dev)
   public :: set_radau5_dev_tols
 
+  !> Hairer ITOL=1 tolerance transform hoisted out of the per-cell integrator
+  !> (MOSE_CHEM_CT): rtolt/atolt = transformed rtol/atol, fnewt precomputed.
+  !> Computed ON DEVICE in set_radau5_dev_tols so the pow bits are identical to
+  !> the in-kernel transform they replace (host libm pow may differ by ULPs).
+  real(8), public :: rtolt_dev(NSMX) = 1d-5
+  real(8), public :: atolt_dev(NSMX) = 1d-5
+  real(8), public :: fnewt_dev = 0d0
+  !$acc declare create(rtolt_dev, atolt_dev)
+
 contains
 
   subroutine set_radau5_dev_tols(n, rt, at)
     implicit none
     integer, intent(in) :: n
     real(8), intent(in) :: rt(n), at(n)
+    integer :: i
+    real(8) :: expm, quot, tolst, fw
     rtol_dev(1:n) = rt(1:n)
     atol_dev(1:n) = at(1:n)
 #   if defined (_OPENACC)
     !$acc update device(rtol_dev, atol_dev)
+    ! One-time device-side Hairer ITOL=1 transform (MOSE_CHEM_CT consumes these;
+    ! computed on the GPU so the pow/sqrt bits match the in-kernel transform).
+    ! uround literal = the 1.1d-19 radau5_dev uses (OSlo WORK(1)).
+    !$acc serial copyout(fw) private(i, expm, quot, tolst)
+    expm = 2.0d0/3.0d0
+    do i = 1, n
+      quot         = atol_dev(i)/rtol_dev(i)
+      rtolt_dev(i) = 0.1d0*rtol_dev(i)**expm
+      atolt_dev(i) = rtolt_dev(i)*quot
+    end do
+    tolst = rtolt_dev(1)
+    fw = max(10*1.1d-19/tolst, min(0.03d0, tolst**0.5d0))
+    !$acc end serial
+    fnewt_dev = fw
+#   else
+    ! Host mirror (kept consistent for host builds; radau5_dev's own transform
+    ! remains the authority when MOSE_CHEM_NZ is not defined).
+    expm = 2.0d0/3.0d0
+    do i = 1, n
+      quot         = at(i)/rt(i)
+      rtolt_dev(i) = 0.1d0*rt(i)**expm
+      atolt_dev(i) = rtolt_dev(i)*quot
+    end do
+    tolst = rtolt_dev(1)
+    fnewt_dev = max(10*1.1d-19/tolst, min(0.03d0, tolst**0.5d0))
 #   endif
   end subroutine set_radau5_dev_tols
 
@@ -104,24 +152,55 @@ contains
   ! Integrate Y over [X, XEND]. RTOL/ATOL are NOT modified (the internal
   ! Hairer transform works on copies). Statistics returned per call.
   !----------------------------------------------------------------------------
-  subroutine radau5_dev(n, x_in, y, xend, rtol_in, atol_in, idid, &
-                        nfcn, njac, nstep, naccpt, nrejct)
+! MOSE_CHEM_CT: compile-time ODE size. `n` becomes a PARAMETER (= MOSE_CHEM_NZ =
+! nsc+1, one binary per mechanism) so every loop trip count below is a literal
+! (unroll + register promotion of the per-thread work arrays, which shrink from
+! NSMX to n). Executable statements are UNTOUCHED -> bit-exact by construction.
+! The launcher guards n_in == MOSE_CHEM_NZ (error stop on mismatch).
+# if defined (MOSE_CHEM_NZ)
+#   define RD5_LD n
+# else
+#   define RD5_LD NSMX
+# endif
+! MOSE_CHEM_INLINE: route the integrator's rhs/jac calls to the same-module
+! copies (inlinable); default = the cross-module originals (byte-identical).
+# if defined (MOSE_CHEM_INLINE)
+#   define RD5_RHS rhs_m
+#   define RD5_JAC jac_m
+# else
+#   define RD5_RHS rhs_native
+#   define RD5_JAC jac_native
+# endif
+  subroutine radau5_dev(n_in, x_in, y, xend, rtol_in, atol_in, &
+# if defined (MOSE_CHEM_NZ)
+                        fnewt_in, &
+# endif
+                        idid, nfcn, njac, nstep, naccpt, nrejct)
     !$acc routine seq
     implicit none
-    integer, intent(in)    :: n
+    integer, intent(in)    :: n_in
     real(8), intent(in)    :: x_in, xend
-    real(8), intent(inout) :: y(n)
-    real(8), intent(in)    :: rtol_in(n), atol_in(n)
+    real(8), intent(inout) :: y(n_in)
+    real(8), intent(in)    :: rtol_in(n_in), atol_in(n_in)
+# if defined (MOSE_CHEM_NZ)
+    real(8), intent(in)    :: fnewt_in
+# endif
     integer, intent(out)   :: idid
     integer, intent(out)   :: nfcn, njac, nstep, naccpt, nrejct
 
+# if defined (MOSE_CHEM_NZ)
+    integer, parameter :: n = MOSE_CHEM_NZ
+# else
+    integer :: n
+# endif
+
     ! ---- fixed per-thread work arrays (original: partitions of WORK/IWORK)
-    real(8) :: z1(NSMX), z2(NSMX), z3(NSMX), y0(NSMX), scal(NSMX)
-    real(8) :: f1(NSMX), f2(NSMX), f3(NSMX)
-    real(8) :: fjac(NSMX,NSMX), e1(NSMX,NSMX), e2r(NSMX,NSMX), e2i(NSMX,NSMX)
-    real(8) :: cont(4*NSMX)
-    integer :: ip1(NSMX), ip2(NSMX)
-    real(8) :: rtol(NSMX), atol(NSMX)
+    real(8) :: z1(RD5_LD), z2(RD5_LD), z3(RD5_LD), y0(RD5_LD), scal(RD5_LD)
+    real(8) :: f1(RD5_LD), f2(RD5_LD), f3(RD5_LD)
+    real(8) :: fjac(RD5_LD,RD5_LD), e1(RD5_LD,RD5_LD), e2r(RD5_LD,RD5_LD), e2i(RD5_LD,RD5_LD)
+    real(8) :: cont(4*RD5_LD)
+    integer :: ip1(RD5_LD), ip2(RD5_LD)
+    real(8) :: rtol(RD5_LD), atol(RD5_LD)
     real(8) :: rpar_d(1)
     integer :: ipar_d(1)
 
@@ -150,6 +229,9 @@ contains
     ! =========================================================================
     ! RADAU5 driver part (specialized: all input checks statically satisfied)
     ! =========================================================================
+# if !defined (MOSE_CHEM_NZ)
+    n = n_in
+# endif
     nfcn=0; njac=0; nstep=0; naccpt=0; nrejct=0
     uround = 1.1d-19            ! OSlo: WORK(1)=1.1d-19
     nmax   = 100000
@@ -166,6 +248,17 @@ contains
     hmax   = xend - x
 
     ! -------- check and change the tolerances (ITOL=1 branch)
+# if defined (MOSE_CHEM_NZ)
+    ! MOSE_CHEM_CT: tolerances arrive PRE-TRANSFORMED (rtolt_dev/atolt_dev, computed
+    ! once on device by set_radau5_dev_tols) + fnewt precomputed -- the per-cell
+    ! pow/div transform is skipped. Same bits: the init kernel runs the identical
+    ! expressions with the identical device pow.
+    do i = 1, n
+      rtol(i) = rtol_in(i)
+      atol(i) = atol_in(i)
+    end do
+    fnewt = fnewt_in
+# else
     expm = 2.0d0/3.0d0
     do i = 1, n
       quot    = atol_in(i)/rtol_in(i)
@@ -175,6 +268,7 @@ contains
     ! --- fnewt (computed from the TRANSFORMED rtol(1), as in the original)
     tolst = rtol(1)
     fnewt = max(10*uround/tolst, min(0.03d0, tolst**0.5d0))
+# endif
 
     ! =========================================================================
     ! RADCOR core (IJOB=1, IMPLCT=F, BANDED=F, M1=0, M2=N, NM1=N, IOUT=0)
@@ -237,14 +331,14 @@ contains
       scal(i) = atol(i)+rtol(i)*abs(y(i))
     end do
     hhfac = h
-    call rhs_native(n, x, y, y0)
+    call RD5_RHS(n, x, y, y0)
     nfcn = nfcn+1
 
     ! --- basic integration step
  10 continue
     ! *** computation of the Jacobian (IJAC=1: analytically)
     njac = njac+1
-    call jac_native(n, x, y, fjac, NSMX, rpar_d, ipar_d)
+    call RD5_JAC(n, x, y, fjac, RD5_LD, rpar_d, ipar_d)
     caljac = .true.
  20 continue
     ! --- compute the matrices E1 and E2 and their decompositions
@@ -258,7 +352,7 @@ contains
       end do
       e1(j,j) = e1(j,j)+fac1
     end do
-    call dec_dev(n, NSMX, e1, ip1, ier)
+    call dec_dev(n, RD5_LD, e1, ip1, ier)
     if (ier .ne. 0) goto 78
     ! DECOMC, IJOB=1
     do j = 1, n
@@ -269,7 +363,7 @@ contains
       e2r(j,j) = e2r(j,j)+alphn
       e2i(j,j) = betan
     end do
-    call decc_dev(n, NSMX, e2r, e2i, ip2, ier)
+    call decc_dev(n, RD5_LD, e2r, e2i, ip2, ier)
     if (ier .ne. 0) goto 78
  30 continue
     nstep = nstep+1
@@ -317,15 +411,15 @@ contains
     do i = 1, n
       cont(i) = y(i)+z1(i)
     end do
-    call rhs_native(n, x+c1*h, cont, z1)
+    call RD5_RHS(n, x+c1*h, cont, z1)
     do i = 1, n
       cont(i) = y(i)+z2(i)
     end do
-    call rhs_native(n, x+c2*h, cont, z2)
+    call RD5_RHS(n, x+c2*h, cont, z2)
     do i = 1, n
       cont(i) = y(i)+z3(i)
     end do
-    call rhs_native(n, xph, cont, z3)
+    call RD5_RHS(n, xph, cont, z3)
     nfcn = nfcn+3
     ! --- solve the linear systems
     do i = 1, n
@@ -344,8 +438,8 @@ contains
       z2(i) = z2(i)+a2*alphn-a3*betan
       z3(i) = z3(i)+a3*alphn+a2*betan
     end do
-    call sol_dev (n, NSMX, e1, z1, ip1)
-    call solc_dev(n, NSMX, e2r, e2i, z2, z3, ip2)
+    call sol_dev (n, RD5_LD, e1, z1, ip1)
+    call solc_dev(n, RD5_LD, e2r, e2i, z2, z3, ip2)
     newt = newt+1
     dyno = 0.d0
     do i = 1, n
@@ -399,7 +493,7 @@ contains
       f2(i) = hee1*z1(i)+hee2*z2(i)+hee3*z3(i)
       cont(i) = f2(i)+y0(i)
     end do
-    call sol_dev(n, NSMX, e1, cont, ip1)
+    call sol_dev(n, RD5_LD, e1, cont, ip1)
     err = 0.d0
     do i = 1, n
       err = err+(cont(i)/scal(i))**2
@@ -410,12 +504,12 @@ contains
         do i = 1, n
           cont(i) = y(i)+cont(i)
         end do
-        call rhs_native(n, x, cont, f1)
+        call RD5_RHS(n, x, cont, f1)
         nfcn = nfcn+1
         do i = 1, n
           cont(i) = f1(i)+f2(i)
         end do
-        call sol_dev(n, NSMX, e1, cont, ip1)
+        call sol_dev(n, RD5_LD, e1, cont, ip1)
         err = 0.d0
         do i = 1, n
           err = err+(cont(i)/scal(i))**2
@@ -466,7 +560,7 @@ contains
         idid = 1
         return
       end if
-      call rhs_native(n, x, y, y0)
+      call RD5_RHS(n, x, y, y0)
       nfcn = nfcn+1
       hnew = posneg*min(abs(hnew), hmaxn)
       hopt = hnew
@@ -751,5 +845,561 @@ contains
     br(1) = prodr/den
     bi(1) = prodi/den
   end subroutine solc_dev
+
+# if defined (MOSE_CHEM_INLINE)
+  ! ===========================================================================
+  ! MOSE_CHEM_INLINE same-module copies (inlinable). Bodies VERBATIM from
+  ! Lib_Chemistry_data.f90 (f_kf/f_kb), Lib_ChemMech/Frolov_nopressure.f90,
+  ! Lib_ChemMech/ONERA-7.f90 and Lib_Chemistry_rhs.f90 (rhs/jac_native).
+  ! KEEP IN SYNC with the originals.
+  ! ===========================================================================
+
+  pure function f_kf_m(ireact,Tint,Tdiff) result(result)
+    !$acc routine seq
+    implicit none
+    integer, intent(in) :: ireact, Tint(2)
+    real(8), intent(in) :: Tdiff
+    real(8) :: a, b
+    real(8) :: result
+    a = kf_tab(Tint(1),ireact)
+    b = kf_tab(Tint(2),ireact)
+    result = a+(b-a)*Tdiff
+  end function f_kf_m
+
+  pure function f_kb_m(ireact,Tint,Tdiff) result(result)
+    !$acc routine seq
+    implicit none
+    integer, intent(in) :: ireact, Tint(2)
+    real(8), intent(in) :: Tdiff
+    real(8) :: a, b
+    real(8) :: result
+    a = kb_tab(Tint(1),ireact)
+    b = kb_tab(Tint(2),ireact)
+    result = a+(b-a)*Tdiff
+  end function f_kb_m
+
+  subroutine frolov_m(roi, temp, omegadot)
+    !$acc routine seq
+    implicit none
+    real(8), intent(inout) :: roi(ns)
+    real(8), intent(in)    :: temp
+    real(8), intent(out)   :: omegadot(ns)
+    real(8) :: coi(NSCHEM), Tdiff
+    integer :: is, T_i, Tint(2)
+    real(8) :: kf, kb, net_rate
+
+    do is = 1, ns
+      coi(is) = roi(is) / Wm_tab(is)   ! kmol/m^3
+    end do
+
+    T_i     = int(temp)
+    Tdiff   = temp - T_i
+    Tint(1) = T_i
+    Tint(2) = T_i + 1
+
+    kf = f_kf_m(1, Tint, Tdiff)
+    kb = f_kb_m(1, Tint, Tdiff)
+
+    ! Reaction 1:  2 H2 + O2 <=> 2 H2O
+    net_rate = kf * coi(3) * coi(3) * coi(1) - kb * coi(2) * coi(2)
+
+    omegadot(1) = -      Wm_tab(1) * net_rate
+    omegadot(2) =  2.d0 * Wm_tab(2) * net_rate
+    omegadot(3) = -2.d0 * Wm_tab(3) * net_rate
+    omegadot(4) = 0.d0
+  end subroutine frolov_m
+
+  subroutine frolov_jac_m(roi, temp, dwdr, dwdT)
+    !$acc routine seq
+    implicit none
+    real(8), intent(in)  :: roi(ns), temp
+    real(8), intent(out) :: dwdr(NSCHEM, ns)
+    real(8), intent(out) :: dwdT(ns)
+    real(8) :: coi(NSCHEM), Tdiff
+    integer :: is, T_i, j
+    real(8) :: kf, kb, dkf_dT, dkb_dT
+    real(8) :: dnet_dc(NSCHEM), dnet_dT_r
+    real(8) :: dwdr_c(NSCHEM, NSCHEM)
+
+    do is = 1, ns
+      coi(is) = roi(is) / Wm_tab(is)
+    end do
+
+    T_i   = int(temp)
+    Tdiff = temp - T_i
+
+    kf     = kf_tab(T_i  , 1) + Tdiff * (kf_tab(T_i+1, 1) - kf_tab(T_i, 1))
+    kb     = kb_tab(T_i  , 1) + Tdiff * (kb_tab(T_i+1, 1) - kb_tab(T_i, 1))
+    dkf_dT = kf_tab(T_i+1, 1) - kf_tab(T_i, 1)
+    dkb_dT = kb_tab(T_i+1, 1) - kb_tab(T_i, 1)
+
+    dnet_dc(1:ns) = 0.d0
+    dnet_dc(1) =          kf * coi(3) * coi(3)
+    dnet_dc(2) = -2.d0 *  kb * coi(2)
+    dnet_dc(3) =  2.d0 *  kf * coi(3) * coi(1)
+    dnet_dT_r  = dkf_dT * coi(3) * coi(3) * coi(1) &
+               - dkb_dT * coi(2) * coi(2)
+
+    dwdr_c(1:ns,1:ns) = 0.d0
+    dwdr_c(1, 1:ns) = -      Wm_tab(1) * dnet_dc(1:ns)
+    dwdr_c(2, 1:ns) =  2.d0 * Wm_tab(2) * dnet_dc(1:ns)
+    dwdr_c(3, 1:ns) = -2.d0 * Wm_tab(3) * dnet_dc(1:ns)
+
+    dwdT(:) = 0.d0
+    dwdT(1) = -      Wm_tab(1) * dnet_dT_r
+    dwdT(2) =  2.d0 * Wm_tab(2) * dnet_dT_r
+    dwdT(3) = -2.d0 * Wm_tab(3) * dnet_dT_r
+
+    do j = 1, ns
+      dwdr(1:ns, j) = dwdr_c(1:ns, j) / Wm_tab(j)
+    end do
+  end subroutine frolov_jac_m
+
+  subroutine onera7_m(roi,temp,omegadot)
+    !$acc routine seq
+    implicit none
+    real(8), intent(inout)  :: roi(ns)
+    real(8), intent(in)  :: temp
+    real(8), intent(out) :: omegadot(ns)
+    real(8) :: coi(NSCHEM), Tdiff
+    real(8) :: M
+    integer :: is, T_i, Tint(2)
+    real(8) :: prodf(1:14), prodb(1:14)
+
+    do is = 1, ns
+     coi(is)=roi(is)/Wm_tab(is) ! kmol/m^3
+    enddo
+    T_i = int(temp)
+    Tdiff  = temp-T_i
+    Tint(1) = T_i
+    Tint(2) = T_i + 1
+    ! reac n. 1: H2 + O2 => 2 OH
+    prodf(1)=f_kf_m(1,Tint,Tdiff)*(coi(3))*(coi(1))
+    prodb(1)=f_kb_m(1,Tint,Tdiff)*(coi(6)*coi(6))
+    ! reac n. 2: 2 OH => H2 + O2
+    prodf(2)=f_kf_m(2,Tint,Tdiff)*(coi(6)*coi(6))
+    prodb(2)=f_kb_m(2,Tint,Tdiff)*(coi(3))*(coi(1))
+    ! reac n. 3: H + O2 => O + OH
+    prodf(3)=f_kf_m(3,Tint,Tdiff)*(coi(4))*(coi(1))
+    prodb(3)=f_kb_m(3,Tint,Tdiff)*(coi(5))*(coi(6))
+    ! reac n. 4: O + OH => H + O2
+    prodf(4)=f_kf_m(4,Tint,Tdiff)*(coi(5))*(coi(6))
+    prodb(4)=f_kb_m(4,Tint,Tdiff)*(coi(4))*(coi(1))
+    ! reac n. 5: H2 + OH => H + H2O
+    prodf(5)=f_kf_m(5,Tint,Tdiff)*(coi(3))*(coi(6))
+    prodb(5)=f_kb_m(5,Tint,Tdiff)*(coi(4))*(coi(2))
+    ! reac n. 6: H + H2O => H2 + OH
+    prodf(6)=f_kf_m(6,Tint,Tdiff)*(coi(4))*(coi(2))
+    prodb(6)=f_kb_m(6,Tint,Tdiff)*(coi(3))*(coi(6))
+    ! reac n. 7: H2 + O => H + OH
+    prodf(7)=f_kf_m(7,Tint,Tdiff)*(coi(3))*(coi(5))
+    prodb(7)=f_kb_m(7,Tint,Tdiff)*(coi(4))*(coi(6))
+    ! reac n. 8: H + OH => H2 + O
+    prodf(8)=f_kf_m(8,Tint,Tdiff)*(coi(4))*(coi(6))
+    prodb(8)=f_kb_m(8,Tint,Tdiff)*(coi(3))*(coi(5))
+    ! reac n. 9: 2 OH => H2O + O
+    prodf(9)=f_kf_m(9,Tint,Tdiff)*(coi(6)*coi(6))
+    prodb(9)=f_kb_m(9,Tint,Tdiff)*(coi(2))*(coi(5))
+    ! reac n. 10: H2O + O => 2 OH
+    prodf(10)=f_kf_m(10,Tint,Tdiff)*(coi(2))*(coi(5))
+    prodb(10)=f_kb_m(10,Tint,Tdiff)*(coi(6)*coi(6))
+    ! reac n. 11: H + OH + M => H2O + M
+    M=coi(1)+coi(2)*12+coi(3)*2.5+coi(4)+coi(5)+coi(6)+coi(7)
+    prodf(11)=f_kf_m(11,Tint,Tdiff)*(coi(4))*(coi(6))*M
+    prodb(11)=f_kb_m(11,Tint,Tdiff)*(coi(2))*M
+    ! reac n. 12: H2O + M => H + OH + M
+    M=coi(1)+coi(2)*12+coi(3)*2.5+coi(4)+coi(5)+coi(6)+coi(7)
+    prodf(12)=f_kf_m(12,Tint,Tdiff)*(coi(2))*M
+    prodb(12)=f_kb_m(12,Tint,Tdiff)*(coi(4))*(coi(6))*M
+    ! reac n. 13: 2 H + M => H2 + M
+    M=coi(1)+coi(2)*12+coi(3)*2.5+coi(4)+coi(5)+coi(6)+coi(7)
+    prodf(13)=f_kf_m(13,Tint,Tdiff)*(coi(4)*coi(4))*M
+    prodb(13)=f_kb_m(13,Tint,Tdiff)*(coi(3))*M
+    ! reac n. 14: H2 + M => 2 H + M
+    M=coi(1)+coi(2)*12+coi(3)*2.5+coi(4)+coi(5)+coi(6)+coi(7)
+    prodf(14)=f_kf_m(14,Tint,Tdiff)*(coi(3))*M
+    prodb(14)=f_kb_m(14,Tint,Tdiff)*(coi(4)*coi(4))*M
+    ! species source terms
+    omegadot(1)=Wm_tab(1)*(+(0.0-1.0)*(prodf(1)-prodb(1))+(1.0-0.0)*(prodf(2)-prodb(2))+(0.0-1.0)*(prodf(3)-prodb(3))+(1.0-0.0)*(prodf(4)-prodb(4)))
+    omegadot(2)=Wm_tab(2)*(+(1.0-0.0)*(prodf(5)-prodb(5))+(0.0-1.0)*(prodf(6)-prodb(6))+(1.0-0.0)*(prodf(9)-prodb(9))+(0.0-1.0)*(prodf(10)-prodb(10))+(1.0-0.0)*(prodf(11)-prodb(11))+(0.0-1.0)*(prodf(12)-prodb(12)))
+    omegadot(3)=Wm_tab(3)*(+(0.0-1.0)*(prodf(1)-prodb(1))+(1.0-0.0)*(prodf(2)-prodb(2))+(0.0-1.0)*(prodf(5)-prodb(5))+(1.0-0.0)*(prodf(6)-prodb(6))+(0.0-1.0)*(prodf(7)-prodb(7))+(1.0-0.0)*(prodf(8)-prodb(8))+(1.0-0.0)*(prodf(13)-prodb(13))+(0.0-1.0)*(prodf(14)-prodb(14)))
+    omegadot(4)=Wm_tab(4)*(+(0.0-1.0)*(prodf(3)-prodb(3))+(1.0-0.0)*(prodf(4)-prodb(4))+(1.0-0.0)*(prodf(5)-prodb(5))+(0.0-1.0)*(prodf(6)-prodb(6))+(1.0-0.0)*(prodf(7)-prodb(7))+(0.0-1.0)*(prodf(8)-prodb(8))+(0.0-1.0)*(prodf(11)-prodb(11))+(1.0-0.0)*(prodf(12)-prodb(12))+(0.0-2.0)*(prodf(13)-prodb(13))+(2.0-0.0)*(prodf(14)-prodb(14)))
+    omegadot(5)=Wm_tab(5)*(+(1.0-0.0)*(prodf(3)-prodb(3))+(0.0-1.0)*(prodf(4)-prodb(4))+(0.0-1.0)*(prodf(7)-prodb(7))+(1.0-0.0)*(prodf(8)-prodb(8))+(1.0-0.0)*(prodf(9)-prodb(9))+(0.0-1.0)*(prodf(10)-prodb(10)))
+    omegadot(6)=Wm_tab(6)*(+(2.0-0.0)*(prodf(1)-prodb(1))+(0.0-2.0)*(prodf(2)-prodb(2))+(1.0-0.0)*(prodf(3)-prodb(3))+(0.0-1.0)*(prodf(4)-prodb(4))+(0.0-1.0)*(prodf(5)-prodb(5))+(1.0-0.0)*(prodf(6)-prodb(6))+(1.0-0.0)*(prodf(7)-prodb(7))+(0.0-1.0)*(prodf(8)-prodb(8))+(0.0-2.0)*(prodf(9)-prodb(9))+(2.0-0.0)*(prodf(10)-prodb(10))+(0.0-1.0)*(prodf(11)-prodb(11))+(1.0-0.0)*(prodf(12)-prodb(12)))
+    omegadot(7)=0.d0
+  end subroutine onera7_m
+
+  subroutine onera7_jac_m(roi, temp, dwdr, dwdT)
+    !$acc routine seq
+    implicit none
+    real(8), intent(in)  :: roi(ns), temp
+    real(8), intent(out) :: dwdr(NSCHEM,ns)
+    real(8), intent(out) :: dwdT(ns)
+    real(8) :: coi(NSCHEM), Tdiff
+    integer :: T_i, j
+    real(8) :: kf_r(14), kb_r(14)
+    real(8) :: dkf_dT(14), dkb_dT(14)
+    real(8) :: M, dM_dc(NSCHEM)
+    real(8) :: dRf_dc(NSCHEM), dRb_dc(NSCHEM), dnet_dc(NSCHEM)
+    real(8) :: dRf_dT_r, dRb_dT_r, dnet_dT_r
+    real(8) :: dwdr_c(NSCHEM,NSCHEM)
+    real(8), parameter :: epsM(7) = [1.d0, 12.d0, 2.5d0, 1.d0, 1.d0, 1.d0, 1.d0]
+
+    do j = 1, ns
+      coi(j) = roi(j)/Wm_tab(j)
+    enddo
+    T_i   = int(temp)
+    Tdiff = temp - T_i
+
+    do j = 1, 14
+      kf_r(j)   =  kf_tab(T_i  ,j) + Tdiff*(kf_tab(T_i+1,j) - kf_tab(T_i,j))
+      kb_r(j)   =  kb_tab(T_i  ,j) + Tdiff*(kb_tab(T_i+1,j) - kb_tab(T_i,j))
+      dkf_dT(j) =  kf_tab(T_i+1,j) - kf_tab(T_i,j)
+      dkb_dT(j) =  kb_tab(T_i+1,j) - kb_tab(T_i,j)
+    enddo
+
+    M = coi(1) + 12.d0*coi(2) + 2.5d0*coi(3) + coi(4) + coi(5) + coi(6) + coi(7)
+    dM_dc(:) = epsM(:)
+
+    dwdr_c = 0.d0
+    dwdT   = 0.d0
+
+    ! ---- reac 1: H2(3) + O2(1) => 2 OH(6)
+    dRf_dc = 0.d0; dRb_dc = 0.d0
+    dRf_dc(1) = kf_r(1)*coi(3);   dRf_dc(3) = kf_r(1)*coi(1)
+    dRb_dc(6) = 2.d0*kb_r(1)*coi(6)
+    dRf_dT_r = dkf_dT(1)*coi(3)*coi(1)
+    dRb_dT_r = dkb_dT(1)*coi(6)*coi(6)
+    dnet_dc = dRf_dc - dRb_dc;  dnet_dT_r = dRf_dT_r - dRb_dT_r
+    dwdr_c(1,:) = dwdr_c(1,:) -      Wm_tab(1)*dnet_dc
+    dwdr_c(3,:) = dwdr_c(3,:) -      Wm_tab(3)*dnet_dc
+    dwdr_c(6,:) = dwdr_c(6,:) + 2.d0*Wm_tab(6)*dnet_dc
+    dwdT(1) = dwdT(1) -      Wm_tab(1)*dnet_dT_r
+    dwdT(3) = dwdT(3) -      Wm_tab(3)*dnet_dT_r
+    dwdT(6) = dwdT(6) + 2.d0*Wm_tab(6)*dnet_dT_r
+
+    ! ---- reac 2: 2 OH => H2 + O2
+    dRf_dc = 0.d0; dRb_dc = 0.d0
+    dRf_dc(6) = 2.d0*kf_r(2)*coi(6)
+    dRb_dc(1) = kb_r(2)*coi(3);   dRb_dc(3) = kb_r(2)*coi(1)
+    dRf_dT_r = dkf_dT(2)*coi(6)*coi(6)
+    dRb_dT_r = dkb_dT(2)*coi(3)*coi(1)
+    dnet_dc = dRf_dc - dRb_dc;  dnet_dT_r = dRf_dT_r - dRb_dT_r
+    dwdr_c(1,:) = dwdr_c(1,:) +      Wm_tab(1)*dnet_dc
+    dwdr_c(3,:) = dwdr_c(3,:) +      Wm_tab(3)*dnet_dc
+    dwdr_c(6,:) = dwdr_c(6,:) - 2.d0*Wm_tab(6)*dnet_dc
+    dwdT(1) = dwdT(1) +      Wm_tab(1)*dnet_dT_r
+    dwdT(3) = dwdT(3) +      Wm_tab(3)*dnet_dT_r
+    dwdT(6) = dwdT(6) - 2.d0*Wm_tab(6)*dnet_dT_r
+
+    ! ---- reac 3: H(4) + O2(1) => O(5) + OH(6)
+    dRf_dc = 0.d0; dRb_dc = 0.d0
+    dRf_dc(1) = kf_r(3)*coi(4);   dRf_dc(4) = kf_r(3)*coi(1)
+    dRb_dc(5) = kb_r(3)*coi(6);   dRb_dc(6) = kb_r(3)*coi(5)
+    dRf_dT_r = dkf_dT(3)*coi(4)*coi(1)
+    dRb_dT_r = dkb_dT(3)*coi(5)*coi(6)
+    dnet_dc = dRf_dc - dRb_dc;  dnet_dT_r = dRf_dT_r - dRb_dT_r
+    dwdr_c(1,:) = dwdr_c(1,:) - Wm_tab(1)*dnet_dc
+    dwdr_c(4,:) = dwdr_c(4,:) - Wm_tab(4)*dnet_dc
+    dwdr_c(5,:) = dwdr_c(5,:) + Wm_tab(5)*dnet_dc
+    dwdr_c(6,:) = dwdr_c(6,:) + Wm_tab(6)*dnet_dc
+    dwdT(1) = dwdT(1) - Wm_tab(1)*dnet_dT_r
+    dwdT(4) = dwdT(4) - Wm_tab(4)*dnet_dT_r
+    dwdT(5) = dwdT(5) + Wm_tab(5)*dnet_dT_r
+    dwdT(6) = dwdT(6) + Wm_tab(6)*dnet_dT_r
+
+    ! ---- reac 4: O(5) + OH(6) => H(4) + O2(1)
+    dRf_dc = 0.d0; dRb_dc = 0.d0
+    dRf_dc(5) = kf_r(4)*coi(6);   dRf_dc(6) = kf_r(4)*coi(5)
+    dRb_dc(1) = kb_r(4)*coi(4);   dRb_dc(4) = kb_r(4)*coi(1)
+    dRf_dT_r = dkf_dT(4)*coi(5)*coi(6)
+    dRb_dT_r = dkb_dT(4)*coi(4)*coi(1)
+    dnet_dc = dRf_dc - dRb_dc;  dnet_dT_r = dRf_dT_r - dRb_dT_r
+    dwdr_c(1,:) = dwdr_c(1,:) + Wm_tab(1)*dnet_dc
+    dwdr_c(4,:) = dwdr_c(4,:) + Wm_tab(4)*dnet_dc
+    dwdr_c(5,:) = dwdr_c(5,:) - Wm_tab(5)*dnet_dc
+    dwdr_c(6,:) = dwdr_c(6,:) - Wm_tab(6)*dnet_dc
+    dwdT(1) = dwdT(1) + Wm_tab(1)*dnet_dT_r
+    dwdT(4) = dwdT(4) + Wm_tab(4)*dnet_dT_r
+    dwdT(5) = dwdT(5) - Wm_tab(5)*dnet_dT_r
+    dwdT(6) = dwdT(6) - Wm_tab(6)*dnet_dT_r
+
+    ! ---- reac 5: H2(3) + OH(6) => H(4) + H2O(2)
+    dRf_dc = 0.d0; dRb_dc = 0.d0
+    dRf_dc(3) = kf_r(5)*coi(6);   dRf_dc(6) = kf_r(5)*coi(3)
+    dRb_dc(2) = kb_r(5)*coi(4);   dRb_dc(4) = kb_r(5)*coi(2)
+    dRf_dT_r = dkf_dT(5)*coi(3)*coi(6)
+    dRb_dT_r = dkb_dT(5)*coi(4)*coi(2)
+    dnet_dc = dRf_dc - dRb_dc;  dnet_dT_r = dRf_dT_r - dRb_dT_r
+    dwdr_c(2,:) = dwdr_c(2,:) + Wm_tab(2)*dnet_dc
+    dwdr_c(3,:) = dwdr_c(3,:) - Wm_tab(3)*dnet_dc
+    dwdr_c(4,:) = dwdr_c(4,:) + Wm_tab(4)*dnet_dc
+    dwdr_c(6,:) = dwdr_c(6,:) - Wm_tab(6)*dnet_dc
+    dwdT(2) = dwdT(2) + Wm_tab(2)*dnet_dT_r
+    dwdT(3) = dwdT(3) - Wm_tab(3)*dnet_dT_r
+    dwdT(4) = dwdT(4) + Wm_tab(4)*dnet_dT_r
+    dwdT(6) = dwdT(6) - Wm_tab(6)*dnet_dT_r
+
+    ! ---- reac 6: H(4) + H2O(2) => H2(3) + OH(6)
+    dRf_dc = 0.d0; dRb_dc = 0.d0
+    dRf_dc(2) = kf_r(6)*coi(4);   dRf_dc(4) = kf_r(6)*coi(2)
+    dRb_dc(3) = kb_r(6)*coi(6);   dRb_dc(6) = kb_r(6)*coi(3)
+    dRf_dT_r = dkf_dT(6)*coi(4)*coi(2)
+    dRb_dT_r = dkb_dT(6)*coi(3)*coi(6)
+    dnet_dc = dRf_dc - dRb_dc;  dnet_dT_r = dRf_dT_r - dRb_dT_r
+    dwdr_c(2,:) = dwdr_c(2,:) - Wm_tab(2)*dnet_dc
+    dwdr_c(3,:) = dwdr_c(3,:) + Wm_tab(3)*dnet_dc
+    dwdr_c(4,:) = dwdr_c(4,:) - Wm_tab(4)*dnet_dc
+    dwdr_c(6,:) = dwdr_c(6,:) + Wm_tab(6)*dnet_dc
+    dwdT(2) = dwdT(2) - Wm_tab(2)*dnet_dT_r
+    dwdT(3) = dwdT(3) + Wm_tab(3)*dnet_dT_r
+    dwdT(4) = dwdT(4) - Wm_tab(4)*dnet_dT_r
+    dwdT(6) = dwdT(6) + Wm_tab(6)*dnet_dT_r
+
+    ! ---- reac 7: H2(3) + O(5) => H(4) + OH(6)
+    dRf_dc = 0.d0; dRb_dc = 0.d0
+    dRf_dc(3) = kf_r(7)*coi(5);   dRf_dc(5) = kf_r(7)*coi(3)
+    dRb_dc(4) = kb_r(7)*coi(6);   dRb_dc(6) = kb_r(7)*coi(4)
+    dRf_dT_r = dkf_dT(7)*coi(3)*coi(5)
+    dRb_dT_r = dkb_dT(7)*coi(4)*coi(6)
+    dnet_dc = dRf_dc - dRb_dc;  dnet_dT_r = dRf_dT_r - dRb_dT_r
+    dwdr_c(3,:) = dwdr_c(3,:) - Wm_tab(3)*dnet_dc
+    dwdr_c(4,:) = dwdr_c(4,:) + Wm_tab(4)*dnet_dc
+    dwdr_c(5,:) = dwdr_c(5,:) - Wm_tab(5)*dnet_dc
+    dwdr_c(6,:) = dwdr_c(6,:) + Wm_tab(6)*dnet_dc
+    dwdT(3) = dwdT(3) - Wm_tab(3)*dnet_dT_r
+    dwdT(4) = dwdT(4) + Wm_tab(4)*dnet_dT_r
+    dwdT(5) = dwdT(5) - Wm_tab(5)*dnet_dT_r
+    dwdT(6) = dwdT(6) + Wm_tab(6)*dnet_dT_r
+
+    ! ---- reac 8: H(4) + OH(6) => H2(3) + O(5)
+    dRf_dc = 0.d0; dRb_dc = 0.d0
+    dRf_dc(4) = kf_r(8)*coi(6);   dRf_dc(6) = kf_r(8)*coi(4)
+    dRb_dc(3) = kb_r(8)*coi(5);   dRb_dc(5) = kb_r(8)*coi(3)
+    dRf_dT_r = dkf_dT(8)*coi(4)*coi(6)
+    dRb_dT_r = dkb_dT(8)*coi(3)*coi(5)
+    dnet_dc = dRf_dc - dRb_dc;  dnet_dT_r = dRf_dT_r - dRb_dT_r
+    dwdr_c(3,:) = dwdr_c(3,:) + Wm_tab(3)*dnet_dc
+    dwdr_c(4,:) = dwdr_c(4,:) - Wm_tab(4)*dnet_dc
+    dwdr_c(5,:) = dwdr_c(5,:) + Wm_tab(5)*dnet_dc
+    dwdr_c(6,:) = dwdr_c(6,:) - Wm_tab(6)*dnet_dc
+    dwdT(3) = dwdT(3) + Wm_tab(3)*dnet_dT_r
+    dwdT(4) = dwdT(4) - Wm_tab(4)*dnet_dT_r
+    dwdT(5) = dwdT(5) + Wm_tab(5)*dnet_dT_r
+    dwdT(6) = dwdT(6) - Wm_tab(6)*dnet_dT_r
+
+    ! ---- reac 9: 2 OH(6) => H2O(2) + O(5)
+    dRf_dc = 0.d0; dRb_dc = 0.d0
+    dRf_dc(6) = 2.d0*kf_r(9)*coi(6)
+    dRb_dc(2) = kb_r(9)*coi(5);   dRb_dc(5) = kb_r(9)*coi(2)
+    dRf_dT_r = dkf_dT(9)*coi(6)*coi(6)
+    dRb_dT_r = dkb_dT(9)*coi(2)*coi(5)
+    dnet_dc = dRf_dc - dRb_dc;  dnet_dT_r = dRf_dT_r - dRb_dT_r
+    dwdr_c(2,:) = dwdr_c(2,:) +      Wm_tab(2)*dnet_dc
+    dwdr_c(5,:) = dwdr_c(5,:) +      Wm_tab(5)*dnet_dc
+    dwdr_c(6,:) = dwdr_c(6,:) - 2.d0*Wm_tab(6)*dnet_dc
+    dwdT(2) = dwdT(2) +      Wm_tab(2)*dnet_dT_r
+    dwdT(5) = dwdT(5) +      Wm_tab(5)*dnet_dT_r
+    dwdT(6) = dwdT(6) - 2.d0*Wm_tab(6)*dnet_dT_r
+
+    ! ---- reac 10: H2O(2) + O(5) => 2 OH(6)
+    dRf_dc = 0.d0; dRb_dc = 0.d0
+    dRf_dc(2) = kf_r(10)*coi(5);  dRf_dc(5) = kf_r(10)*coi(2)
+    dRb_dc(6) = 2.d0*kb_r(10)*coi(6)
+    dRf_dT_r = dkf_dT(10)*coi(2)*coi(5)
+    dRb_dT_r = dkb_dT(10)*coi(6)*coi(6)
+    dnet_dc = dRf_dc - dRb_dc;  dnet_dT_r = dRf_dT_r - dRb_dT_r
+    dwdr_c(2,:) = dwdr_c(2,:) -      Wm_tab(2)*dnet_dc
+    dwdr_c(5,:) = dwdr_c(5,:) -      Wm_tab(5)*dnet_dc
+    dwdr_c(6,:) = dwdr_c(6,:) + 2.d0*Wm_tab(6)*dnet_dc
+    dwdT(2) = dwdT(2) -      Wm_tab(2)*dnet_dT_r
+    dwdT(5) = dwdT(5) -      Wm_tab(5)*dnet_dT_r
+    dwdT(6) = dwdT(6) + 2.d0*Wm_tab(6)*dnet_dT_r
+
+    ! ---- reac 11: H(4) + OH(6) + M => H2O(2) + M
+    dRf_dc(:) = kf_r(11)*coi(4)*coi(6)*dM_dc(:)
+    dRf_dc(4) = dRf_dc(4) + kf_r(11)*coi(6)*M
+    dRf_dc(6) = dRf_dc(6) + kf_r(11)*coi(4)*M
+    dRb_dc(:) = kb_r(11)*coi(2)*dM_dc(:)
+    dRb_dc(2) = dRb_dc(2) + kb_r(11)*M
+    dRf_dT_r = dkf_dT(11)*coi(4)*coi(6)*M
+    dRb_dT_r = dkb_dT(11)*coi(2)*M
+    dnet_dc = dRf_dc - dRb_dc;  dnet_dT_r = dRf_dT_r - dRb_dT_r
+    dwdr_c(2,:) = dwdr_c(2,:) + Wm_tab(2)*dnet_dc
+    dwdr_c(4,:) = dwdr_c(4,:) - Wm_tab(4)*dnet_dc
+    dwdr_c(6,:) = dwdr_c(6,:) - Wm_tab(6)*dnet_dc
+    dwdT(2) = dwdT(2) + Wm_tab(2)*dnet_dT_r
+    dwdT(4) = dwdT(4) - Wm_tab(4)*dnet_dT_r
+    dwdT(6) = dwdT(6) - Wm_tab(6)*dnet_dT_r
+
+    ! ---- reac 12: H2O(2) + M => H(4) + OH(6) + M
+    dRf_dc(:) = kf_r(12)*coi(2)*dM_dc(:)
+    dRf_dc(2) = dRf_dc(2) + kf_r(12)*M
+    dRb_dc(:) = kb_r(12)*coi(4)*coi(6)*dM_dc(:)
+    dRb_dc(4) = dRb_dc(4) + kb_r(12)*coi(6)*M
+    dRb_dc(6) = dRb_dc(6) + kb_r(12)*coi(4)*M
+    dRf_dT_r = dkf_dT(12)*coi(2)*M
+    dRb_dT_r = dkb_dT(12)*coi(4)*coi(6)*M
+    dnet_dc = dRf_dc - dRb_dc;  dnet_dT_r = dRf_dT_r - dRb_dT_r
+    dwdr_c(2,:) = dwdr_c(2,:) - Wm_tab(2)*dnet_dc
+    dwdr_c(4,:) = dwdr_c(4,:) + Wm_tab(4)*dnet_dc
+    dwdr_c(6,:) = dwdr_c(6,:) + Wm_tab(6)*dnet_dc
+    dwdT(2) = dwdT(2) - Wm_tab(2)*dnet_dT_r
+    dwdT(4) = dwdT(4) + Wm_tab(4)*dnet_dT_r
+    dwdT(6) = dwdT(6) + Wm_tab(6)*dnet_dT_r
+
+    ! ---- reac 13: 2 H(4) + M => H2(3) + M
+    dRf_dc(:) = kf_r(13)*coi(4)*coi(4)*dM_dc(:)
+    dRf_dc(4) = dRf_dc(4) + 2.d0*kf_r(13)*coi(4)*M
+    dRb_dc(:) = kb_r(13)*coi(3)*dM_dc(:)
+    dRb_dc(3) = dRb_dc(3) + kb_r(13)*M
+    dRf_dT_r = dkf_dT(13)*coi(4)*coi(4)*M
+    dRb_dT_r = dkb_dT(13)*coi(3)*M
+    dnet_dc = dRf_dc - dRb_dc;  dnet_dT_r = dRf_dT_r - dRb_dT_r
+    dwdr_c(3,:) = dwdr_c(3,:) +      Wm_tab(3)*dnet_dc
+    dwdr_c(4,:) = dwdr_c(4,:) - 2.d0*Wm_tab(4)*dnet_dc
+    dwdT(3) = dwdT(3) +      Wm_tab(3)*dnet_dT_r
+    dwdT(4) = dwdT(4) - 2.d0*Wm_tab(4)*dnet_dT_r
+
+    ! ---- reac 14: H2(3) + M => 2 H(4) + M
+    dRf_dc(:) = kf_r(14)*coi(3)*dM_dc(:)
+    dRf_dc(3) = dRf_dc(3) + kf_r(14)*M
+    dRb_dc(:) = kb_r(14)*coi(4)*coi(4)*dM_dc(:)
+    dRb_dc(4) = dRb_dc(4) + 2.d0*kb_r(14)*coi(4)*M
+    dRf_dT_r = dkf_dT(14)*coi(3)*M
+    dRb_dT_r = dkb_dT(14)*coi(4)*coi(4)*M
+    dnet_dc = dRf_dc - dRb_dc;  dnet_dT_r = dRf_dT_r - dRb_dT_r
+    dwdr_c(3,:) = dwdr_c(3,:) -      Wm_tab(3)*dnet_dc
+    dwdr_c(4,:) = dwdr_c(4,:) + 2.d0*Wm_tab(4)*dnet_dc
+    dwdT(3) = dwdT(3) -      Wm_tab(3)*dnet_dT_r
+    dwdT(4) = dwdT(4) + 2.d0*Wm_tab(4)*dnet_dT_r
+
+    do j = 1, ns
+      dwdr(:,j) = dwdr_c(:,j) / Wm_tab(j)
+    enddo
+  end subroutine onera7_jac_m
+
+  subroutine rhs_m ( nz, time, Z, F )
+    !$acc routine seq
+    implicit none
+    integer, intent(in)  :: nz
+    real(8), intent(in)  :: time
+    real(8), intent(in)  :: Z(nz)
+    real(8), intent(out) :: F(nz)
+    real(8) :: roi(NSCHEM)
+    real(8) :: T, T_frac
+    real(8) :: droic(NSCHEM)
+    real(8) :: eiroi,rho_cv
+    integer :: s, T_idx
+    real(8) :: h_val, cp_val
+
+    T = Z(nz)
+
+    if (T < Tmin .or. T >= Tmax .or. ieee_is_nan(T)) then
+       F(:) = -1.0d0
+       return
+    end if
+
+    T_idx  = idint(T)
+    T_frac = T - dble(T_idx)
+
+    roi(1:ns) = max(Z(1:ns), 0.d0)
+
+    if (mech_dev == 2) then
+      call frolov_m ( roi, T, droic )
+    else
+      call onera7_m ( roi, T, droic )
+    end if
+
+    eiroi = 0.d0; rho_cv = 0.d0
+    do s = 1, ns
+        h_val  = h_tab(T_idx, s) + T_frac * (h_tab(T_idx+1, s) - h_tab(T_idx, s))
+        cp_val = cp_tab(T_idx, s) + T_frac * (cp_tab(T_idx+1, s) - cp_tab(T_idx, s))
+
+        eiroi  = eiroi + (h_val - Ri_tab(s) * T) * droic(s)
+        rho_cv = rho_cv + roi(s) * (cp_val - Ri_tab(s))
+    end do
+
+    F(1:ns) = droic(1:ns)
+    F(nz) = -eiroi / rho_cv
+  end subroutine rhs_m
+
+  subroutine jac_m(nz, time, Z, DFY, LDFY, RPAR, IPAR)
+    !$acc routine seq
+    implicit none
+    integer, intent(in)  :: nz, LDFY
+    real(8), intent(in)  :: time
+    real(8), intent(in)  :: Z(nz)
+    real(8), intent(out) :: DFY(LDFY, nz)
+    real(8), intent(in)  :: RPAR(*)
+    integer, intent(in)  :: IPAR(*)
+    real(8) :: roi(NSCHEM), droic(NSCHEM)
+    real(8) :: dwdr(NSCHEM, NSCHEM), dwdT(NSCHEM)
+    real(8) :: h_vec(NSCHEM), cp_vec(NSCHEM), dh_dT(NSCHEM), dcp_dT(NSCHEM)
+    real(8) :: T, T_frac
+    integer :: T_idx, s, j
+    real(8) :: G, D, inv_D, F_T
+    real(8) :: dG_drho_j, dD_drho_j, dG_dT, dD_dT
+
+    T = Z(nz)
+
+    if (T < Tmin .or. T >= Tmax .or. ieee_is_nan(T)) then
+      DFY(1:nz, 1:nz) = 0.d0
+      return
+    end if
+
+    T_idx  = idint(T)
+    T_frac = T - dble(T_idx)
+    roi(1:ns) = max(Z(1:ns), 0.d0)
+
+    if (mech_dev == 2) then
+      call frolov_m     ( roi, T, droic )
+      call frolov_jac_m ( roi, T, dwdr, dwdT )
+    else
+      call onera7_m     ( roi, T, droic )
+      call onera7_jac_m ( roi, T, dwdr, dwdT )
+    end if
+
+    do s = 1, ns
+      h_vec(s)      = h_tab(T_idx,s)  + T_frac * (h_tab(T_idx+1,s)  - h_tab(T_idx,s))
+      cp_vec(s)     = cp_tab(T_idx,s) + T_frac * (cp_tab(T_idx+1,s) - cp_tab(T_idx,s))
+      dh_dT(s)  = h_tab(T_idx+1,s)  - h_tab(T_idx,s)
+      dcp_dT(s) = cp_tab(T_idx+1,s) - cp_tab(T_idx,s)
+    end do
+
+    G = 0.d0
+    D = 0.d0
+    do s = 1, ns
+      G = G + (h_vec(s) - Ri_tab(s) * T) * droic(s)
+      D = D + roi(s) * (cp_vec(s) - Ri_tab(s))
+    end do
+    inv_D = 1.d0 / D
+    F_T   = -G * inv_D
+
+    do j = 1, ns
+      DFY(1:ns, j) = dwdr(1:ns, j)
+    end do
+    DFY(1:ns, nz) = dwdT(1:ns)
+
+    do j = 1, ns
+      dG_drho_j = 0.d0
+      do s = 1, ns
+        dG_drho_j = dG_drho_j + (h_vec(s) - Ri_tab(s) * T) * dwdr(s, j)
+      end do
+      dD_drho_j = cp_vec(j) - Ri_tab(j)
+      DFY(nz, j) = -inv_D * dG_drho_j - F_T * inv_D * dD_drho_j
+    end do
+
+    dG_dT = 0.d0
+    dD_dT = 0.d0
+    do s = 1, ns
+      dG_dT = dG_dT + (h_vec(s) - Ri_tab(s) * T) * dwdT(s) &
+                    + (dh_dT(s) - Ri_tab(s))    * droic(s)
+      dD_dT = dD_dT + roi(s) * dcp_dT(s)
+    end do
+    DFY(nz, nz) = -inv_D * dG_dT - F_T * inv_D * dD_dT
+
+  end subroutine jac_m
+# endif
 
 end module FLINT_Lib_Radau5_dev

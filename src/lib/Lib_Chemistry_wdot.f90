@@ -36,14 +36,14 @@ module FLINT_Lib_Chemistry_wdot
   abstract interface
   subroutine chemjac_if(roi,temp,dwdr,dwdT)
     use FLINT_Lib_Thermodynamic
-    use FLINT_Lib_Chemistry_data, only: NSMAX
+    use FLINT_Lib_Chemistry_data, only: NSCHEM
     implicit none
     real(8), intent(in)  :: roi(ns), temp
-    ! dwdr carries a fixed leading dimension NSMAX (not ns) so the column
+    ! dwdr carries a fixed leading dimension NSCHEM (not ns) so the column
     ! stride agrees with the caller's fixed-size array (jac_native): with
     ! sequence association the leading extent must match on both sides, else
     ! columns misalign. Only the (1:ns,1:ns) block is written/read.
-    real(8), intent(out) :: dwdr(NSMAX,ns)
+    real(8), intent(out) :: dwdr(NSCHEM,ns)
     real(8), intent(out) :: dwdT(ns)
   end subroutine chemjac_if
   end interface

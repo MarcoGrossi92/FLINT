@@ -29,16 +29,16 @@ contains
   subroutine rhs_native ( nz, time, Z, F )
     !$acc routine seq
     use FLINT_Lib_Thermodynamic
-    use FLINT_Lib_Chemistry_data, only: NSMAX
+    use FLINT_Lib_Chemistry_data, only: NSCHEM
     implicit none
     integer, intent(in)  :: nz
     real(8), intent(in)  :: time
     real(8), intent(in)  :: Z(nz)
     real(8), intent(out) :: F(nz)
     ! Local (fixed-size: no device-heap malloc; only 1:ns used)
-    real(8) :: roi(NSMAX)
+    real(8) :: roi(NSCHEM)
     real(8) :: T, T_frac
-    real(8) :: droic(NSMAX)
+    real(8) :: droic(NSCHEM)
     real(8) :: eiroi,rho_cv
     integer :: s, T_idx
     real(8) :: h_val, cp_val
@@ -97,7 +97,7 @@ contains
   subroutine jac_native(nz, time, Z, DFY, LDFY, RPAR, IPAR)
     !$acc routine seq
     use FLINT_Lib_Thermodynamic
-    use FLINT_Lib_Chemistry_data, only: NSMAX
+    use FLINT_Lib_Chemistry_data, only: NSCHEM
     implicit none
     integer, intent(in)  :: nz, LDFY
     real(8), intent(in)  :: time
@@ -106,12 +106,12 @@ contains
     real(8), intent(in)  :: RPAR(*)
     integer, intent(in)  :: IPAR(*)
     ! Local (fixed-size: no device-heap malloc; only 1:ns used). dwdr carries
-    ! a fixed leading dimension NSMAX so its column stride matches the
+    ! a fixed leading dimension NSCHEM so its column stride matches the
     ! mechanism-jacobian dummy (chemjac_if) — sequence association requires
     ! caller and callee to agree on the leading extent, not just on ns.
-    real(8) :: roi(NSMAX), droic(NSMAX)
-    real(8) :: dwdr(NSMAX, NSMAX), dwdT(NSMAX)
-    real(8) :: h_vec(NSMAX), cp_vec(NSMAX), dh_dT(NSMAX), dcp_dT(NSMAX)
+    real(8) :: roi(NSCHEM), droic(NSCHEM)
+    real(8) :: dwdr(NSCHEM, NSCHEM), dwdT(NSCHEM)
+    real(8) :: h_vec(NSCHEM), cp_vec(NSCHEM), dh_dT(NSCHEM), dcp_dT(NSCHEM)
     real(8) :: T, T_frac
     integer :: T_idx, s, j
     real(8) :: G, D, inv_D, F_T

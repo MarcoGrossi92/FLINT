@@ -35,7 +35,7 @@ contains
     real(8), intent(in)    :: temp
     real(8), intent(out)   :: omegadot(ns)
     ! Local (fixed-size: device builds avoid per-call heap malloc; 1:ns used)
-    real(8) :: coi(NSMAX), Tdiff
+    real(8) :: coi(NSCHEM), Tdiff
     integer :: is, T_i, Tint(2)
     real(8) :: kf, kb, net_rate
 
@@ -79,16 +79,16 @@ contains
     use FLINT_Lib_Chemistry_data
     implicit none
     real(8), intent(in)  :: roi(ns), temp
-    ! dwdr: fixed leading dimension NSMAX to match jac_native/chemjac_if storage
+    ! dwdr: fixed leading dimension NSCHEM to match jac_native/chemjac_if storage
     ! (sequence association). Only (1:ns,1:ns) written.
-    real(8), intent(out) :: dwdr(NSMAX, ns)
+    real(8), intent(out) :: dwdr(NSCHEM, ns)
     real(8), intent(out) :: dwdT(ns)
-    ! Local (fixed-size NSMAX: no device-heap malloc; sliced 1:ns throughout)
-    real(8) :: coi(NSMAX), Tdiff
+    ! Local (fixed-size NSCHEM: no device-heap malloc; sliced 1:ns throughout)
+    real(8) :: coi(NSCHEM), Tdiff
     integer :: is, T_i, j
     real(8) :: kf, kb, dkf_dT, dkb_dT
-    real(8) :: dnet_dc(NSMAX), dnet_dT_r
-    real(8) :: dwdr_c(NSMAX, NSMAX)
+    real(8) :: dnet_dc(NSCHEM), dnet_dT_r
+    real(8) :: dwdr_c(NSCHEM, NSCHEM)
 
     do is = 1, ns
       coi(is) = roi(is) / Wm_tab(is)

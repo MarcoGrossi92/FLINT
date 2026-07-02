@@ -6,8 +6,18 @@ module FLINT_Lib_Chemistry_data
   !> per-thread per-call device-heap malloc through a serializing allocator.
   !> Sized for the mechanisms allowed on the device (mech_dev guard):
   !> ONERA-7 (ns=7) is the largest. Bump if a bigger device mechanism is added.
-  integer, parameter, public :: NSMAX = 7        !> max species on the device path
-  integer, parameter, public :: NZMAX = NSMAX+1  !> max ODE system size (ns+1)
+  !> DECOUPLED device-path array sizing. The species count is a thermo/composition
+  !> property INDEPENDENT of the reacting mechanism: a FROZEN run carries species but
+  !> no mechanism and may have MORE species than any device mechanism.
+  !>   NSMAX  = max species on the device THERMO/transport path (frozen-capable; bound
+  !>            by the MOSE device cap NPRIM_DEV). Sizes coi/cpi/Wilke-fi. Bump for a
+  !>            frozen case with more species (independent of any mechanism).
+  !>   NSCHEM = max species of a device-supported reacting MECHANISM (ONERA-7=7 largest).
+  !>            Sizes the chemistry rhs/jac + the radau5 ODE solver ONLY (reactive runs);
+  !>            kept tight for per-thread memory. Bump only when a bigger mech is added.
+  integer, parameter, public :: NSMAX  = 8
+  integer, parameter, public :: NSCHEM = 7
+  integer, parameter, public :: NZMAX  = NSCHEM+1  !> max ODE system size = mech species + 1
 
   integer                              :: nrc
   integer, dimension(:), allocatable   :: rxn_type ! 0 -> Arrhenius, 1 -> Troe, 2 -> Lindemann

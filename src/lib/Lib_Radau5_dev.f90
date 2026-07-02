@@ -120,6 +120,12 @@ contains
                                        cp_tab, dcpi_tab, h_tab, mi_tab, k_tab, &
                                        Mi_Mj_pow_m025, inv_sqrt8_1p
     implicit none
+#   if defined (MOSE_TT_NS)
+    ! MOSE_TT_CT: the device thermo/transport helpers (Lib_ThermoTransport_dev) are
+    ! specialized to a compile-time species count -- refuse any other mechanism size.
+    if (ns /= MOSE_TT_NS) &
+      error stop 'MOSE_TT_CT: FLINT ns /= MOSE_TT_NS (rebuild with matching MOSE_NSC)'
+#   endif
 #   if defined (_OPENACC)
     !$acc update device(ns, Tmin, Tmax)
     !$acc update device(wm_tab, Ri_tab, cp_tab, dcpi_tab, h_tab)

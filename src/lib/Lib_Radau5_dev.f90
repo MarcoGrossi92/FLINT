@@ -177,6 +177,20 @@ contains
 #   define RD5_RHS rhs_native
 #   define RD5_JAC jac_native
 # endif
+
+! MOSE_CHEM_NS: compile-time SPECIES trip counts inside the inlined _m chain.
+! MOSE_CHEM_CT stopped at the integrator driver (n); the _m mechanism/rhs/jac
+! bodies still looped over the runtime module `ns`, which nvfortran cannot
+! unroll/register-promote. Under the flag, ns == MOSE_CHEM_NZ-1 (the launcher
+! and upload guards already error-stop on any mismatch) becomes a literal.
+! Pure trip-count specialization, executable statements untouched -> bit-exact.
+# if defined (MOSE_CHEM_NZ) && defined (MOSE_CHEM_NS)
+#   define RD5_NS (MOSE_CHEM_NZ-1)
+#   define RD5_NZ MOSE_CHEM_NZ
+# else
+#   define RD5_NS ns
+#   define RD5_NZ nz
+# endif
   subroutine radau5_dev(n_in, x_in, y, xend, rtol_in, atol_in, &
 # if defined (MOSE_CHEM_NZ)
                         fnewt_in, &
@@ -887,14 +901,14 @@ contains
   subroutine frolov_m(roi, temp, omegadot)
     !$acc routine seq
     implicit none
-    real(8), intent(inout) :: roi(ns)
+    real(8), intent(inout) :: roi(RD5_NS)
     real(8), intent(in)    :: temp
-    real(8), intent(out)   :: omegadot(ns)
+    real(8), intent(out)   :: omegadot(RD5_NS)
     real(8) :: coi(NSCHEM), Tdiff
     integer :: is, T_i, Tint(2)
     real(8) :: kf, kb, net_rate
 
-    do is = 1, ns
+    do is = 1, RD5_NS
       coi(is) = roi(is) / Wm_tab(is)   ! kmol/m^3
     end do
 
@@ -918,16 +932,16 @@ contains
   subroutine frolov_jac_m(roi, temp, dwdr, dwdT)
     !$acc routine seq
     implicit none
-    real(8), intent(in)  :: roi(ns), temp
-    real(8), intent(out) :: dwdr(NSCHEM, ns)
-    real(8), intent(out) :: dwdT(ns)
+    real(8), intent(in)  :: roi(RD5_NS), temp
+    real(8), intent(out) :: dwdr(NSCHEM, RD5_NS)
+    real(8), intent(out) :: dwdT(RD5_NS)
     real(8) :: coi(NSCHEM), Tdiff
     integer :: is, T_i, j
     real(8) :: kf, kb, dkf_dT, dkb_dT
     real(8) :: dnet_dc(NSCHEM), dnet_dT_r
     real(8) :: dwdr_c(NSCHEM, NSCHEM)
 
-    do is = 1, ns
+    do is = 1, RD5_NS
       coi(is) = roi(is) / Wm_tab(is)
     end do
 
@@ -939,40 +953,40 @@ contains
     dkf_dT = kf_tab(T_i+1, 1) - kf_tab(T_i, 1)
     dkb_dT = kb_tab(T_i+1, 1) - kb_tab(T_i, 1)
 
-    dnet_dc(1:ns) = 0.d0
+    dnet_dc(1:RD5_NS) = 0.d0
     dnet_dc(1) =          kf * coi(3) * coi(3)
     dnet_dc(2) = -2.d0 *  kb * coi(2)
     dnet_dc(3) =  2.d0 *  kf * coi(3) * coi(1)
     dnet_dT_r  = dkf_dT * coi(3) * coi(3) * coi(1) &
                - dkb_dT * coi(2) * coi(2)
 
-    dwdr_c(1:ns,1:ns) = 0.d0
-    dwdr_c(1, 1:ns) = -      Wm_tab(1) * dnet_dc(1:ns)
-    dwdr_c(2, 1:ns) =  2.d0 * Wm_tab(2) * dnet_dc(1:ns)
-    dwdr_c(3, 1:ns) = -2.d0 * Wm_tab(3) * dnet_dc(1:ns)
+    dwdr_c(1:RD5_NS,1:RD5_NS) = 0.d0
+    dwdr_c(1, 1:RD5_NS) = -      Wm_tab(1) * dnet_dc(1:RD5_NS)
+    dwdr_c(2, 1:RD5_NS) =  2.d0 * Wm_tab(2) * dnet_dc(1:RD5_NS)
+    dwdr_c(3, 1:RD5_NS) = -2.d0 * Wm_tab(3) * dnet_dc(1:RD5_NS)
 
     dwdT(:) = 0.d0
     dwdT(1) = -      Wm_tab(1) * dnet_dT_r
     dwdT(2) =  2.d0 * Wm_tab(2) * dnet_dT_r
     dwdT(3) = -2.d0 * Wm_tab(3) * dnet_dT_r
 
-    do j = 1, ns
-      dwdr(1:ns, j) = dwdr_c(1:ns, j) / Wm_tab(j)
+    do j = 1, RD5_NS
+      dwdr(1:RD5_NS, j) = dwdr_c(1:RD5_NS, j) / Wm_tab(j)
     end do
   end subroutine frolov_jac_m
 
   subroutine onera7_m(roi,temp,omegadot)
     !$acc routine seq
     implicit none
-    real(8), intent(inout)  :: roi(ns)
+    real(8), intent(inout)  :: roi(RD5_NS)
     real(8), intent(in)  :: temp
-    real(8), intent(out) :: omegadot(ns)
+    real(8), intent(out) :: omegadot(RD5_NS)
     real(8) :: coi(NSCHEM), Tdiff
     real(8) :: M
     integer :: is, T_i, Tint(2)
     real(8) :: prodf(1:14), prodb(1:14)
 
-    do is = 1, ns
+    do is = 1, RD5_NS
      coi(is)=roi(is)/Wm_tab(is) ! kmol/m^3
     enddo
     T_i = int(temp)
@@ -1038,9 +1052,9 @@ contains
   subroutine onera7_jac_m(roi, temp, dwdr, dwdT)
     !$acc routine seq
     implicit none
-    real(8), intent(in)  :: roi(ns), temp
-    real(8), intent(out) :: dwdr(NSCHEM,ns)
-    real(8), intent(out) :: dwdT(ns)
+    real(8), intent(in)  :: roi(RD5_NS), temp
+    real(8), intent(out) :: dwdr(NSCHEM,RD5_NS)
+    real(8), intent(out) :: dwdT(RD5_NS)
     real(8) :: coi(NSCHEM), Tdiff
     integer :: T_i, j
     real(8) :: kf_r(14), kb_r(14)
@@ -1051,7 +1065,7 @@ contains
     real(8) :: dwdr_c(NSCHEM,NSCHEM)
     real(8), parameter :: epsM(7) = [1.d0, 12.d0, 2.5d0, 1.d0, 1.d0, 1.d0, 1.d0]
 
-    do j = 1, ns
+    do j = 1, RD5_NS
       coi(j) = roi(j)/Wm_tab(j)
     enddo
     T_i   = int(temp)
@@ -1280,7 +1294,7 @@ contains
     dwdT(3) = dwdT(3) -      Wm_tab(3)*dnet_dT_r
     dwdT(4) = dwdT(4) + 2.d0*Wm_tab(4)*dnet_dT_r
 
-    do j = 1, ns
+    do j = 1, RD5_NS
       dwdr(:,j) = dwdr_c(:,j) / Wm_tab(j)
     enddo
   end subroutine onera7_jac_m
@@ -1290,8 +1304,8 @@ contains
     implicit none
     integer, intent(in)  :: nz
     real(8), intent(in)  :: time
-    real(8), intent(in)  :: Z(nz)
-    real(8), intent(out) :: F(nz)
+    real(8), intent(in)  :: Z(RD5_NZ)
+    real(8), intent(out) :: F(RD5_NZ)
     real(8) :: roi(NSCHEM)
     real(8) :: T, T_frac
     real(8) :: droic(NSCHEM)
@@ -1299,7 +1313,7 @@ contains
     integer :: s, T_idx
     real(8) :: h_val, cp_val
 
-    T = Z(nz)
+    T = Z(RD5_NZ)
 
     if (T < Tmin .or. T >= Tmax .or. ieee_is_nan(T)) then
        F(:) = -1.0d0
@@ -1309,7 +1323,7 @@ contains
     T_idx  = idint(T)
     T_frac = T - dble(T_idx)
 
-    roi(1:ns) = max(Z(1:ns), 0.d0)
+    roi(1:RD5_NS) = max(Z(1:RD5_NS), 0.d0)
 
     if (mech_dev == 2) then
       call frolov_m ( roi, T, droic )
@@ -1318,7 +1332,7 @@ contains
     end if
 
     eiroi = 0.d0; rho_cv = 0.d0
-    do s = 1, ns
+    do s = 1, RD5_NS
         h_val  = h_tab(T_idx, s) + T_frac * (h_tab(T_idx+1, s) - h_tab(T_idx, s))
         cp_val = cp_tab(T_idx, s) + T_frac * (cp_tab(T_idx+1, s) - cp_tab(T_idx, s))
 
@@ -1326,8 +1340,8 @@ contains
         rho_cv = rho_cv + roi(s) * (cp_val - Ri_tab(s))
     end do
 
-    F(1:ns) = droic(1:ns)
-    F(nz) = -eiroi / rho_cv
+    F(1:RD5_NS) = droic(1:RD5_NS)
+    F(RD5_NZ) = -eiroi / rho_cv
   end subroutine rhs_m
 
   subroutine jac_m(nz, time, Z, DFY, LDFY, RPAR, IPAR)
@@ -1335,8 +1349,8 @@ contains
     implicit none
     integer, intent(in)  :: nz, LDFY
     real(8), intent(in)  :: time
-    real(8), intent(in)  :: Z(nz)
-    real(8), intent(out) :: DFY(LDFY, nz)
+    real(8), intent(in)  :: Z(RD5_NZ)
+    real(8), intent(out) :: DFY(LDFY, RD5_NZ)
     real(8), intent(in)  :: RPAR(*)
     integer, intent(in)  :: IPAR(*)
     real(8) :: roi(NSCHEM), droic(NSCHEM)
@@ -1347,16 +1361,16 @@ contains
     real(8) :: G, D, inv_D, F_T
     real(8) :: dG_drho_j, dD_drho_j, dG_dT, dD_dT
 
-    T = Z(nz)
+    T = Z(RD5_NZ)
 
     if (T < Tmin .or. T >= Tmax .or. ieee_is_nan(T)) then
-      DFY(1:nz, 1:nz) = 0.d0
+      DFY(1:RD5_NZ, 1:RD5_NZ) = 0.d0
       return
     end if
 
     T_idx  = idint(T)
     T_frac = T - dble(T_idx)
-    roi(1:ns) = max(Z(1:ns), 0.d0)
+    roi(1:RD5_NS) = max(Z(1:RD5_NS), 0.d0)
 
     if (mech_dev == 2) then
       call frolov_m     ( roi, T, droic )
@@ -1366,7 +1380,7 @@ contains
       call onera7_jac_m ( roi, T, dwdr, dwdT )
     end if
 
-    do s = 1, ns
+    do s = 1, RD5_NS
       h_vec(s)      = h_tab(T_idx,s)  + T_frac * (h_tab(T_idx+1,s)  - h_tab(T_idx,s))
       cp_vec(s)     = cp_tab(T_idx,s) + T_frac * (cp_tab(T_idx+1,s) - cp_tab(T_idx,s))
       dh_dT(s)  = h_tab(T_idx+1,s)  - h_tab(T_idx,s)
@@ -1375,35 +1389,35 @@ contains
 
     G = 0.d0
     D = 0.d0
-    do s = 1, ns
+    do s = 1, RD5_NS
       G = G + (h_vec(s) - Ri_tab(s) * T) * droic(s)
       D = D + roi(s) * (cp_vec(s) - Ri_tab(s))
     end do
     inv_D = 1.d0 / D
     F_T   = -G * inv_D
 
-    do j = 1, ns
-      DFY(1:ns, j) = dwdr(1:ns, j)
+    do j = 1, RD5_NS
+      DFY(1:RD5_NS, j) = dwdr(1:RD5_NS, j)
     end do
-    DFY(1:ns, nz) = dwdT(1:ns)
+    DFY(1:RD5_NS, RD5_NZ) = dwdT(1:RD5_NS)
 
-    do j = 1, ns
+    do j = 1, RD5_NS
       dG_drho_j = 0.d0
-      do s = 1, ns
+      do s = 1, RD5_NS
         dG_drho_j = dG_drho_j + (h_vec(s) - Ri_tab(s) * T) * dwdr(s, j)
       end do
       dD_drho_j = cp_vec(j) - Ri_tab(j)
-      DFY(nz, j) = -inv_D * dG_drho_j - F_T * inv_D * dD_drho_j
+      DFY(RD5_NZ, j) = -inv_D * dG_drho_j - F_T * inv_D * dD_drho_j
     end do
 
     dG_dT = 0.d0
     dD_dT = 0.d0
-    do s = 1, ns
+    do s = 1, RD5_NS
       dG_dT = dG_dT + (h_vec(s) - Ri_tab(s) * T) * dwdT(s) &
                     + (dh_dT(s) - Ri_tab(s))    * droic(s)
       dD_dT = dD_dT + roi(s) * dcp_dT(s)
     end do
-    DFY(nz, nz) = -inv_D * dG_dT - F_T * inv_D * dD_dT
+    DFY(RD5_NZ, RD5_NZ) = -inv_D * dG_dT - F_T * inv_D * dD_dT
 
   end subroutine jac_m
 # endif

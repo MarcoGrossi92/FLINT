@@ -17,7 +17,7 @@ module FLINT_Lib_ThermoTransport_dev
   use FLINT_Lib_Chemistry_data, only: NSMAX
   implicit none
   private
-  public :: co_rotot_Rtot_dev, co_k_mi_lam_Wilke_dev, f_cp_dev, f_ss_dev, H0_dev
+  public :: co_rotot_Rtot_dev, co_k_mi_lam_Wilke_dev, f_cp_dev, f_ss_dev, f_ss_cp_dev, H0_dev
 
 ! MOSE_TT_CT (compile-time dims extension; mirrors MOSE_CHEM_CT in Lib_Radau5_dev):
 ! when the build pins the mechanism size (MOSE_TT_NS = MOSE_NSC from CMake), the
@@ -84,6 +84,21 @@ contains
     gam = cp/(cp - Rtot)
     res = dsqrt(gam*Rtot*T)
   end function f_ss_dev
+
+  !> Frozen speed of sound from a PRECOMPUTED mixture cp (the resident thermo-cache
+  !> cp_c). Statement-for-statement f_ss_dev with the f_cp_dev call substituted by
+  !> the argument: whenever cp carries the bits f_cp_dev would produce at this state
+  !> (cp_c does -- same rhoi/rho/Rtot/T operands, see thermo_cache_visc_W_blk), the
+  !> result is bit-identical while skipping the full species gather + cp table loop.
+  pure function f_ss_cp_dev(cp, p, rho, Rtot) result(res)
+    !$acc routine seq
+    implicit none
+    real(8), intent(in) :: cp, p, rho, Rtot
+    real(8) :: res, T, gam
+    T = p/(Rtot*rho)
+    gam = cp/(cp - Rtot)
+    res = dsqrt(gam*Rtot*T)
+  end function f_ss_cp_dev
 
   !> rho = sum(roi), R = f_Rtot(roi). (co_rotot_Rtot has no array automatic; a
   !> thin device wrapper for symmetry / a single call site.)

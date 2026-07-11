@@ -244,7 +244,7 @@ contains
     real(8) :: facgus, hacc, erracc, qt, ak, acont3
     real(8) :: hee1, hee2, hee3, ysafe, delt
     integer :: i, j, ier, n2, n3, newt, nsing
-    logical :: reject, first, caljac, last
+    logical :: reject, first, caljac, last, zzero
 
     ! =========================================================================
     ! RADAU5 driver part (specialized: all input checks statically satisfied)
@@ -398,11 +398,13 @@ contains
     xph = x+h
     ! *** starting values for Newton iteration
     if (first .or. startn) then
+      zzero = .true.
       do i = 1, n
         z1(i)=0.d0; z2(i)=0.d0; z3(i)=0.d0
         f1(i)=0.d0; f2(i)=0.d0; f3(i)=0.d0
       end do
     else
+      zzero = .false.
       c3q = h/hold
       c1q = c1*c3q
       c2q = c2*c3q
@@ -428,6 +430,17 @@ contains
  40 continue
     if (newt .ge. nit) goto 78
     ! --- compute the right-hand side
+    if (newt .eq. 0 .and. zzero) then
+      ! Cold-start first iteration: z1=z2=z3=0 so cont = y + z_i = y exactly, and the
+      ! chemistry system is AUTONOMOUS (rhs_native/jac_native never read their time
+      ! argument) -- all three stage evaluations equal the y0 = f(y) computed at step
+      ! entry. Copy it instead of re-evaluating the mechanism: bit-identical values,
+      ! three fewer RHS evaluations per cold-started step (every step in the per-cell
+      ! per-substage production regime, where nstep=1).
+      do i = 1, n
+        z1(i) = y0(i); z2(i) = y0(i); z3(i) = y0(i)
+      end do
+    else
     do i = 1, n
       cont(i) = y(i)+z1(i)
     end do
@@ -441,6 +454,7 @@ contains
     end do
     call RD5_RHS(n, xph, cont, z3)
     nfcn = nfcn+3
+    end if
     ! --- solve the linear systems
     do i = 1, n
       a1 = z1(i)

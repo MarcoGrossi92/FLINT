@@ -99,6 +99,8 @@ contains
     Ri_tab = Runiv/wm_tab
 
     ! Precompute species-pair constants used by co_fiij (Wilke mixing rule)
+    if (allocated(Mi_Mj_pow_m025)) deallocate(Mi_Mj_pow_m025)
+    if (allocated(inv_sqrt8_1p))   deallocate(inv_sqrt8_1p)
     allocate(Mi_Mj_pow_m025(1:ns, 1:ns))
     allocate(inv_sqrt8_1p  (1:ns, 1:ns))
     block

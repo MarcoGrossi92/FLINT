@@ -1102,6 +1102,105 @@ program test
   if (allocated(species_composition)) deallocate(species_composition)
   call free_chemistry_data()
 
+  !-------------------------------------------------------------------------------------------------
+  ! Gerlinger
+  !-------------------------------------------------------------------------------------------------
+
+  call execute_command_line('mkdir -p Gerlinger/OUTPUT')
+  err = read_idealgas_thermo('Gerlinger/INPUT')
+  err = read_chemistry( folder='Gerlinger/INPUT', mech_name=mech_name )
+# if defined (CANTERA)
+  call load_phase(gas, 'Gerlinger/INPUT/Gerlinger-9.yaml')
+# endif
+
+  open(100, file='Gerlinger/OUTPUT/batch-general.dat', status='replace', form='formatted')
+  open(200, file='Gerlinger/OUTPUT/batch-explicit.dat', status='replace', form='formatted')
+# if defined (CANTERA)
+  open(300, file='Gerlinger/OUTPUT/batch-cantera.dat', status='replace', form='formatted')
+# endif
+
+  ! p = 1 bar, T = 1200 K, stoichiometric H2/air (2 H2 + O2 + 3.76 N2)
+  tlim = 2.0d-4
+  pin = 1.0d+5
+  Tin = 1200d0
+  dt = tlim/nstep
+
+  neq = ns + 1
+  allocate(Y(neq))
+  allocate(sp_Y(ns))
+
+  sp_Y = 1d-20
+  sp_Y(1) = 0.745124d0   ! N2
+  sp_Y(2) = 0.226354d0   ! O2
+  sp_Y(3) = 0.028522d0   ! H2
+
+  allocate(RT(neq),AT(neq))
+  RT(1:ns)=1d-7
+  RT(neq)=1d-7
+  AT(1:ns)=1d-7
+  AT(neq)=1d-7
+  call setup_odesolver(N=neq,solver=solver,RT=RT,AT=AT,iopt=iopt)
+
+  !! Cantera
+# if defined (CANTERA)
+  call initialize
+  call cpu_time(time1)
+  do n = 1, nstep
+    timein = timeout; timeout = timeout+dt
+    call run_odesolver(neq,timein,timeout,Y,rhs_cantera,err)
+    Tout = y(neq)
+    write(300,*) timeout, Tout
+  enddo
+  call cpu_time(time2)
+
+  write(*,*) 'Gerlinger Cantera time =', time2-time1
+  write(30,*) 'Gerlinger', time2-time1
+# endif
+
+  !! Native with coded mechanism
+  call Assign_Mechanism(mech_name)
+  call initialize
+  call cpu_time(time1)
+  do n = 1, nstep
+    timein = timeout; timeout = timeout+dt
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    Tout = y(neq)
+    write(200,*) timeout, Tout
+  enddo
+  call cpu_time(time2)
+
+  write(*,*) 'Gerlinger explicit time =', time2-time1
+  write(20,*) 'Gerlinger', time2-time1
+
+  !! Native without coded mechanism
+  call Assign_Mechanism('nemo')
+  call initialize
+  call cpu_time(time1)
+  do n = 1, nstep
+    timein = timeout; timeout = timeout+dt
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    Tout = y(neq)
+    write(100,*) timeout, Tout
+  enddo
+  call cpu_time(time2)
+
+  write(*,*) 'Gerlinger general time =', time2-time1
+  write(10,*) 'Gerlinger', time2-time1
+
+  close(100); close(200)
+# if defined (CANTERA)
+  close(300)
+# endif
+
+  deallocate(Y); deallocate(sp_Y)
+  deallocate(AT); deallocate(RT)
+  deallocate(wm_tab); deallocate(Ri_tab)
+  deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
+  deallocate(species_names)
+  if (allocated(elements_names)) deallocate(elements_names)
+  if (allocated(species_composition)) deallocate(species_composition)
+  call free_chemistry_data()
+
 contains
 
   subroutine initialize()

@@ -542,6 +542,48 @@ int main()
         }
 
         //-------------------------------------------------------------------------------------------------
+        // Gerlinger
+        //-------------------------------------------------------------------------------------------------
+
+        // Create the solution and thermo object
+        auto sol12 = newSolution("Gerlinger/INPUT/Gerlinger-9.yaml");
+        auto gas12 = sol12->thermo();
+        // p = 1 bar, T = 1200 K, stoichiometric H2/air (2 H2 + O2 + 3.76 N2)
+        gas12->setState_TPY(1200.0, 100000.0, "N2:0.745124, O2:0.226354, H2:0.028522");
+
+        // Reactor setup
+        auto reactor12 = newReactorBase("IdealGasReactor", sol12);
+        ReactorNet sim12(reactor12);
+        sim12.setTolerances(1e-7, 1e-7);
+
+        // Integration settings
+        dt = 2.0e-4 / nsteps;
+
+        // Run the simulation
+        t0 = std::chrono::high_resolution_clock::now();
+        std::vector<std::pair<double, double>> timeTemp12;
+        timeTemp12.reserve(nsteps);
+        time = 0.0;
+        for (int i = 0; i < nsteps; i++) {
+            time += dt;
+            sim12.advance(time);
+            double T = reactor12->temperature();
+            timeTemp12.emplace_back(time, T);
+        }
+        t1 = std::chrono::high_resolution_clock::now();
+
+        elapsed = t1 - t0;
+        std::cout << "Gerlinger Cantera-CXX time = "
+          << std::scientific << elapsed.count() << std::endl;
+        summaryData.emplace_back("Gerlinger", elapsed.count());
+
+        // Write results for second simulation
+        std::ofstream outFile12("Gerlinger/OUTPUT/batch-CXX.dat");
+        for (const auto& [time, temp] : timeTemp12) {
+            outFile12 << time << "\t" << temp << "\n";
+        }
+
+        //-------------------------------------------------------------------------------------------------
         // Summary output
         //-------------------------------------------------------------------------------------------------
 

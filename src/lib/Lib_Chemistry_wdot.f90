@@ -40,6 +40,7 @@ contains
     use ONERA7_mod
     use sandiego_mod
     use FFCMy_12_mod
+    use Gerlinger9_mod
     implicit none
     character(*), intent(in) :: mad_world
 
@@ -92,6 +93,8 @@ contains
       chemistry_source => sandiego20161214
     case('FFCMy-12')
       chemistry_source => FFCMy_12
+    case('Gerlinger-9')
+      chemistry_source => Gerlinger9
 
     case default
       write(*,*) "[WARNING] Explicit procedure for "//trim(mad_world)//" not found, defaulting to the general procedure"

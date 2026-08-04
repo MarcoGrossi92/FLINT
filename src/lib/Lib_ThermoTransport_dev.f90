@@ -17,7 +17,7 @@ module FLINT_Lib_ThermoTransport_dev
   use FLINT_Lib_Chemistry_data, only: NSMAX
   implicit none
   private
-  public :: co_rotot_Rtot_dev, co_k_mi_lam_Wilke_dev, f_cp_dev, f_ss_dev, f_ss_cp_dev, H0_dev
+  public :: co_rotot_Rtot_dev, co_k_mi_lam_Wilke_dev, co_mi_lam_Wilke_dev, f_cp_dev, f_ss_dev, f_ss_cp_dev, H0_dev
 
 ! MOSE_TT_CT (compile-time dims extension; mirrors MOSE_CHEM_CT in Lib_Radau5_dev):
 ! when the build pins the mechanism size (MOSE_TT_NS = MOSE_NSC from CMake), the
@@ -171,6 +171,44 @@ contains
       klam  = klam  + Xi(s)*klam_i(s) *inv_lam_den
     enddo
   end subroutine co_k_mi_lam_Wilke_dev
+
+
+  !> Laminar viscosity ONLY via Wilke mixing -- the mil-only twin of
+  !> co_k_mi_lam_Wilke_dev for the face-exact production path, where the cell
+  !> conductivity cache kl_c is dead (the face conductivity is recomputed in tface).
+  !> The milam FP chain is BIT-IDENTICAL to co_k_mi_lam_Wilke_dev (same Wmtot, Xi,
+  !> fi from milam_i, lam_den, and milam accumulation order); only the k_tab lookups
+  !> and the klam accumulation are dropped. co_fiij_dev(fi, milam_i) is still needed
+  !> for the viscosity denominator, so the ns^2 phi_ij matrix is unchanged.
+  pure subroutine co_mi_lam_Wilke_dev ( rhoi, rho, Tint, Tdiff, milam )
+    !$acc routine seq
+    implicit none
+    integer, intent(in)  :: Tint(2)
+    real(8), intent(in)  :: rhoi(NSL), rho, Tdiff
+    real(8), intent(out) :: milam
+    real(8) :: lam_den(NSPAD), Xi(NSPAD)
+    real(8) :: fi(NSPAD, NSPAD), milam_i(NSPAD)
+    real(8) :: Wmtot, inv_lam_den
+    integer :: s, i, j
+
+    Wmtot = TT_F_MOLW(rhoi)
+    do s = 1, NSL
+      Xi(s)      = rhoi(s)*Wmtot/(rho*Wm_tab(s))
+      milam_i(s) = TT_F_TABT(s, mi_tab, Tint, Tdiff)
+    enddo
+    call co_fiij_dev(fi, milam_i)
+    do i = 1, NSL
+      lam_den(i) = 0.d0
+      do j = 1, NSL
+        lam_den(i) = lam_den(i) + Xi(j)*fi(i,j)
+      enddo
+    enddo
+    milam = 0.d0
+    do s = 1, NSL
+      inv_lam_den = 1.d0/lam_den(s)
+      milam = milam + Xi(s)*milam_i(s)*inv_lam_den
+    enddo
+  end subroutine co_mi_lam_Wilke_dev
 
 
   !> Mixture cp. Fixed-size cpi(NSMAX). Bit-faithful to f_cp_expr.

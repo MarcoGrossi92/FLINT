@@ -40,7 +40,7 @@ module FLINT_Lib_Radau5_dev
 # endif
   implicit none
   private
-  public :: radau5_dev, flint_acc_upload_tables, flint_acc_upload_thermo
+  public :: radau5_dev, rodas_dev, flint_acc_upload_tables, flint_acc_upload_thermo
 
   !> Max system size for the fixed per-thread work arrays (ns+1). Single source
   !> of truth = NZMAX (Lib_Chemistry_data); ONERA-7 -> 8. Keep TIGHT: the four
@@ -645,6 +645,297 @@ contains
     goto 10
 
   end subroutine radau5_dev
+
+
+  !============================================================================
+  ! rodas_dev : device RODAS4 (Rosenbrock, Hairer/Wanner METH=1) chemistry
+  ! integrator. Same public contract as radau5_dev so ode_dev can dispatch
+  ! either. Fixed config mirrors the host H-rodas (wrap_rodas): autonomous
+  ! (IFCN=0 -> AUTNMS: every df/dx / HD term vanishes), IJOB=1 (B=I, full
+  ! Jacobian, no mass matrix), ITOL=1, PRED=.TRUE. (Gustafsson predictive),
+  ! NMAX=100000, UROUND=1.1d-19, FAC1=5, FAC2=1/6, SAFE=0.9.
+  !
+  ! DELIBERATE, more-correct deviation from the host: host wrap_rodas uses
+  ! IJAC=0 (finite-difference Jacobian); on device we use the ANALYTIC
+  ! Jacobian (jac_m) -- the identical choice radau5_dev makes, strictly more
+  ! accurate, and it removes the N extra RHS evals per step. rtol/atol are
+  ! used RAW (RODAS applies no RADAU5 2/3-power pre-transform), so fnewt_in
+  ! is accepted only for signature parity with radau5_dev and is unused.
+  !
+  ! Verbatim algebra from hairerRodas.f::ROSCOR + ROCOE(METH=1), with
+  ! DECOMR/SLVROD IJOB=1 (hairerToolbox.f) inlined for the full-matrix,
+  ! B=identity, autonomous case. No STOP/WRITE (device): failures -> idid<0.
+  ! Lighter than radau5_dev on-device: one real LU (no complex e2r/e2i pair,
+  ! no z1/z2/z3/f1/f2/f3) -> ~half the per-thread matrix storage.
+  !============================================================================
+  subroutine rodas_dev(n_in, x_in, y, xend, rtol_in, atol_in, &
+# if defined (MOSE_CHEM_NZ)
+                        fnewt_in, &
+# endif
+                        idid, nfcn, njac, nstep, naccpt, nrejct)
+    !$acc routine seq
+    implicit none
+    integer, intent(in)    :: n_in
+    real(8), intent(in)    :: x_in, xend
+    real(8), intent(inout) :: y(n_in)
+    real(8), intent(in)    :: rtol_in(n_in), atol_in(n_in)
+# if defined (MOSE_CHEM_NZ)
+    real(8), intent(in)    :: fnewt_in   ! signature parity only; unused by RODAS
+# endif
+    integer, intent(out)   :: idid
+    integer, intent(out)   :: nfcn, njac, nstep, naccpt, nrejct
+
+# if defined (MOSE_CHEM_NZ)
+    integer, parameter :: n = MOSE_CHEM_NZ
+# else
+    integer :: n
+# endif
+
+    ! ---- fixed per-thread work arrays
+    real(8) :: dy1(RD5_LD), dy(RD5_LD), ynew(RD5_LD)
+    real(8) :: ak1(RD5_LD), ak2(RD5_LD), ak3(RD5_LD)
+    real(8) :: ak4(RD5_LD), ak5(RD5_LD), ak6(RD5_LD)
+    real(8) :: bsol(RD5_LD)
+    real(8) :: fjac(RD5_LD,RD5_LD), e1(RD5_LD,RD5_LD)
+    integer :: ip1(RD5_LD)
+    real(8) :: rtol(RD5_LD), atol(RD5_LD)
+    real(8) :: rpar_d(1)
+    integer :: ipar_d(1)
+
+    ! ---- RODAS4 (METH=1) coefficients (ROCOE, METH=1)
+    real(8), parameter :: C2 = 0.386d0, C3 = 0.21d0, C4 = 0.63d0
+    real(8), parameter :: GAMMA = 0.2500000000000000d+00
+    real(8), parameter :: A21 = 0.1544000000000000d+01
+    real(8), parameter :: A31 = 0.9466785280815826d+00
+    real(8), parameter :: A32 = 0.2557011698983284d+00
+    real(8), parameter :: A41 = 0.3314825187068521d+01
+    real(8), parameter :: A42 = 0.2896124015972201d+01
+    real(8), parameter :: A43 = 0.9986419139977817d+00
+    real(8), parameter :: A51 = 0.1221224509226641d+01
+    real(8), parameter :: A52 = 0.6019134481288629d+01
+    real(8), parameter :: A53 = 0.1253708332932087d+02
+    real(8), parameter :: A54 =-0.6878860361058950d+00
+    real(8), parameter :: C21 =-0.5668800000000000d+01
+    real(8), parameter :: C31 =-0.2430093356833875d+01
+    real(8), parameter :: C32 =-0.2063599157091915d+00
+    real(8), parameter :: C41 =-0.1073529058151375d+00
+    real(8), parameter :: C42 =-0.9594562251023355d+01
+    real(8), parameter :: C43 =-0.2047028614809616d+02
+    real(8), parameter :: C51 = 0.7496443313967647d+01
+    real(8), parameter :: C52 =-0.1024680431464352d+02
+    real(8), parameter :: C53 =-0.3399990352819905d+02
+    real(8), parameter :: C54 = 0.1170890893206160d+02
+    real(8), parameter :: C61 = 0.8083246795921522d+01
+    real(8), parameter :: C62 =-0.7981132988064893d+01
+    real(8), parameter :: C63 =-0.3152159432874371d+02
+    real(8), parameter :: C64 = 0.1631930543123136d+02
+    real(8), parameter :: C65 =-0.6058818238834054d+01
+
+    ! ---- driver parameters (host wrap_rodas defaults)
+    real(8), parameter :: uround = 1.1d-19
+    real(8), parameter :: safe   = 0.9d0
+    real(8), parameter :: fac1p  = 5.0d0          ! FAC1
+    real(8), parameter :: fac2p  = 1.0d0/6.0d0    ! FAC2
+    integer, parameter :: nmax   = 100000
+    logical, parameter :: pred   = .true.
+
+    ! ---- locals
+    real(8) :: x, h, hmax, hmaxn, posneg, hopt, hnew, hacc, erracc
+    real(8) :: facval, facgus, err, sk, hgam
+    real(8) :: hc21,hc31,hc32,hc41,hc42,hc43,hc51,hc52,hc53,hc54
+    real(8) :: hc61,hc62,hc63,hc64,hc65
+    integer :: i, j, ier, nsing
+    logical :: reject, last
+
+    ! -- init
+# if !defined (MOSE_CHEM_NZ)
+    n = n_in
+# endif
+    nfcn=0; njac=0; nstep=0; naccpt=0; nrejct=0
+    idid = 1
+    rpar_d = 0.d0; ipar_d = 0
+    do i = 1, n
+      rtol(i) = rtol_in(i)         ! RODAS: tolerances used raw (no 2/3 transform)
+      atol(i) = atol_in(i)
+    end do
+    x      = x_in
+    hmax   = xend - x
+    posneg = sign(1.d0, xend-x)
+    hmaxn  = min(abs(hmax), abs(xend-x))
+    h      = 1.0d-6                 ! H=0 input -> 1e-6 (as RODAS driver)
+    h      = min(abs(h), hmaxn)
+    h      = sign(h, posneg)
+    hopt   = h
+    reject = .false.
+    last   = .false.
+    nsing  = 0
+    hacc   = 0.d0
+    erracc = 1.d-2
+
+    ! ===== basic integration step (label 1) =====
+ 1  continue
+    if (nstep .gt. nmax) then
+      idid = -2; return                 ! more than NMAX steps
+    end if
+    if (0.1d0*abs(h) .le. abs(x)*uround) then
+      idid = -3; return                 ! step size too small
+    end if
+    if (last) then
+      h = hopt
+      idid = 1; return
+    end if
+    hopt = h
+    if ((x+h*1.0001d0-xend)*posneg .ge. 0.d0) then
+      h = xend-x
+      last = .true.
+    end if
+    ! -- RHS + analytic Jacobian at current point (kept across reject/singular)
+    call RD5_RHS(n, x, y, dy1)
+    nfcn = nfcn+1
+    njac = njac+1
+    call RD5_JAC(n, x, y, fjac, RD5_LD, rpar_d, ipar_d)
+
+    ! ===== stages (label 2, re-entered on reject/singular) =====
+ 2  continue
+    hgam = 1.d0/(h*GAMMA)               ! FAC = 1/(H*GAMMA)
+    ! DECOMR IJOB=1: E1 = FAC*I - FJAC ; real LU
+    do j = 1, n
+      do i = 1, n
+        e1(i,j) = -fjac(i,j)
+      end do
+      e1(j,j) = e1(j,j)+hgam
+    end do
+    call dec_dev(n, RD5_LD, e1, ip1, ier)
+    if (ier .ne. 0) goto 80
+    hc21=C21/h; hc31=C31/h; hc32=C32/h; hc41=C41/h; hc42=C42/h; hc43=C43/h
+    hc51=C51/h; hc52=C52/h; hc53=C53/h; hc54=C54/h
+    hc61=C61/h; hc62=C62/h; hc63=C63/h; hc64=C64/h; hc65=C65/h
+
+    ! -- stage 1 : ak1 = E^-1 dy1
+    do i=1,n
+      ak1(i) = dy1(i)
+    end do
+    call sol_dev(n, RD5_LD, e1, ak1, ip1)
+    ! -- stage 2
+    do i=1,n
+      ynew(i) = y(i)+A21*ak1(i)
+    end do
+    call RD5_RHS(n, x+C2*h, ynew, dy)
+    do i=1,n
+      bsol(i) = dy(i)+hc21*ak1(i)
+    end do
+    call sol_dev(n, RD5_LD, e1, bsol, ip1)
+    do i=1,n
+      ak2(i) = bsol(i)
+    end do
+    ! -- stage 3
+    do i=1,n
+      ynew(i) = y(i)+A31*ak1(i)+A32*ak2(i)
+    end do
+    call RD5_RHS(n, x+C3*h, ynew, dy)
+    do i=1,n
+      bsol(i) = dy(i)+hc31*ak1(i)+hc32*ak2(i)
+    end do
+    call sol_dev(n, RD5_LD, e1, bsol, ip1)
+    do i=1,n
+      ak3(i) = bsol(i)
+    end do
+    ! -- stage 4
+    do i=1,n
+      ynew(i) = y(i)+A41*ak1(i)+A42*ak2(i)+A43*ak3(i)
+    end do
+    call RD5_RHS(n, x+C4*h, ynew, dy)
+    do i=1,n
+      bsol(i) = dy(i)+hc41*ak1(i)+hc42*ak2(i)+hc43*ak3(i)
+    end do
+    call sol_dev(n, RD5_LD, e1, bsol, ip1)
+    do i=1,n
+      ak4(i) = bsol(i)
+    end do
+    ! -- stage 5
+    do i=1,n
+      ynew(i) = y(i)+A51*ak1(i)+A52*ak2(i)+A53*ak3(i)+A54*ak4(i)
+    end do
+    call RD5_RHS(n, x+h, ynew, dy)
+    do i=1,n
+      bsol(i) = dy(i)+hc52*ak2(i)+hc54*ak4(i)+hc51*ak1(i)+hc53*ak3(i)
+    end do
+    call sol_dev(n, RD5_LD, e1, bsol, ip1)
+    do i=1,n
+      ak5(i) = bsol(i)
+    end do
+    ! -- embedded solution accumulate (YNEW += AK5)
+    do i=1,n
+      ynew(i) = ynew(i)+ak5(i)
+    end do
+    ! -- stage 6 (error stage)
+    call RD5_RHS(n, x+h, ynew, dy)
+    do i=1,n
+      bsol(i) = dy(i)+hc61*ak1(i)+hc62*ak2(i)+hc65*ak5(i)+hc64*ak4(i)+hc63*ak3(i)
+    end do
+    call sol_dev(n, RD5_LD, e1, bsol, ip1)
+    do i=1,n
+      ak6(i) = bsol(i)
+    end do
+    do i=1,n
+      ynew(i) = ynew(i)+ak6(i)         ! new solution
+    end do
+    nstep = nstep+1
+    nfcn  = nfcn+5
+
+    ! ===== error estimation (AK6 is the error vector) =====
+    err = 0.d0
+    do i=1,n
+      sk  = atol(i)+rtol(i)*max(abs(y(i)),abs(ynew(i)))
+      err = err+(ak6(i)/sk)**2
+    end do
+    err    = sqrt(err/n)
+    facval = max(fac2p, min(fac1p, err**0.25d0/safe))
+    hnew   = h/facval
+
+    if (err .le. 1.d0) then
+      ! ----- step accepted
+      naccpt = naccpt+1
+      if (pred) then
+        if (naccpt .gt. 1) then
+          facgus = (hacc/h)*(err**2/erracc)**0.25d0/safe
+          facgus = max(fac2p, min(fac1p, facgus))
+          facval = max(facval, facgus)
+          hnew   = h/facval
+        end if
+        hacc   = h
+        erracc = max(1.0d-2, err)
+      end if
+      do i=1,n
+        y(i) = ynew(i)
+      end do
+      x = x+h
+      if (abs(hnew) .gt. hmaxn) hnew = posneg*hmaxn
+      if (reject) hnew = posneg*min(abs(hnew), abs(h))
+      reject = .false.
+      h = hnew
+      goto 1
+    else
+      ! ----- step rejected
+      reject = .true.
+      last   = .false.
+      h      = hnew
+      if (naccpt .ge. 1) nrejct = nrejct+1
+      goto 2
+    end if
+
+    ! ===== singular matrix =====
+ 80 continue
+    nsing = nsing+1
+    if (nsing .ge. 5) then
+      idid = -4; return                 ! matrix repeatedly singular
+    end if
+    h      = h*0.5d0
+    reject = .true.
+    last   = .false.
+    goto 2
+
+  end subroutine rodas_dev
 
 
   !----------------------------------------------------------------------------

@@ -152,6 +152,12 @@ contains
       dcpi_tab(0,:) = dcpi_tab(1,:)
     endif
 
+    ! Refresh the species-contiguous companions the hot interpolation loops read
+    ! (rhs_native, jac_native, f_tabT_expr call sites). Done here rather than
+    ! left to the caller so they can never be missing or stale with respect to
+    ! the tables just loaded.
+    call build_transposed_tables()
+
     ios = read_idealgas_composition(folder)
     if (ios == 1) ios = 5
     if (ios == 2) ios = 6
@@ -258,6 +264,10 @@ contains
       mi_tab(0,:) = mi_tab(1,:)
       k_tab(0,:) = k_tab(1,:)
     endif
+
+    ! Same as in read_idealgas_thermo: keep mi_tabT/k_tabT in step with the
+    ! tables just loaded.
+    call build_transposed_tables()
 
   end function read_idealgas_transport
 

@@ -86,7 +86,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_cantera,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_cantera,no_jacobian,0,err)
     Tout = y(neq)
     write(300,*) timeout, Tout
   enddo
@@ -102,7 +102,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,jac_native,IJAC_chem,err)
     Tout = y(neq)
     write(200,*) timeout, Tout
   enddo
@@ -169,7 +169,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_cantera,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_cantera,no_jacobian,0,err)
     Tout = y(neq)
     write(300,*) timeout, Tout
   enddo
@@ -185,7 +185,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,jac_native,IJAC_chem,err)
     Tout = y(neq)
     write(200,*) timeout, Tout
   enddo
@@ -200,7 +200,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,jac_native,IJAC_chem,err)
     Tout = y(neq)
     write(100,*) timeout, Tout
   enddo
@@ -267,7 +267,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_cantera,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_cantera,no_jacobian,0,err)
     Tout = y(neq)
     write(300,*) timeout, Tout
   enddo
@@ -283,7 +283,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,jac_native,IJAC_chem,err)
     Tout = y(neq)
     write(200,*) timeout, Tout
   enddo
@@ -298,7 +298,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,jac_native,IJAC_chem,err)
     Tout = y(neq)
     write(100,*) timeout, Tout
   enddo
@@ -365,7 +365,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_cantera,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_cantera,no_jacobian,0,err)
     Tout = y(neq)
     write(300,*) timeout, Tout
   enddo
@@ -381,7 +381,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,jac_native,IJAC_chem,err)
     Tout = y(neq)
     write(200,*) timeout, Tout
   enddo
@@ -396,7 +396,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,jac_native,IJAC_chem,err)
     Tout = y(neq)
     write(100,*) timeout, Tout
   enddo
@@ -463,7 +463,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_cantera,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_cantera,no_jacobian,0,err)
     Tout = y(neq)
     write(300,*) timeout, Tout
   enddo
@@ -479,7 +479,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,jac_native,IJAC_chem,err)
     Tout = y(neq)
     write(200,*) timeout, Tout
   enddo
@@ -494,7 +494,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,jac_native,IJAC_chem,err)
     Tout = y(neq)
     write(100,*) timeout, Tout
   enddo
@@ -560,7 +560,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_cantera,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_cantera,no_jacobian,0,err)
     Tout = y(neq)
     write(300,*) timeout, Tout
   enddo
@@ -576,7 +576,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,jac_native,IJAC_chem,err)
     Tout = y(neq)
     write(200,*) timeout, Tout
   enddo
@@ -591,7 +591,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,jac_native,IJAC_chem,err)
     Tout = y(neq)
     write(100,*) timeout, Tout
   enddo
@@ -657,7 +657,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_cantera,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_cantera,no_jacobian,0,err)
     Tout = y(neq)
     write(300,*) timeout, Tout
   enddo
@@ -673,7 +673,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,jac_native,IJAC_chem,err)
     Tout = y(neq)
     write(200,*) timeout, Tout
   enddo
@@ -688,7 +688,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,jac_native,IJAC_chem,err)
     Tout = y(neq)
     write(100,*) timeout, Tout
   enddo
@@ -757,7 +757,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_cantera,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_cantera,no_jacobian,0,err)
     Tout = y(neq)
     write(300,*) timeout, Tout
   enddo
@@ -773,7 +773,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,jac_native,IJAC_chem,err)
     Tout = y(neq)
     write(200,*) timeout, Tout
   enddo
@@ -788,7 +788,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,jac_native,IJAC_chem,err)
     Tout = y(neq)
     write(100,*) timeout, Tout
   enddo
@@ -854,7 +854,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_cantera,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_cantera,no_jacobian,0,err)
     Tout = y(neq)
     write(300,*) timeout, Tout
   enddo
@@ -870,7 +870,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,jac_native,IJAC_chem,err)
     Tout = y(neq)
     write(200,*) timeout, Tout
   enddo
@@ -885,7 +885,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,jac_native,IJAC_chem,err)
     Tout = y(neq)
     write(100,*) timeout, Tout
   enddo
@@ -951,7 +951,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_cantera,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_cantera,no_jacobian,0,err)
     Tout = y(neq)
     write(300,*) timeout, Tout
   enddo
@@ -967,7 +967,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,jac_native,IJAC_chem,err)
     Tout = y(neq)
     write(200,*) timeout, Tout
   enddo
@@ -982,7 +982,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,jac_native,IJAC_chem,err)
     Tout = y(neq)
     write(100,*) timeout, Tout
   enddo
@@ -1048,7 +1048,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_cantera,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_cantera,no_jacobian,0,err)
     Tout = y(neq)
     write(300,*) timeout, Tout
   enddo
@@ -1064,7 +1064,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,jac_native,IJAC_chem,err)
     Tout = y(neq)
     write(200,*) timeout, Tout
   enddo
@@ -1079,7 +1079,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,jac_native,IJAC_chem,err)
     Tout = y(neq)
     write(100,*) timeout, Tout
   enddo
@@ -1147,7 +1147,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_cantera,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_cantera,no_jacobian,0,err)
     Tout = y(neq)
     write(300,*) timeout, Tout
   enddo
@@ -1163,7 +1163,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,jac_native,IJAC_chem,err)
     Tout = y(neq)
     write(200,*) timeout, Tout
   enddo
@@ -1178,7 +1178,7 @@ program test
   call cpu_time(time1)
   do n = 1, nstep
     timein = timeout; timeout = timeout+dt
-    call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+    call run_odesolver(neq,timein,timeout,Y,rhs_native,jac_native,IJAC_chem,err)
     Tout = y(neq)
     write(100,*) timeout, Tout
   enddo

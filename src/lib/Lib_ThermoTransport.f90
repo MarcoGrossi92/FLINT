@@ -30,6 +30,12 @@ module FLINT_Lib_Thermodynamic
   real(kind=8), dimension(:,:), allocatable :: cp_tab, dcpi_tab, h_tab, s_tab
   real(kind=8), dimension(:,:), allocatable :: mi_tab, k_tab
 
+  ! Species-contiguous transposed companions, tabT(species, T) = tab(T, species),
+  ! filled once by build_transposed_tables() after the loaders. The hot per-species
+  ! interpolation loops read these so the gather over species is unit-stride
+  ! (vectorizable). Values are identical to the originals -> bit-identical.
+  real(kind=8), dimension(:,:), allocatable :: cp_tabT, h_tabT, mi_tabT, k_tabT
+
   ! Real fluid properties tables (p, h). One species only
   real(kind=8), dimension(:,:), allocatable :: rho_tab, T_tab, dT_tab, rh_tab, hT_tab, rp_tab, sound_tab, s_tab2D, h_tab2D
   real(kind=8), dimension(:,:), allocatable :: mi_tab2D, k_tab2D
@@ -247,7 +253,7 @@ contains
     real(8), intent(in)  :: rhoi(ns)
     real(8) :: result
     integer :: s
-    real(8) :: rho
+    real(8) :: rho, inv_rho
 
     rho = sum(rhoi)
     result = 0.d0
@@ -264,7 +270,7 @@ contains
     real(8), intent(in)  :: rhoi(ns)
     real(8) :: result
     integer :: s
-    real(8) :: rho
+    real(8) :: rho, inv_rho
 
     rho = sum(rhoi)
     result = 0.d0
@@ -280,7 +286,7 @@ contains
     integer, intent(in) :: i
     real(8), intent(in) :: T
     real(8) :: Tdiff
-    integer :: T_i, Tint(2)
+    integer :: T_i, Tint(2), Ti1, Ti2
     real(8) :: result
 
     T_i = idint(T)
@@ -288,7 +294,13 @@ contains
     Tint(1) = T_i
     Tint(2) = T_i + 1
 
-    result = f_tabT_expr(i,cp_tab,Tint,Tdiff)
+    ! Same index clamp f_tabT_expr applies. Kept explicitly at every inlined
+    ! site: the inline was written against the pre-clamp f_tabT_expr, and
+    ! dropping it here would reintroduce the out-of-range table read the clamp
+    ! was added to prevent (T overshoot in the CEA equilibrium iteration).
+    Ti1 = max(Tmin, min(Tint(1), Tmax))
+    Ti2 = max(Tmin, min(Tint(2), Tmax))
+    result = cp_tabT(i,Ti1) + (cp_tabT(i,Ti2)-cp_tabT(i,Ti1))*Tdiff  ! = f_tabT_expr(i,cp_tab,...)
 
   endfunction cpi
 
@@ -299,7 +311,7 @@ contains
     real(8), intent(in) :: T, rho
     real(8) :: cpi(ns)
     real(8) :: Tdiff
-    integer :: s, T_i, Tint(2)
+    integer :: s, T_i, Tint(2), Ti1, Ti2
     real(8) :: result
 
     T_i = idint(T)
@@ -307,9 +319,14 @@ contains
     Tint(1) = T_i
     Tint(2) = T_i + 1
 
+    ! Clamp once outside the species loop (loop-invariant), so the inlined form
+    ! keeps f_tabT_expr's bounds behaviour without costing the unit-stride win.
+    Ti1 = max(Tmin, min(Tint(1), Tmax))
+    Ti2 = max(Tmin, min(Tint(2), Tmax))
+
     result = 0.d0
     do s = 1, ns
-      cpi(s) = f_tabT_expr(s,cp_tab,Tint,Tdiff)
+      cpi(s) = cp_tabT(s,Ti1) + (cp_tabT(s,Ti2)-cp_tabT(s,Ti1))*Tdiff  ! = f_tabT_expr(s,cp_tab,...), unit-stride
       result = result+rhoi(s)/rho*cpi(s)
     enddo
 
@@ -322,12 +339,15 @@ contains
     real(8), intent(in) :: Tdiff, rho
     integer, intent(in) :: Tint(2)
     real(8) :: cpi(ns)
-    integer :: s
+    integer :: s, Ti1, Ti2
     real(8) :: result
+
+    Ti1 = max(Tmin, min(Tint(1), Tmax))
+    Ti2 = max(Tmin, min(Tint(2), Tmax))
 
     result = 0.d0
     do s = 1, ns
-      cpi(s) = f_tabT_expr(s,cp_tab,Tint,Tdiff)
+      cpi(s) = cp_tabT(s,Ti1) + (cp_tabT(s,Ti2)-cp_tabT(s,Ti1))*Tdiff  ! = f_tabT_expr(s,cp_tab,...), unit-stride
       result = result+rhoi(s)/rho*cpi(s)
     enddo
 
@@ -422,7 +442,7 @@ contains
     real(8), dimension(ns)  :: mil_den, Xi, mi_fiij
     real(8)                 :: fi(ns,ns)
     real(8)                 :: Wmtot, T, Tdiff
-    integer                 :: s ,i ,j ,T_i, Tint(2)
+    integer                 :: s ,i ,j ,T_i, Tint(2), Ti1, Ti2
 
     T = p/(Rtot*rho)
     T_i = idint(T)
@@ -430,12 +450,15 @@ contains
     Tint(1) = T_i
     Tint(2) = T_i + 1
 
+    Ti1 = max(Tmin, min(Tint(1), Tmax))
+    Ti2 = max(Tmin, min(Tint(2), Tmax))
+
     Wmtot = f_molecularWeight(rhoi)
 
     !calcolo delle frazioni molari Xi, viscosità laminare da tabella, mi(s)
     do s = 1, ns
       Xi(s) = (rhoi(s)*Wmtot)/(rho*Wm_tab(s))
-      mi_fiij(s) = f_tabT_expr(s,mi_tab,Tint,Tdiff)
+      mi_fiij(s) = mi_tabT(s,Ti1) + (mi_tabT(s,Ti2)-mi_tabT(s,Ti1))*Tdiff  ! = f_tabT_expr(s,mi_tab,...)
     enddo
 
     ! calcolo del denominatore della legge di Wilke
@@ -482,15 +505,18 @@ contains
     real(8), dimension(ns) :: lam_den, Xi
     real(8)                 :: fi(ns,ns), klam_i(ns), milam_i(ns)
     real(8)                 :: Wmtot, inv_lam_den
-    integer                 :: s ,i ,j
+    integer                 :: s ,i ,j, Ti1, Ti2
+
+    Ti1 = max(Tmin, min(Tint(1), Tmax))
+    Ti2 = max(Tmin, min(Tint(2), Tmax))
 
     Wmtot = f_molecularWeight(rhoi)
 
     ! calcolo delle frazioni molari Xi, viscosità laminare da tabella, mi(s)
     do s = 1, ns
       Xi(s) = rhoi(s)*Wmtot/(rho*Wm_tab(s))
-      milam_i(s) = f_tabT_expr(s,mi_tab,Tint,Tdiff)
-      klam_i(s)  = f_tabT_expr(s,k_tab,Tint,Tdiff)
+      milam_i(s) = mi_tabT(s,Ti1) + (mi_tabT(s,Ti2)-mi_tabT(s,Ti1))*Tdiff  ! = f_tabT_expr(s,mi_tab,...)
+      klam_i(s)  = k_tabT(s,Ti1)  + (k_tabT(s,Ti2) -k_tabT(s,Ti1)) *Tdiff  ! = f_tabT_expr(s,k_tab,...)
     enddo
 
     ! calcolo del denominatore della legge di Wilke (same for k and mi computations)
@@ -722,5 +748,46 @@ contains
 
     result = (1.d0 - alpha_p) * h_lo + alpha_p * h_hi
   endfunction pT2h
+
+
+  ! Build the species-contiguous transposed companions from the freshly-loaded
+  ! (T, species) tables. Called once after the thermo+transport loaders (either
+  ! the ideal-gas ORION path or the legacy reader). An explicit element copy --
+  ! tabT(s,T) = tab(T,s) -- so it is trivially correct and the hot loops that read
+  ! tabT get identical values to the originals (bit-identical), just unit-stride.
+  !> The thermo pair (cp_tab/h_tab) and the transport pair (mi_tab/k_tab) come
+  !> from two independent loaders -- read_idealgas_thermo and
+  !> read_idealgas_transport -- and an inviscid run loads only the first, so the
+  !> two groups are guarded separately.  Safe to call more than once: each group
+  !> is rebuilt from whatever is currently allocated.
+  subroutine build_transposed_tables()
+    implicit none
+    integer :: s, T
+
+    if (allocated(cp_tab) .and. allocated(h_tab)) then
+      if (allocated(cp_tabT)) deallocate(cp_tabT, h_tabT)
+      allocate(cp_tabT(1:ns, Tmin:Tmax))
+      allocate(h_tabT, mold=cp_tabT)
+      do T = Tmin, Tmax
+        do s = 1, ns
+          cp_tabT(s,T) = cp_tab(T,s)
+          h_tabT (s,T) = h_tab (T,s)
+        end do
+      end do
+    end if
+
+    if (allocated(mi_tab) .and. allocated(k_tab)) then
+      if (allocated(mi_tabT)) deallocate(mi_tabT, k_tabT)
+      allocate(mi_tabT(1:ns, Tmin:Tmax))
+      allocate(k_tabT, mold=mi_tabT)
+      do T = Tmin, Tmax
+        do s = 1, ns
+          mi_tabT(s,T) = mi_tab(T,s)
+          k_tabT (s,T) = k_tab (T,s)
+        end do
+      end do
+    end if
+
+  end subroutine build_transposed_tables
 
 endmodule FLINT_Lib_Thermodynamic

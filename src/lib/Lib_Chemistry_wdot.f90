@@ -175,8 +175,8 @@ contains
       prod_fwd = 1.0d0
       prod_rev = 1.0d0
       do is = 1, ns
-        if (ni1_arrh_tab(is, ir) /= 0) prod_fwd = prod_fwd * coi(is)**nint(ni1_arrh_tab(is, ir))
-        if (ni2_arrh_tab(is, ir) /= 0) prod_rev = prod_rev * coi(is)**nint(ni2_arrh_tab(is, ir))
+        if (ni1_arrh_tab(is, ir) /= 0) prod_fwd = prod_fwd * ipow(coi(is), nint(ni1_arrh_tab(is, ir)))
+        if (ni2_arrh_tab(is, ir) /= 0) prod_rev = prod_rev * ipow(coi(is), nint(ni2_arrh_tab(is, ir)))
       enddo
       rate_fwd = f_kf(ir,Tint,Tdiff) * prod_fwd * coM
       rate_rev = f_kb(ir,Tint,Tdiff) * prod_rev * coM
@@ -257,5 +257,33 @@ contains
     enddo
 
   end subroutine general
+
+
+  !> x**n for the small integer exponents that reaction orders actually take.
+  !>
+  !> The `**` operator with a run-time integer exponent lowers to a call into
+  !> libgcc's __powidf2. Orders of 1, 2 and 3 cover every
+  !> reaction in the shipped mechanisms and are expanded inline here; anything
+  !> else falls back to the intrinsic, so results are unchanged.
+  pure function ipow(x, n) result(y)
+    implicit none
+    real(8), intent(in) :: x
+    integer, intent(in) :: n
+    real(8) :: y
+
+    select case (n)
+    case (1)
+      y = x
+    case (2)
+      y = x*x
+    case (3)
+      y = x*x*x
+    case (0)
+      y = 1.0d0
+    case default
+      y = x**n
+    end select
+
+  end function ipow
 
 end module FLINT_Lib_Chemistry_wdot

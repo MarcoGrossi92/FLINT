@@ -453,6 +453,14 @@ contains
     Ti1 = max(Tmin, min(Tint(1), Tmax))
     Ti2 = max(Tmin, min(Tint(2), Tmax))
 
+    ! Single species: Wilke is the identity -- see co_k_mi_lam_Wilke_expr for
+    ! why fi(1,1) and Xi(1) are both 1 and the mixture value is the pure-species
+    ! table interpolation.
+    if (ns == 1) then
+      mil = mi_tabT(1,Ti1) + (mi_tabT(1,Ti2)-mi_tabT(1,Ti1))*Tdiff
+      return
+    end if
+
     Wmtot = f_molecularWeight(rhoi)
 
     !calcolo delle frazioni molari Xi, viscosità laminare da tabella, mi(s)
@@ -509,6 +517,13 @@ contains
 
     Ti1 = max(Tmin, min(Tint(1), Tmax))
     Ti2 = max(Tmin, min(Tint(2), Tmax))
+
+    ! Single species: the Wilke mixing rule is the identity, so skip it.
+    if (ns == 1) then
+      milam = mi_tabT(1,Ti1) + (mi_tabT(1,Ti2)-mi_tabT(1,Ti1))*Tdiff
+      klam  = k_tabT (1,Ti1) + (k_tabT (1,Ti2)-k_tabT (1,Ti1))*Tdiff
+      return
+    end if
 
     Wmtot = f_molecularWeight(rhoi)
 

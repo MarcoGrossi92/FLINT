@@ -18,6 +18,7 @@ module FLINT_Lib_ThermoTransport_dev
   implicit none
   private
   public :: co_rotot_Rtot_dev, co_k_mi_lam_Wilke_dev, co_mi_lam_Wilke_dev, f_cp_dev, f_ss_dev, f_ss_cp_dev, H0_dev
+  public :: prim2cons_dev, cons2prim_dev
 
 ! MOSE_TT_CT (compile-time dims extension; mirrors MOSE_CHEM_CT in Lib_Radau5_dev):
 ! when the build pins the mechanism size (MOSE_TT_NS = MOSE_NSC from CMake), the
@@ -284,5 +285,65 @@ contains
 
   endfunction f_Rtot_m
 # endif
+
+  !> Device twin of prim2cons (Lib_ThermoTransport): conserved from primitive
+  !> {rhoi, u, v, w, p}. Energy via H0_dev: rho*E0 = rho*H0(p,rhoi,|u|) - p.
+  !> Fixed-size NSL+4 vectors (species + 3 momentum + energy); RANS variables are
+  !> NOT part of the conserved conversion (mirrors the host chimera/manifold use,
+  !> which converts 1:np only).
+  pure subroutine prim2cons_dev(prim, cons)
+    !$acc routine seq
+    implicit none
+    real(8), intent(in)  :: prim(NSL+4)
+    real(8), intent(out) :: cons(NSL+4)
+    real(8) :: rho, vel
+    integer :: s
+    rho = 0d0
+    do s = 1, NSL
+      cons(s) = prim(s)
+      rho = rho + prim(s)
+    end do
+    vel = sqrt(prim(NSL+1)**2 + prim(NSL+2)**2 + prim(NSL+3)**2)
+    do s = NSL+1, NSL+3
+      cons(s) = rho*prim(s)
+    end do
+    cons(NSL+4) = rho*H0_dev(prim(NSL+4), prim(1:NSL), vel) - prim(NSL+4)
+  end subroutine prim2cons_dev
+
+  !> Device twin of cons2prim (Lib_ThermoTransport): primitive from conserved with
+  !> the same Newton-Raphson T solve (rel 1e-6 on energy, max 20 iters, cv = cp - R,
+  !> E(p,rhoi) = H0_dev(p,rhoi,0) - p/rho). T is the initial guess, exactly as host.
+  pure subroutine cons2prim_dev(cons, T, prim)
+    !$acc routine seq
+    implicit none
+    real(8), intent(in)  :: cons(NSL+4)
+    real(8), intent(in)  :: T
+    real(8), intent(out) :: prim(NSL+4)
+    real(8) :: Rgas, rho, vel, energy, T_iter, p_iter, cv_iter, energy_iter, diff_en, Tdiff
+    integer :: s, iter_T, T_i, Tint(2)
+    Rgas = TT_F_RTOT(cons(1:NSL))
+    rho = 0d0
+    do s = 1, NSL
+      prim(s) = cons(s)
+      rho = rho + cons(s)
+    end do
+    do s = NSL+1, NSL+3
+      prim(s) = cons(s)/rho
+    end do
+    vel = sqrt(prim(NSL+1)**2 + prim(NSL+2)**2 + prim(NSL+3)**2)
+    energy = cons(NSL+4)/rho - 0.5d0*vel*vel
+    diff_en = 1.0d+3; iter_T = 1; T_iter = T
+    do while ( (abs(diff_en/energy) >= 1d-6) .and. (iter_T <= 20) )
+      p_iter = rho*Rgas*T_iter
+      T_i = idint(T_iter); Tdiff = T_iter - T_i
+      Tint(1) = T_i; Tint(2) = T_i + 1
+      cv_iter = f_cp_dev(cons(1:NSL), Tint, Tdiff, rho) - Rgas
+      energy_iter = H0_dev(p_iter, cons(1:NSL), 0d0) - p_iter/rho
+      diff_en = abs(energy_iter - energy)
+      T_iter = T_iter + (energy - energy_iter)/cv_iter
+      iter_T = iter_T + 1
+    end do
+    prim(NSL+4) = rho*Rgas*T_iter
+  end subroutine cons2prim_dev
 
 end module FLINT_Lib_ThermoTransport_dev

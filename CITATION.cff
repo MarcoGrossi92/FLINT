@@ -4,12 +4,11 @@ type: software
 title: "FLINT"
 version: 1.0.0
 authors:
-
-* family-names: "Grossi"
+- family-names: "Grossi"
   given-names: "Marco"
   affiliation: "Sapienza University of Rome"
   orcid: "https://orcid.org/0000-0002-8487-1932"
-  license: "GPL-3.0"
-  date-released: 2026-09-02
-  doi: "10.5281/zenodo.22272202"
-  url: "https://github.com/MarcoGrossi92/FLINT"
+license: "GPL-3.0"
+date-released: 2026-09-02
+doi: "10.5281/zenodo.22272202"
+url: "https://github.com/MarcoGrossi92/FLINT"

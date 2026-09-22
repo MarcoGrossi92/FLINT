@@ -42,7 +42,7 @@ styles = [
 ]
 
 for idx, folder_ in enumerate(folders):
-    folder = folder_ + "/OUTPUT/"
+    folder = folder_ + "/"
 
     fig, ax = plt.subplots(figsize=(5, 4), facecolor="none")
     ax.set_facecolor("none")

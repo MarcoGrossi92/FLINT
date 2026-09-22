@@ -41,8 +41,6 @@ This section is intended for:
 
 If you are new to FLINT, start from [Getting Started](../getting-started/index.md).
 
-## Scope of This Section
-
 The User Guide covers:
 
 * API basics for all features

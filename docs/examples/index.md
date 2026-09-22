@@ -24,8 +24,6 @@ This section illustrates the capabilities of FLINT through practical simulation 
 
 </div>
 
-## Scope of This Section
-
 This section covers:
 
 1. **Examples**

@@ -6,6 +6,8 @@ repo_url: https://github.com/MarcoGrossi92/FLINT
 
 theme:
   name: material
+  logo: flint-logo-icon-cropped.png
+  favicon: flint-logo-icon-cropped.png
   highlightjs: true
   code_style: monokai
   font:
@@ -13,7 +15,7 @@ theme:
     code: Fira Code
   palette:
     - scheme: default
-      primary: blue grey
+      primary: white
       accent: deep orange
       toggle:
         icon: material/weather-night
@@ -30,7 +32,6 @@ theme:
     - navigation.top
     - navigation.tracking
     - navigation.indexes
-    - toc.integrate
     - content.code.copy
     - search.suggest
     - search.highlight
@@ -79,8 +80,6 @@ extra_css:
   - stylesheets/extra.css
 
 nav:
-  - Home: index.md
-
   - Getting Started: 
     - getting-started/index.md
     - Installation: getting-started/installation.md
@@ -96,13 +95,6 @@ nav:
     - Chemistry Database:
       - Available Mechanisms: user/database.md
       - Generating New Mechanisms: user/chemistry_routines.md
-
-  # - API Reference:
-  #   - api/index.md
-  #   - Thermodynamics: api/thermo.md
-  #   - Kinetics: api/kinetics.md
-  #   - Equilibrium: api/equilibrium.md
-  #   - I/O: api/io.md
 
   - Examples & Verification:
     - examples/index.md

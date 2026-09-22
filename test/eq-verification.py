@@ -47,10 +47,9 @@ def read_two_column_file(filepath):
 
 # -------------------------------------------------------
 
-for folder_ in folders:
-    folder_name = os.path.basename(folder_)
+for folder in folders:
+    folder_name = os.path.basename(folder)
 
-    folder = os.path.join(folder_, "OUTPUT")
     if not os.path.exists(folder):
         continue
 

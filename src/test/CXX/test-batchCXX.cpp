@@ -88,7 +88,7 @@ int main()
         //-------------------------------------------------------------------------------------------------
 
         // Create the solution and thermo object
-        auto sol1 = newSolution("WD/INPUT/WD.yaml");
+        auto sol1 = newSolution("../database/WD/WD.yaml");
         auto gas = sol1->thermo();
         gas->setState_TPY(1000.0, 100000.0, "CH4:0.20, O2:0.8");
 
@@ -118,7 +118,7 @@ int main()
         summaryData.emplace_back("WD", elapsed.count());
 
         // Write results for first simulation
-        std::ofstream outFile("WD/OUTPUT/batch-CXX.dat");
+        std::ofstream outFile("WD/batch-CXX.dat");
         for (const auto& [time, temp] : timeTemp) {
             outFile << time << "\t" << temp << "\n";
         }
@@ -128,7 +128,7 @@ int main()
         //-------------------------------------------------------------------------------------------------
 
         // Create the solution and thermo object
-        auto sol2 = newSolution("Troyes/INPUT/troyes.yaml");
+        auto sol2 = newSolution("../database/Troyes/troyes.yaml");
         auto gas2 = sol2->thermo();
 
         gas2->setState_TPY(1000.0, 100000.0,
@@ -159,7 +159,7 @@ int main()
         summaryData.emplace_back("Troyes", elapsed.count());
 
         // Write results for second simulation
-        std::ofstream outFile2("Troyes/OUTPUT/batch-CXX.dat");
+        std::ofstream outFile2("Troyes/batch-CXX.dat");
         for (const auto& [time, temp] : timeTemp2) {
             outFile2 << time << "\t" << temp << "\n";
         }
@@ -169,7 +169,7 @@ int main()
         //-------------------------------------------------------------------------------------------------
 
         // Create the solution and thermo object
-        auto sol3 = newSolution("Ecker/INPUT/ecker.yaml");
+        auto sol3 = newSolution("../database/Ecker/ecker.yaml");
         auto gas3 = sol3->thermo();
         gas3->setState_TPY(1000.0, 100000.0, "H2:0.00534534, CL2:0.18798856, N2:0.8066661");
 
@@ -201,7 +201,7 @@ int main()
         summaryData.emplace_back("Ecker", elapsed.count());
 
         // Write results for second simulation
-        std::ofstream outFile3("Ecker/OUTPUT/batch-CXX.dat");
+        std::ofstream outFile3("Ecker/batch-CXX.dat");
         for (const auto& [time, temp] : timeTemp3) {
             outFile3 << time << "\t" << temp << "\n";
         }
@@ -211,7 +211,7 @@ int main()
         //-------------------------------------------------------------------------------------------------
 
         // Create the solution and thermo object
-        auto sol4 = newSolution("Cross/INPUT/cross.yaml");
+        auto sol4 = newSolution("../database/Cross/cross.yaml");
         auto gas4 = sol4->thermo();
         gas4->setState_TPY(1010.0, 100000.0, "H2:0.00534534, CL2:0.18798856, N2:0.8066661");
 
@@ -243,7 +243,7 @@ int main()
         summaryData.emplace_back("Cross", elapsed.count());
 
         // Write results for second simulation
-        std::ofstream outFile4("Cross/OUTPUT/batch-CXX.dat");
+        std::ofstream outFile4("Cross/batch-CXX.dat");
         for (const auto& [time, temp] : timeTemp4) {
             outFile4 << time << "\t" << temp << "\n";
         }
@@ -254,7 +254,7 @@ int main()
         //-------------------------------------------------------------------------------------------------
 
         // Create the solution and thermo object
-        auto sol5 = newSolution("Smooke/INPUT/smooke.yaml");
+        auto sol5 = newSolution("../database/Smooke/smooke.yaml");
         auto gas5 = sol5->thermo();
         gas5->setState_TPY(1300.0, 100000.0, "CH4:0.0552, O2:0.2201, N2: 0.7247");
 
@@ -286,7 +286,7 @@ int main()
         summaryData.emplace_back("Smooke", elapsed.count());
 
         // Write results for second simulation
-        std::ofstream outFile5("Smooke/OUTPUT/batch-CXX.dat");
+        std::ofstream outFile5("Smooke/batch-CXX.dat");
         for (const auto& [time, temp] : timeTemp5) {
             outFile5 << time << "\t" << temp << "\n";
         }
@@ -297,7 +297,7 @@ int main()
         //-------------------------------------------------------------------------------------------------
 
         // Create the solution and thermo object
-        auto sol6 = newSolution("CORIA/INPUT/coria.yaml");
+        auto sol6 = newSolution("../database/CORIA/coria.yaml");
         auto gas6 = sol6->thermo();
         gas6->setState_TPY(1300.0, 100000.0, "CH4:0.2, O2:0.8");
 
@@ -329,7 +329,7 @@ int main()
         summaryData.emplace_back("CORIA", elapsed.count());
 
         // Write results for second simulation
-        std::ofstream outFile6("CORIA/OUTPUT/batch-CXX.dat");
+        std::ofstream outFile6("CORIA/batch-CXX.dat");
         for (const auto& [time, temp] : timeTemp6) {
             outFile6 << time << "\t" << temp << "\n";
         }
@@ -339,7 +339,7 @@ int main()
         //-------------------------------------------------------------------------------------------------
 
         // Create the solution and thermo object
-        auto sol7 = newSolution("TSR-CDF-13/INPUT/TSR-CDF-13.yaml");
+        auto sol7 = newSolution("../database/TSR-CDF-13/TSR-CDF-13.yaml");
         auto gas7 = sol7->thermo();
         gas7->setState_TPY(1300.0, 500000, "CH4:1, O2:4");
 
@@ -371,7 +371,7 @@ int main()
         summaryData.emplace_back("TSR-CDF-13", elapsed.count());
 
         // Write results for second simulation
-        std::ofstream outFile7("TSR-CDF-13/OUTPUT/batch-CXX.dat");
+        std::ofstream outFile7("TSR-CDF-13/batch-CXX.dat");
         for (const auto& [time, temp] : timeTemp7) {
             outFile7 << time << "\t" << temp << "\n";
         }
@@ -381,7 +381,7 @@ int main()
         //-------------------------------------------------------------------------------------------------
 
         // Create the solution and thermo object
-        auto sol8 = newSolution("Pelucchi/INPUT/pelucchi.yaml");
+        auto sol8 = newSolution("../database/Pelucchi/INPUT/pelucchi.yaml");
         auto gas8 = sol8->thermo();
         gas8->setState_TPY(1250.0, 100000, "CO:0.00859, O2:0.00606, H2O:0.00365, HCL:0.00025, N2:0.98044");
 
@@ -413,7 +413,7 @@ int main()
         summaryData.emplace_back("Pelucchi", elapsed.count());
 
         // Write results for second simulation
-        std::ofstream outFile8("Pelucchi/OUTPUT/batch-CXX.dat");
+        std::ofstream outFile8("Pelucchi/batch-CXX.dat");
         for (const auto& [time, temp] : timeTemp8) {
             outFile8 << time << "\t" << temp << "\n";
         }
@@ -423,7 +423,7 @@ int main()
         //-------------------------------------------------------------------------------------------------
 
         // Create the solution and thermo object
-        auto sol9 = newSolution("ZK/INPUT/ZK.yaml");
+        auto sol9 = newSolution("../database/ZK/INPUT/ZK.yaml");
         auto gas9 = sol9->thermo();
         gas9->setState_TPY(1300.0, 500000, "CH4:1, O2:4");
 
@@ -454,7 +454,7 @@ int main()
         summaryData.emplace_back("ZK", elapsed.count());
 
         // Write results for second simulation
-        std::ofstream outFile9("ZK/OUTPUT/batch-CXX.dat");
+        std::ofstream outFile9("ZK/batch-CXX.dat");
         for (const auto& [time, temp] : timeTemp9) {
             outFile9 << time << "\t" << temp << "\n";
         }
@@ -464,7 +464,7 @@ int main()
         //-------------------------------------------------------------------------------------------------
 
         // Create the solution and thermo object
-        auto sol10 = newSolution("TSR-GP-24/INPUT/TSR-GP-24.yaml");
+        auto sol10 = newSolution("../database/TSR-GP-24/TSR-GP-24.yaml");
         auto gas10 = sol10->thermo();
         gas10->setState_TPY(1300.0, 500000, "CH4:1, O2:4");
 
@@ -495,7 +495,7 @@ int main()
         summaryData.emplace_back("TSR-GP-24", elapsed.count());
 
         // Write results for second simulation
-        std::ofstream outFile10("TSR-GP-24/OUTPUT/batch-CXX.dat");
+        std::ofstream outFile10("TSR-GP-24/batch-CXX.dat");
         for (const auto& [time, temp] : timeTemp10) {
             outFile10 << time << "\t" << temp << "\n";
         }
@@ -505,7 +505,7 @@ int main()
         //-------------------------------------------------------------------------------------------------
 
         // Create the solution and thermo object
-        auto sol11 = newSolution("TSR-Rich-31/INPUT/TSR-Rich-31.yaml");
+        auto sol11 = newSolution("../database/TSR-Rich-31/TSR-Rich-31.yaml");
         auto gas11 = sol11->thermo();
         gas11->setState_TPY(1300.0, 500000, "CH4:1, O2:4");
 
@@ -536,7 +536,7 @@ int main()
         summaryData.emplace_back("TSR-Rich-31", elapsed.count());
 
         // Write results for second simulation
-        std::ofstream outFile11("TSR-Rich-31/OUTPUT/batch-CXX.dat");
+        std::ofstream outFile11("TSR-Rich-31/batch-CXX.dat");
         for (const auto& [time, temp] : timeTemp11) {
             outFile11 << time << "\t" << temp << "\n";
         }
@@ -546,7 +546,7 @@ int main()
         //-------------------------------------------------------------------------------------------------
 
         // Create the solution and thermo object
-        auto sol12 = newSolution("Gerlinger/INPUT/Gerlinger-9.yaml");
+        auto sol12 = newSolution("../database/Gerlinger/INPUT/Gerlinger-9.yaml");
         auto gas12 = sol12->thermo();
         // p = 1 bar, T = 1200 K, stoichiometric H2/air (2 H2 + O2 + 3.76 N2)
         gas12->setState_TPY(1200.0, 100000.0, "N2:0.745124, O2:0.226354, H2:0.028522");
@@ -578,7 +578,7 @@ int main()
         summaryData.emplace_back("Gerlinger", elapsed.count());
 
         // Write results for second simulation
-        std::ofstream outFile12("Gerlinger/OUTPUT/batch-CXX.dat");
+        std::ofstream outFile12("Gerlinger/batch-CXX.dat");
         for (const auto& [time, temp] : timeTemp12) {
             outFile12 << time << "\t" << temp << "\n";
         }

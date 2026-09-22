@@ -22,8 +22,6 @@ Welcome to the FLINT getting started guide! This section will help you install F
 
 </div>
 
-## Scope of This Section
-
 This getting started guide covers:
 
 1. **Installation**

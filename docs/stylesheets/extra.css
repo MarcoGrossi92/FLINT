@@ -13,3 +13,10 @@
 .md-content svg .matplotlib-axis line {
   stroke: currentColor !important;
 }
+
+/* Enlarge the header/banner logo */
+.md-header__button.md-logo img,
+.md-header__button.md-logo svg {
+  height: 1.6rem;
+  width: auto;
+}

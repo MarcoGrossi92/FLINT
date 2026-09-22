@@ -1,15 +1,19 @@
-# FLINT Documentation
 
-Welcome to the FLINT (Fortran Library for INTegrated Thermochemistry) documentation.
+<p align="center">
+  <img src="flint-logo-concept-1.png" alt="FLINT logo" width="600">
+</p>
 
-## Getting Started
+
+
+
+# Getting Started
 
 New to FLINT? Follow these steps:
 
 1. **[Install FLINT](getting-started/installation.md)** - Install via script or build from source
 2. **[Quick Start Tutorial](getting-started/quick-start.md)** - Learn the basics with a hands-on example
 
-## Documentation Structure
+# Documentation Structure
 
 This documentation is organized into several sections:
 

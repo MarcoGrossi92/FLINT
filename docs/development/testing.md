@@ -33,11 +33,13 @@ FLINT testing follows three principles:
 - Compares specific heat and thermodynamic properties
 - Native implementation vs Cantera
 - Checks relative error and execution time
+- Split into ideal-gas and real-fluid variants
 
-Executable:
+Executables:
 ```
 
-test-thermo
+test-thermo-ideal
+test-thermo-real
 
 ```
 
@@ -101,6 +103,30 @@ Each test reports:
 * Key computed quantities
 * Reference values (if applicable)
 * Success/failure verdict
+
+---
+
+## Test Data Layout and Management
+
+Test data is split across two directories:
+
+* `database/` — raw mechanism data (Cantera YAML, thermodynamic and chemistry data files) used to build the library and to generate the mechanism-specific explicit routines via `utils/YTF.py`.
+* `test/` — per-mechanism inputs and reference ("blessed") outputs used by the test executables at runtime.
+
+Both directories are organized per mechanism, using the same mechanism name as the subfolder (e.g. `WD/`, `ZK/`, `Cross/`):
+
+```
+database/<Mechanism>/   # mechanism definition and raw data
+test/<Mechanism>/       # INPUT/ + reference outputs for that mechanism
+```
+
+### Adding a New Mechanism to the Test Suite
+
+1. Add the mechanism data under `database/<Mechanism>/` (YAML file plus supporting `.dat`/`.txt` files).
+2. Generate the dedicated explicit routine with `utils/YTF.py <Mechanism>` and place the resulting source in `src/lib/Lib_ChemMech/`.
+3. Create a matching `test/<Mechanism>/` folder with an `INPUT/` subfolder for any runtime input files.
+4. Run the relevant test executables against the new mechanism and save the resulting outputs (e.g. `batch-explicit.dat`, `wdot-explicit.dat`, `eq-ref.txt`) as the reference values for future regression checks.
+5. Keep `test/<Mechanism>/` and `database/<Mechanism>/` in sync — removing or renaming a mechanism should update both locations.
 
 ---
 

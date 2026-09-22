@@ -23,11 +23,11 @@ program test
   ! WD
   !-------------------------------------------------------------------------------------------------
 
-  call execute_command_line('mkdir -p WD/OUTPUT')
-  err = read_idealgas_thermo('WD/INPUT')
-  err = read_chemistry( folder='WD/INPUT', mech_name=mech_name )
+  call execute_command_line('mkdir -p WD')
+  err = read_idealgas_thermo('../database/WD')
+  err = read_chemistry( folder='../database/WD', mech_name=mech_name )
 # if defined(CANTERA)
-  call load_phase(gas, 'WD/INPUT/WD.yaml')
+  call load_phase(gas, '../database/WD/WD.yaml')
 # endif
   call Assign_Mechanism(mech_name)
 
@@ -74,13 +74,13 @@ program test
 
 # endif
 
-  open(100, file='WD/OUTPUT/wdot-explicit.dat', status='replace', form='formatted')
+  open(100, file='WD/wdot-explicit.dat', status='replace', form='formatted')
   do i = Tstart, Tend
     write(100,*) dble(i), (wdot_explicit(j,i),j=1,ns)
   enddo
   close(100)
 # if defined(CANTERA)
-  open(200, file='WD/OUTPUT/wdot-cantera.dat', status='replace', form='formatted')
+  open(200, file='WD/wdot-cantera.dat', status='replace', form='formatted')
   do i = Tstart, Tend
     write(200,*) dble(i), (wdot_cantera(j,i),j=1,ns)
   enddo
@@ -92,17 +92,18 @@ program test
   deallocate(rhoi)
   deallocate(wm_tab); deallocate(Ri_tab)
   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
+  deallocate(species_names)
   call free_chemistry_data()
 
   !-------------------------------------------------------------------------------------------------
   ! TROYES
   !-------------------------------------------------------------------------------------------------
 
-  call execute_command_line('mkdir -p Troyes/OUTPUT')
-  err = read_idealgas_thermo('Troyes/INPUT')
-  err = read_chemistry( folder='Troyes/INPUT', mech_name=mech_name )
+  call execute_command_line('mkdir -p Troyes')
+  err = read_idealgas_thermo('../database/Troyes/')
+  err = read_chemistry( folder='../database/Troyes/', mech_name=mech_name )
 # if defined (CANTERA)
-  call load_phase(gas, 'Troyes/INPUT/troyes.yaml')
+  call load_phase(gas, '../database/Troyes/troyes.yaml')
 # endif
   call Assign_Mechanism(mech_name)
 
@@ -147,13 +148,13 @@ program test
 
 # endif
 
-  open(100, file='Troyes/OUTPUT/wdot-explicit.dat', status='replace', form='formatted')
+  open(100, file='Troyes/wdot-explicit.dat', status='replace', form='formatted')
   do i = Tstart, Tend
     write(100,*) dble(i), (wdot_explicit(j,i),j=1,ns)
   enddo
   close(100)
 # if defined (CANTERA)
-  open(200, file='Troyes/OUTPUT/wdot-cantera.dat', status='replace', form='formatted')
+  open(200, file='Troyes/wdot-cantera.dat', status='replace', form='formatted')
   do i = Tstart, Tend
     write(200,*) dble(i), (wdot_cantera(j,i),j=1,ns)
   enddo
@@ -165,17 +166,20 @@ program test
   deallocate(rhoi)
   deallocate(wm_tab); deallocate(Ri_tab)
   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
+  deallocate(species_names)
+  if (allocated(elements_names)) deallocate(elements_names)
+  if (allocated(species_composition)) deallocate(species_composition)
   call free_chemistry_data()
 
   !-------------------------------------------------------------------------------------------------
   ! ECKER
   !-------------------------------------------------------------------------------------------------
 
-  call execute_command_line('mkdir -p Ecker/OUTPUT')
-  err = read_idealgas_thermo('Ecker/INPUT')
-  err = read_chemistry( folder='Ecker/INPUT', mech_name=mech_name )
+  call execute_command_line('mkdir -p Ecker/')
+  err = read_idealgas_thermo('../database/Ecker/')
+  err = read_chemistry( folder='../database/Ecker/', mech_name=mech_name )
 # if defined (CANTERA)
-  call load_phase(gas, 'Ecker/INPUT/ecker.yaml')
+  call load_phase(gas, '../database/Ecker/ecker.yaml')
 # endif
   call Assign_Mechanism(mech_name)
 
@@ -225,13 +229,13 @@ program test
 
 # endif
 
-  open(100, file='Ecker/OUTPUT/wdot-explicit.dat', status='replace', form='formatted')
+  open(100, file='Ecker/wdot-explicit.dat', status='replace', form='formatted')
   do i = Tstart, Tend
     write(100,*) dble(i), (wdot_explicit(j,i),j=1,ns)
   enddo
   close(100)
 # if defined (CANTERA)
-  open(200, file='Ecker/OUTPUT/wdot-cantera.dat', status='replace', form='formatted')
+  open(200, file='Ecker/wdot-cantera.dat', status='replace', form='formatted')
   do i = Tstart, Tend
     write(200,*) dble(i), (wdot_cantera(j,i),j=1,ns)
   enddo
@@ -243,17 +247,20 @@ program test
   deallocate(rhoi)
   deallocate(wm_tab); deallocate(Ri_tab)
   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
+  if (allocated(species_names)) deallocate(species_names)
+  if (allocated(elements_names)) deallocate(elements_names)
+  if (allocated(species_composition)) deallocate(species_composition)
   call free_chemistry_data()
 
   !-------------------------------------------------------------------------------------------------
   ! CROSS
   !-------------------------------------------------------------------------------------------------
 
-  call execute_command_line('mkdir -p Cross/OUTPUT')
-  err = read_idealgas_thermo('Cross/INPUT')
-  err = read_chemistry( folder='Cross/INPUT', mech_name=mech_name )
+  call execute_command_line('mkdir -p Cross/')
+  err = read_idealgas_thermo('../database/Cross/')
+  err = read_chemistry( folder='../database/Cross/', mech_name=mech_name )
 # if defined (CANTERA)
-  call load_phase(gas, 'Cross/INPUT/cross.yaml')
+  call load_phase(gas, '../database/Cross/cross.yaml')
 # endif
   call Assign_Mechanism(mech_name)
 
@@ -298,13 +305,13 @@ program test
 
 # endif
 
-  open(100, file='Cross/OUTPUT/wdot-explicit.dat', status='replace', form='formatted')
+  open(100, file='Cross/wdot-explicit.dat', status='replace', form='formatted')
   do i = Tstart, Tend
     write(100,*) dble(i), (wdot_explicit(j,i),j=1,ns)
   enddo
   close(100)
 # if defined (CANTERA)
-  open(200, file='Cross/OUTPUT/wdot-cantera.dat', status='replace', form='formatted')
+  open(200, file='Cross/wdot-cantera.dat', status='replace', form='formatted')
   do i = Tstart, Tend
     write(200,*) dble(i), (wdot_cantera(j,i),j=1,ns)
   enddo
@@ -316,17 +323,20 @@ program test
   deallocate(rhoi)
   deallocate(wm_tab); deallocate(Ri_tab)
   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
+  if (allocated(species_names)) deallocate(species_names)
+  if (allocated(elements_names)) deallocate(elements_names)
+  if (allocated(species_composition)) deallocate(species_composition)
   call free_chemistry_data()
 
   !-------------------------------------------------------------------------------------------------
   ! SMOOKE
   !-------------------------------------------------------------------------------------------------
 
-  call execute_command_line('mkdir -p Smooke/OUTPUT')
-  err = read_idealgas_thermo('Smooke/INPUT')
-  err = read_chemistry( folder='Smooke/INPUT', mech_name=mech_name )
+  call execute_command_line('mkdir -p Smooke/')
+  err = read_idealgas_thermo('../database/Smooke/')
+  err = read_chemistry( folder='../database/Smooke/', mech_name=mech_name )
 # if defined (CANTERA)
-  call load_phase(gas, 'Smooke/INPUT/smooke.yaml')
+  call load_phase(gas, '../database/Smooke/smooke.yaml')
 # endif
   call Assign_Mechanism(mech_name)
 
@@ -371,13 +381,13 @@ program test
 
 # endif
 
-  open(100, file='Smooke/OUTPUT/wdot-explicit.dat', status='replace', form='formatted')
+  open(100, file='Smooke/wdot-explicit.dat', status='replace', form='formatted')
   do i = Tstart, Tend
     write(100,*) dble(i), (wdot_explicit(j,i),j=1,ns)
   enddo
   close(100)
 # if defined (CANTERA)
-  open(200, file='Smooke/OUTPUT/wdot-cantera.dat', status='replace', form='formatted')
+  open(200, file='Smooke/wdot-cantera.dat', status='replace', form='formatted')
   do i = Tstart, Tend
     write(200,*) dble(i), (wdot_cantera(j,i),j=1,ns)
   enddo
@@ -389,17 +399,20 @@ program test
   deallocate(rhoi)
   deallocate(wm_tab); deallocate(Ri_tab)
   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
+  if (allocated(species_names)) deallocate(species_names)
+  if (allocated(elements_names)) deallocate(elements_names)
+  if (allocated(species_composition)) deallocate(species_composition)
   call free_chemistry_data()
 
   !-------------------------------------------------------------------------------------------------
   ! CORIA-CNRS
   !-------------------------------------------------------------------------------------------------
 
-  call execute_command_line('mkdir -p CORIA/OUTPUT')
-  err = read_idealgas_thermo('CORIA/INPUT')
-  err = read_chemistry( folder='CORIA/INPUT', mech_name=mech_name )
+  call execute_command_line('mkdir -p CORIA/')
+  err = read_idealgas_thermo('../database/CORIA/')
+  err = read_chemistry( folder='../database/CORIA/', mech_name=mech_name )
 # if defined (CANTERA)
-  call load_phase(gas, 'CORIA/INPUT/coria.yaml')
+  call load_phase(gas, '../database/CORIA/coria.yaml')
 # endif
   call Assign_Mechanism(mech_name)
 
@@ -444,13 +457,13 @@ program test
 
 # endif
 
-  open(100, file='CORIA/OUTPUT/wdot-explicit.dat', status='replace', form='formatted')
+  open(100, file='CORIA/wdot-explicit.dat', status='replace', form='formatted')
   do i = Tstart, Tend
     write(100,*) dble(i), (wdot_explicit(j,i),j=1,ns)
   enddo
   close(100)
 # if defined (CANTERA)
-  open(200, file='CORIA/OUTPUT/wdot-cantera.dat', status='replace', form='formatted')
+  open(200, file='CORIA/wdot-cantera.dat', status='replace', form='formatted')
   do i = Tstart, Tend
     write(200,*) dble(i), (wdot_cantera(j,i),j=1,ns)
   enddo
@@ -462,17 +475,20 @@ program test
   deallocate(rhoi)
   deallocate(wm_tab); deallocate(Ri_tab)
   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
+  if (allocated(species_names)) deallocate(species_names)
+  if (allocated(elements_names)) deallocate(elements_names)
+  if (allocated(species_composition)) deallocate(species_composition)
   call free_chemistry_data()
 
   !-------------------------------------------------------------------------------------------------
   ! TSR-CDF-13
   !-------------------------------------------------------------------------------------------------
 
-  call execute_command_line('mkdir -p TSR-CDF-13/OUTPUT')
-  err = read_idealgas_thermo('TSR-CDF-13/INPUT')
-  err = read_chemistry( folder='TSR-CDF-13/INPUT', mech_name=mech_name )
+  call execute_command_line('mkdir -p TSR-CDF-13/')
+  err = read_idealgas_thermo('../database/TSR-CDF-13/')
+  err = read_chemistry( folder='../database/TSR-CDF-13/', mech_name=mech_name )
 # if defined (CANTERA)
-  call load_phase(gas, 'TSR-CDF-13/INPUT/TSR-CDF-13.yaml')
+  call load_phase(gas, '../database/TSR-CDF-13/TSR-CDF-13.yaml')
 # endif
   call Assign_Mechanism(mech_name)
 
@@ -517,13 +533,13 @@ program test
 
 # endif
 
-  open(100, file='TSR-CDF-13/OUTPUT/wdot-explicit.dat', status='replace', form='formatted')
+  open(100, file='TSR-CDF-13/wdot-explicit.dat', status='replace', form='formatted')
   do i = Tstart, Tend
     write(100,*) dble(i), (wdot_explicit(j,i),j=1,ns)
   enddo
   close(100)
 # if defined (CANTERA)
-  open(200, file='TSR-CDF-13/OUTPUT/wdot-cantera.dat', status='replace', form='formatted')
+  open(200, file='TSR-CDF-13/wdot-cantera.dat', status='replace', form='formatted')
   do i = Tstart, Tend
     write(200,*) dble(i), (wdot_cantera(j,i),j=1,ns)
   enddo
@@ -535,17 +551,20 @@ program test
   deallocate(rhoi)
   deallocate(wm_tab); deallocate(Ri_tab)
   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
+  if (allocated(species_names)) deallocate(species_names)
+  if (allocated(elements_names)) deallocate(elements_names)
+  if (allocated(species_composition)) deallocate(species_composition)
   call free_chemistry_data()
 
   !-------------------------------------------------------------------------------------------------
   ! TSR-GP-24
   !-------------------------------------------------------------------------------------------------
 
-  call execute_command_line('mkdir -p TSR-GP-24/OUTPUT')
-  err = read_idealgas_thermo('TSR-GP-24/INPUT')
-  err = read_chemistry( folder='TSR-GP-24/INPUT', mech_name=mech_name )
+  call execute_command_line('mkdir -p TSR-GP-24/')
+  err = read_idealgas_thermo('../database/TSR-GP-24/')
+  err = read_chemistry( folder='../database/TSR-GP-24/', mech_name=mech_name )
 # if defined (CANTERA)
-  call load_phase(gas, 'TSR-GP-24/INPUT/TSR-GP-24.yaml')
+  call load_phase(gas, '../database/TSR-GP-24/TSR-GP-24.yaml')
 # endif
   call Assign_Mechanism(mech_name)
 
@@ -590,13 +609,13 @@ program test
 
 # endif
 
-  open(100, file='TSR-GP-24/OUTPUT/wdot-explicit.dat', status='replace', form='formatted')
+  open(100, file='TSR-GP-24/wdot-explicit.dat', status='replace', form='formatted')
   do i = Tstart, Tend
     write(100,*) dble(i), (wdot_explicit(j,i),j=1,ns)
   enddo
   close(100)
 # if defined (CANTERA)
-  open(200, file='TSR-GP-24/OUTPUT/wdot-cantera.dat', status='replace', form='formatted')
+  open(200, file='TSR-GP-24/wdot-cantera.dat', status='replace', form='formatted')
   do i = Tstart, Tend
     write(200,*) dble(i), (wdot_cantera(j,i),j=1,ns)
   enddo
@@ -608,17 +627,20 @@ program test
   deallocate(rhoi)
   deallocate(wm_tab); deallocate(Ri_tab)
   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
+  if (allocated(species_names)) deallocate(species_names)
+  if (allocated(elements_names)) deallocate(elements_names)
+  if (allocated(species_composition)) deallocate(species_composition)
   call free_chemistry_data()
 
   !-------------------------------------------------------------------------------------------------
   ! TSR-Rich-31
   !-------------------------------------------------------------------------------------------------
 
-  call execute_command_line('mkdir -p TSR-Rich-31/OUTPUT')
-  err = read_idealgas_thermo('TSR-Rich-31/INPUT')
-  err = read_chemistry( folder='TSR-Rich-31/INPUT', mech_name=mech_name )
+  call execute_command_line('mkdir -p TSR-Rich-31/')
+  err = read_idealgas_thermo('../database/TSR-Rich-31/')
+  err = read_chemistry( folder='../database/TSR-Rich-31/', mech_name=mech_name )
 # if defined (CANTERA)
-  call load_phase(gas, 'TSR-Rich-31/INPUT/TSR-Rich-31.yaml')
+  call load_phase(gas, '../database/TSR-Rich-31/TSR-Rich-31.yaml')
 # endif
   call Assign_Mechanism(mech_name)
 
@@ -663,13 +685,13 @@ program test
 
 # endif
 
-  open(100, file='TSR-Rich-31/OUTPUT/wdot-explicit.dat', status='replace', form='formatted')
+  open(100, file='TSR-Rich-31/wdot-explicit.dat', status='replace', form='formatted')
   do i = Tstart, Tend
     write(100,*) dble(i), (wdot_explicit(j,i),j=1,ns)
   enddo
   close(100)
 # if defined (CANTERA)
-  open(200, file='TSR-Rich-31/OUTPUT/wdot-cantera.dat', status='replace', form='formatted')
+  open(200, file='TSR-Rich-31/wdot-cantera.dat', status='replace', form='formatted')
   do i = Tstart, Tend
     write(200,*) dble(i), (wdot_cantera(j,i),j=1,ns)
   enddo
@@ -681,17 +703,20 @@ program test
   deallocate(rhoi)
   deallocate(wm_tab); deallocate(Ri_tab)
   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
+  if (allocated(species_names)) deallocate(species_names)
+  if (allocated(elements_names)) deallocate(elements_names)
+  if (allocated(species_composition)) deallocate(species_composition)
   call free_chemistry_data()
 
   !-------------------------------------------------------------------------------------------------
   ! Pelucchi
   !-------------------------------------------------------------------------------------------------
 
-  call execute_command_line('mkdir -p Pelucchi/OUTPUT')
-  err = read_idealgas_thermo('Pelucchi/INPUT')
-  err = read_chemistry( folder='Pelucchi/INPUT', mech_name=mech_name )
+  call execute_command_line('mkdir -p Pelucchi/')
+  err = read_idealgas_thermo('../database/Pelucchi/')
+  err = read_chemistry( folder='../database/Pelucchi/', mech_name=mech_name )
 # if defined (CANTERA)
-  call load_phase(gas, 'Pelucchi/INPUT/pelucchi.yaml')
+  call load_phase(gas, '../database/Pelucchi/pelucchi.yaml')
 # endif
   call Assign_Mechanism(mech_name)
 
@@ -736,13 +761,13 @@ program test
 
 # endif
 
-  open(100, file='Pelucchi/OUTPUT/wdot-explicit.dat', status='replace', form='formatted')
+  open(100, file='Pelucchi/wdot-explicit.dat', status='replace', form='formatted')
   do i = Tstart, Tend
     write(100,*) dble(i), (wdot_explicit(j,i),j=1,ns)
   enddo
   close(100)
 # if defined (CANTERA)
-  open(200, file='Pelucchi/OUTPUT/wdot-cantera.dat', status='replace', form='formatted')
+  open(200, file='Pelucchi/wdot-cantera.dat', status='replace', form='formatted')
   do i = Tstart, Tend
     write(200,*) dble(i), (wdot_cantera(j,i),j=1,ns)
   enddo
@@ -754,6 +779,9 @@ program test
   deallocate(rhoi)
   deallocate(wm_tab); deallocate(Ri_tab)
   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
+  if (allocated(species_names)) deallocate(species_names)
+  if (allocated(elements_names)) deallocate(elements_names)
+  if (allocated(species_composition)) deallocate(species_composition)
   call free_chemistry_data()
 
 end program test

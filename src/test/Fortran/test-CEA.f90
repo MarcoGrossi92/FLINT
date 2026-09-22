@@ -23,7 +23,8 @@ program test_eq
   write(*,*)
   write(*,*) 'WD'
 
-  err = read_idealgas_thermo('WD/INPUT')
+  call execute_command_line('mkdir -p WD/')
+  err = read_idealgas_thermo('../database/WD/')
   allocate(rhoi(ns))
   allocate(y_eq, mold=rhoi)
 
@@ -31,7 +32,7 @@ program test_eq
   call CEA_initialize_global()
 
   write(*,*) 'Testing the equilibrium solver for different mixture ratios...'
-  open(unit=313, file='WD/OUTPUT/FLINT-CEA.txt', status='replace')
+  open(unit=313, file='WD/FLINT-CEA.txt', status='replace')
   do i = 1, N
     of = 0.01d0 * (100d0/0.01d0)**(real(i-1, kind=8)/real(N-1, kind=8))
     rhoi = 1d-20
@@ -79,7 +80,8 @@ program test_eq
   write(*,*)
   write(*,*) 'ZK'
 
-  err = read_idealgas_thermo('ZK/INPUT')
+  call execute_command_line('mkdir -p ZK/')
+  err = read_idealgas_thermo('../database/ZK/')
   allocate(rhoi(ns))
   allocate(y_eq, mold=rhoi)
 
@@ -87,7 +89,7 @@ program test_eq
   call CEA_initialize_global()
 
   write(*,*) 'Testing the equilibrium solver for different mixture ratios...'
-  open(unit=313, file='ZK/OUTPUT/FLINT-CEA.txt', status='replace')
+  open(unit=313, file='ZK/FLINT-CEA.txt', status='replace')
   do i = 1, N
     of = 0.01d0 * (100d0/0.01d0)**(real(i-1, kind=8)/real(N-1, kind=8))
     rhoi = 1d-20
@@ -135,26 +137,27 @@ program test_eq
   write(*,*)
   write(*,*) 'TSR-GP-24'
 
-  err = read_idealgas_thermo('TSR-GP-24/INPUT')
+  call execute_command_line('mkdir -p TSR-GP-24/')
+  err = read_idealgas_thermo('../database/TSR-GP-24/')
   allocate(rhoi(ns))
   allocate(y_eq, mold=rhoi)
 
   ! Initialize the global variables for the CEA solver, which are needed to solve the equilibrium problem
   call CEA_initialize_global()
 
-  ! write(*,*) 'Testing the equilibrium solver for different mixture ratios...'
-  ! open(unit=313, file='TSR-GP-24/OUTPUT/FLINT-CEA.txt', status='replace')
-  ! do i = 1, N
-  !   of = 0.01d0 * (100d0/0.01d0)**(real(i-1, kind=8)/real(N-1, kind=8))
-  !   rhoi = 1d-20
-  !   rhoi(19) = of/(of+1d0)
-  !   rhoi(22) = 1d0/(of+1d0)
-  !   rhoi = rhoi * rho_
-  !   call CEA_solve(T_, rhoi, teq, y_eq)
-  !   if (mod(i,100)==0) write(*,'(A,F10.3,A,F10.3,A)') ' Mixture ratio = ', of, ' -> equilibrium temperature = ', teq, ' K'
-  !   write(313,*) of, teq
-  ! end do
-  ! close(313)
+  write(*,*) 'Testing the equilibrium solver for different mixture ratios...'
+  open(unit=313, file='TSR-GP-24/FLINT-CEA.txt', status='replace')
+  do i = 1, N
+    of = 0.01d0 * (100d0/0.01d0)**(real(i-1, kind=8)/real(N-1, kind=8))
+    rhoi = 1d-20
+    rhoi(19) = of/(of+1d0)
+    rhoi(22) = 1d0/(of+1d0)
+    rhoi = rhoi * rho_
+    call CEA_solve(T_, rhoi, teq, y_eq)
+    if (mod(i,100)==0) write(*,'(A,F10.3,A,F10.3,A)') ' Mixture ratio = ', of, ' -> equilibrium temperature = ', teq, ' K'
+    write(313,*) of, teq
+  end do
+  close(313)
 
   write(*,*) 'Testing the equilibrium solver for a single point...'
   blessed_Teq = 3616.638618717671
@@ -191,7 +194,8 @@ program test_eq
   write(*,*)
   write(*,*) 'ECKER'
 
-  err = read_idealgas_thermo('Ecker/INPUT')
+  call execute_command_line('mkdir -p Ecker/')
+  err = read_idealgas_thermo('../database/Ecker/')
   allocate(rhoi(ns))
   allocate(y_eq, mold=rhoi)
 
@@ -205,17 +209,17 @@ program test_eq
   ! Initialize the global variables for the CEA solver, which are needed to solve the equilibrium problem
   call CEA_initialize_global()
 
-  ! write(*,*) 'Testing the equilibrium solver for different mixture ratios...'
-  ! open(unit=313, file='Ecker/OUTPUT/FLINT-CEA.txt', status='replace')
-  ! do i = 1, N
-  !   press = 1d5 * 10d0**(real(i-1, kind=8)*log10(100d0/1d-5)/real(N-1, kind=8))
-  !   rho_ = press/(f_rtot(rhoi)*T_)
-  !   rhoi = rhoi * rho_
-  !   call CEA_solve(T_, rhoi, teq, y_eq)
-  !   if (mod(i,100)==0) write(*,'(A,F10.3,A,F10.3,A)') ' Pressure = ', press*1e-5, ' -> equilibrium temperature = ', teq, ' K'
-  !   write(313,*) press, teq
-  ! end do
-  ! close(313)
+  write(*,*) 'Testing the equilibrium solver for different mixture ratios...'
+  open(unit=313, file='Ecker/FLINT-CEA.txt', status='replace')
+  do i = 1, N
+    press = 1d5 * 10d0**(real(i-1, kind=8)*log10(100d0/1d-5)/real(N-1, kind=8))
+    rho_ = press/(f_rtot(rhoi)*T_)
+    rhoi = rhoi * rho_
+    call CEA_solve(T_, rhoi, teq, y_eq)
+    if (mod(i,100)==0) write(*,'(A,F10.3,A,F10.3,A)') ' Pressure = ', press*1e-5, ' -> equilibrium temperature = ', teq, ' K'
+    write(313,*) press, teq
+  end do
+  close(313)
 
   write(*,*) 'Testing the equilibrium solver for a single point...'
   blessed_Teq = 1571.8416518627969

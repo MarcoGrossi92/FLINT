@@ -29,9 +29,9 @@ program test
   real(8) :: time1, time2
   integer :: i, j, err
 
-  err = read_idealgas_thermo('WD/INPUT/')
+  err = read_idealgas_thermo('../database/WD/')
 # if defined (CANTERA)
-  call load_phase(gas, 'WD/INPUT/WD.yaml')
+  call load_phase(gas, '../database/WD/WD.yaml')
 # endif
 
   rhoi = 0.d0

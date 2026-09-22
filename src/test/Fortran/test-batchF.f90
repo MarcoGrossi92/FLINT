@@ -48,16 +48,16 @@ program test
   ! WD
   !-------------------------------------------------------------------------------------------------
 
-  call execute_command_line('mkdir -p WD/OUTPUT')
-  err = read_idealgas_thermo('WD/INPUT')
-  err = read_chemistry( folder='WD/INPUT', mech_name=mech_name )
+  call execute_command_line('mkdir -p WD/')
+  err = read_idealgas_thermo('../database/WD/')
+  err = read_chemistry( folder='../database/WD/', mech_name=mech_name )
 # if defined (CANTERA)
-  call load_phase(gas, 'WD/INPUT/WD.yaml')
+  call load_phase(gas, '../database/WD/WD.yaml')
 # endif
 
-  open(200, file='WD/OUTPUT/batch-explicit.dat', status='replace', form='formatted')
+  open(200, file='WD/batch-explicit.dat', status='replace', form='formatted')
 # if defined (CANTERA)
-  open(300, file='WD/OUTPUT/batch-cantera.dat', status='replace', form='formatted')
+  open(300, file='WD/batch-cantera.dat', status='replace', form='formatted')
 # endif
 
   tlim = 8.d-3
@@ -129,17 +129,17 @@ program test
   ! Troyes
   !-------------------------------------------------------------------------------------------------
 
-  call execute_command_line('mkdir -p Troyes/OUTPUT')
-  err = read_idealgas_thermo('Troyes/INPUT')
-  err = read_chemistry( folder='Troyes/INPUT', mech_name=mech_name )
+  call execute_command_line('mkdir -p Troyes/')
+  err = read_idealgas_thermo('../database/Troyes/')
+  err = read_chemistry( folder='../database/Troyes/', mech_name=mech_name )
 # if defined (CANTERA)
-  call load_phase(gas, 'Troyes/INPUT/troyes.yaml')
+  call load_phase(gas, '../database/Troyes/troyes.yaml')
 # endif
 
-  open(100, file='Troyes/OUTPUT/batch-general.dat', status='replace', form='formatted')
-  open(200, file='Troyes/OUTPUT/batch-explicit.dat', status='replace', form='formatted')
+  open(100, file='Troyes/batch-general.dat', status='replace', form='formatted')
+  open(200, file='Troyes/batch-explicit.dat', status='replace', form='formatted')
 # if defined (CANTERA)
-  open(300, file='Troyes/OUTPUT/batch-cantera.dat', status='replace', form='formatted')
+  open(300, file='Troyes/batch-cantera.dat', status='replace', form='formatted')
 # endif
 
   tlim = 5d-3
@@ -227,17 +227,17 @@ program test
   ! Ecker
   !-------------------------------------------------------------------------------------------------
 
-  call execute_command_line('mkdir -p Ecker/OUTPUT')
-  err = read_idealgas_thermo('Ecker/INPUT')
-  err = read_chemistry( folder='Ecker/INPUT', mech_name=mech_name )
+  call execute_command_line('mkdir -p Ecker/')
+  err = read_idealgas_thermo('../database/Ecker/')
+  err = read_chemistry( folder='../database/Ecker/', mech_name=mech_name )
 # if defined (CANTERA)
-  call load_phase(gas, 'Ecker/INPUT/ecker.yaml')
+  call load_phase(gas, '../database/Ecker/ecker.yaml')
 # endif
 
-  open(100, file='Ecker/OUTPUT/batch-general.dat', status='replace', form='formatted')
-  open(200, file='Ecker/OUTPUT/batch-explicit.dat', status='replace', form='formatted')
+  open(100, file='Ecker/batch-general.dat', status='replace', form='formatted')
+  open(200, file='Ecker/batch-explicit.dat', status='replace', form='formatted')
 # if defined (CANTERA)
-  open(300, file='Ecker/OUTPUT/batch-cantera.dat', status='replace', form='formatted')
+  open(300, file='Ecker/batch-cantera.dat', status='replace', form='formatted')
 # endif
 
   tlim = 5d-3
@@ -325,17 +325,17 @@ program test
   ! Cross
   !-------------------------------------------------------------------------------------------------
 
-  call execute_command_line('mkdir -p Cross/OUTPUT')
-  err = read_idealgas_thermo('Cross/INPUT')
-  err = read_chemistry( folder='Cross/INPUT', mech_name=mech_name )
+  call execute_command_line('mkdir -p Cross/')
+  err = read_idealgas_thermo('../database/Cross/')
+  err = read_chemistry( folder='../database/Cross/', mech_name=mech_name )
 # if defined (CANTERA)
-  call load_phase(gas, 'Cross/INPUT/cross.yaml')
+  call load_phase(gas, '../database/Cross/cross.yaml')
 # endif
 
-  open(100, file='Cross/OUTPUT/batch-general.dat', status='replace', form='formatted')
-  open(200, file='Cross/OUTPUT/batch-explicit.dat', status='replace', form='formatted')
+  open(100, file='Cross/batch-general.dat', status='replace', form='formatted')
+  open(200, file='Cross/batch-explicit.dat', status='replace', form='formatted')
 # if defined (CANTERA)
-  open(300, file='Cross/OUTPUT/batch-cantera.dat', status='replace', form='formatted')
+  open(300, file='Cross/batch-cantera.dat', status='replace', form='formatted')
 # endif
 
   tlim = 1d-2
@@ -423,17 +423,17 @@ program test
   ! Smooke
   !-------------------------------------------------------------------------------------------------
 
-  call execute_command_line('mkdir -p Smooke/OUTPUT')
-  err = read_idealgas_thermo('Smooke/INPUT')
-  err = read_chemistry( folder='Smooke/INPUT', mech_name=mech_name )
+  call execute_command_line('mkdir -p Smooke/')
+  err = read_idealgas_thermo('../database/Smooke/')
+  err = read_chemistry( folder='../database/Smooke/', mech_name=mech_name )
 # if defined (CANTERA)
-  call load_phase(gas, 'Smooke/INPUT/smooke.yaml')
+  call load_phase(gas, '../database/Smooke/smooke.yaml')
 # endif
 
-  open(100, file='Smooke/OUTPUT/batch-general.dat', status='replace', form='formatted')
-  open(200, file='Smooke/OUTPUT/batch-explicit.dat', status='replace', form='formatted')
+  open(100, file='Smooke/batch-general.dat', status='replace', form='formatted')
+  open(200, file='Smooke/batch-explicit.dat', status='replace', form='formatted')
 # if defined (CANTERA)
-  open(300, file='Smooke/OUTPUT/batch-cantera.dat', status='replace', form='formatted')
+  open(300, file='Smooke/batch-cantera.dat', status='replace', form='formatted')
 # endif
 
   tlim = 0.2d0
@@ -521,17 +521,17 @@ program test
   ! CORIA-CNRS
   !-------------------------------------------------------------------------------------------------
 
-  call execute_command_line('mkdir -p CORIA/OUTPUT')
-  err = read_idealgas_thermo('CORIA/INPUT')
-  err = read_chemistry( folder='CORIA/INPUT', mech_name=mech_name )
+  call execute_command_line('mkdir -p CORIA/')
+  err = read_idealgas_thermo('../database/CORIA/')
+  err = read_chemistry( folder='../database/CORIA/', mech_name=mech_name )
 # if defined (CANTERA)
-  call load_phase(gas, 'CORIA/INPUT/coria.yaml')
+  call load_phase(gas, '../database/CORIA/coria.yaml')
 # endif
 
-  open(100, file='CORIA/OUTPUT/batch-general.dat', status='replace', form='formatted')
-  open(200, file='CORIA/OUTPUT/batch-explicit.dat', status='replace', form='formatted')
+  open(100, file='CORIA/batch-general.dat', status='replace', form='formatted')
+  open(200, file='CORIA/batch-explicit.dat', status='replace', form='formatted')
 # if defined (CANTERA)
-  open(300, file='CORIA/OUTPUT/batch-cantera.dat', status='replace', form='formatted')
+  open(300, file='CORIA/batch-cantera.dat', status='replace', form='formatted')
 # endif
 
   tlim = 0.005
@@ -618,17 +618,17 @@ program test
   ! TSR-CDF-13
   !-------------------------------------------------------------------------------------------------
 
-  call execute_command_line('mkdir -p TSR-CDF-13/OUTPUT')
-  err = read_idealgas_thermo('TSR-CDF-13/INPUT')
-  err = read_chemistry( folder='TSR-CDF-13/INPUT', mech_name=mech_name )
+  call execute_command_line('mkdir -p TSR-CDF-13')
+  err = read_idealgas_thermo('../database/TSR-CDF-13/')
+  err = read_chemistry( folder='../database/TSR-CDF-13/', mech_name=mech_name )
 # if defined (CANTERA)
-  call load_phase(gas, 'TSR-CDF-13/INPUT/TSR-CDF-13.yaml')
+  call load_phase(gas, '../database/TSR-CDF-13/TSR-CDF-13.yaml')
 # endif
 
-  open(100, file='TSR-CDF-13/OUTPUT/batch-general.dat', status='replace', form='formatted')
-  open(200, file='TSR-CDF-13/OUTPUT/batch-explicit.dat', status='replace', form='formatted')
+  open(100, file='TSR-CDF-13/batch-general.dat', status='replace', form='formatted')
+  open(200, file='TSR-CDF-13/batch-explicit.dat', status='replace', form='formatted')
 # if defined (CANTERA)
-  open(300, file='TSR-CDF-13/OUTPUT/batch-cantera.dat', status='replace', form='formatted')
+  open(300, file='TSR-CDF-13/batch-cantera.dat', status='replace', form='formatted')
 # endif
 
   tlim = 0.005
@@ -715,17 +715,17 @@ program test
   ! Pelucchi
   !-------------------------------------------------------------------------------------------------
 
-  call execute_command_line('mkdir -p Pelucchi/OUTPUT')
-  err = read_idealgas_thermo('Pelucchi/INPUT')
-  err = read_chemistry( folder='Pelucchi/INPUT', mech_name=mech_name )
+  call execute_command_line('mkdir -p Pelucchi')
+  err = read_idealgas_thermo('../database/Pelucchi/')
+  err = read_chemistry( folder='../database/Pelucchi/', mech_name=mech_name )
 # if defined (CANTERA)
-  call load_phase(gas, 'Pelucchi/INPUT/pelucchi.yaml')
+  call load_phase(gas, '../database/Pelucchi/pelucchi.yaml')
 # endif
 
-  open(100, file='Pelucchi/OUTPUT/batch-general.dat', status='replace', form='formatted')
-  open(200, file='Pelucchi/OUTPUT/batch-explicit.dat', status='replace', form='formatted')
+  open(100, file='Pelucchi/batch-general.dat', status='replace', form='formatted')
+  open(200, file='Pelucchi/batch-explicit.dat', status='replace', form='formatted')
 # if defined (CANTERA)
-  open(300, file='Pelucchi/OUTPUT/batch-cantera.dat', status='replace', form='formatted')
+  open(300, file='Pelucchi/batch-cantera.dat', status='replace', form='formatted')
 # endif
 
   tlim = 5d-2
@@ -815,17 +815,17 @@ program test
   ! ZK
   !-------------------------------------------------------------------------------------------------
 
-  call execute_command_line('mkdir -p ZK/OUTPUT')
-  err = read_idealgas_thermo('ZK/INPUT')
-  err = read_chemistry( folder='ZK/INPUT', mech_name=mech_name )
+  call execute_command_line('mkdir -p ZK/')
+  err = read_idealgas_thermo('../database/ZK/')
+  err = read_chemistry( folder='../database/ZK/', mech_name=mech_name )
 # if defined (CANTERA)
-  call load_phase(gas, 'ZK/INPUT/ZK.yaml')
+  call load_phase(gas, '../database/ZK/ZK.yaml')
 # endif
 
-  open(100, file='ZK/OUTPUT/batch-general.dat', status='replace', form='formatted')
-  open(200, file='ZK/OUTPUT/batch-explicit.dat', status='replace', form='formatted')
+  open(100, file='ZK/batch-general.dat', status='replace', form='formatted')
+  open(200, file='ZK/batch-explicit.dat', status='replace', form='formatted')
 # if defined (CANTERA)
-  open(300, file='ZK/OUTPUT/batch-cantera.dat', status='replace', form='formatted')
+  open(300, file='ZK/batch-cantera.dat', status='replace', form='formatted')
 # endif
 
   tlim = 0.002
@@ -912,17 +912,17 @@ program test
   ! TSR-GP-24
   !-------------------------------------------------------------------------------------------------
 
-  call execute_command_line('mkdir -p TSR-GP-24/OUTPUT')
-  err = read_idealgas_thermo('TSR-GP-24/INPUT')
-  err = read_chemistry( folder='TSR-GP-24/INPUT', mech_name=mech_name )
+  call execute_command_line('mkdir -p TSR-GP-24/')
+  err = read_idealgas_thermo('../database/TSR-GP-24/')
+  err = read_chemistry( folder='../database/TSR-GP-24/', mech_name=mech_name )
 # if defined (CANTERA)
-  call load_phase(gas, 'TSR-GP-24/INPUT/TSR-GP-24.yaml')
+  call load_phase(gas, '../database/TSR-GP-24/TSR-GP-24.yaml')
 # endif
 
-  open(100, file='TSR-GP-24/OUTPUT/batch-general.dat', status='replace', form='formatted')
-  open(200, file='TSR-GP-24/OUTPUT/batch-explicit.dat', status='replace', form='formatted')
+  open(100, file='TSR-GP-24/batch-general.dat', status='replace', form='formatted')
+  open(200, file='TSR-GP-24/batch-explicit.dat', status='replace', form='formatted')
 # if defined (CANTERA)
-  open(300, file='TSR-GP-24/OUTPUT/batch-cantera.dat', status='replace', form='formatted')
+  open(300, file='TSR-GP-24/batch-cantera.dat', status='replace', form='formatted')
 # endif
 
   tlim = 0.002
@@ -1009,17 +1009,17 @@ program test
   ! TSR-Rich-31
   !-------------------------------------------------------------------------------------------------
 
-  call execute_command_line('mkdir -p TSR-Rich-31/OUTPUT')
-  err = read_idealgas_thermo('TSR-Rich-31/INPUT')
-  err = read_chemistry( folder='TSR-Rich-31/INPUT', mech_name=mech_name )
+  call execute_command_line('mkdir -p TSR-Rich-31/')
+  err = read_idealgas_thermo('../database/TSR-Rich-31/')
+  err = read_chemistry( folder='../database/TSR-Rich-31/', mech_name=mech_name )
 # if defined (CANTERA)
-  call load_phase(gas, 'TSR-Rich-31/INPUT/TSR-Rich-31.yaml')
+  call load_phase(gas, '../database/TSR-Rich-31/TSR-Rich-31.yaml')
 # endif
 
-  open(100, file='TSR-Rich-31/OUTPUT/batch-general.dat', status='replace', form='formatted')
-  open(200, file='TSR-Rich-31/OUTPUT/batch-explicit.dat', status='replace', form='formatted')
+  open(100, file='TSR-Rich-31/batch-general.dat', status='replace', form='formatted')
+  open(200, file='TSR-Rich-31/batch-explicit.dat', status='replace', form='formatted')
 # if defined (CANTERA)
-  open(300, file='TSR-Rich-31/OUTPUT/batch-cantera.dat', status='replace', form='formatted')
+  open(300, file='TSR-Rich-31/batch-cantera.dat', status='replace', form='formatted')
 # endif
 
   tlim = 0.005
@@ -1106,17 +1106,17 @@ program test
   ! Gerlinger
   !-------------------------------------------------------------------------------------------------
 
-  call execute_command_line('mkdir -p Gerlinger/OUTPUT')
-  err = read_idealgas_thermo('Gerlinger/INPUT')
-  err = read_chemistry( folder='Gerlinger/INPUT', mech_name=mech_name )
+  call execute_command_line('mkdir -p Gerlinger/')
+  err = read_idealgas_thermo('../database/Gerlinger/')
+  err = read_chemistry( folder='../database/Gerlinger/', mech_name=mech_name )
 # if defined (CANTERA)
-  call load_phase(gas, 'Gerlinger/INPUT/Gerlinger-9.yaml')
+  call load_phase(gas, '../database/Gerlinger/Gerlinger-9.yaml')
 # endif
 
-  open(100, file='Gerlinger/OUTPUT/batch-general.dat', status='replace', form='formatted')
-  open(200, file='Gerlinger/OUTPUT/batch-explicit.dat', status='replace', form='formatted')
+  open(100, file='Gerlinger/batch-general.dat', status='replace', form='formatted')
+  open(200, file='Gerlinger/batch-explicit.dat', status='replace', form='formatted')
 # if defined (CANTERA)
-  open(300, file='Gerlinger/OUTPUT/batch-cantera.dat', status='replace', form='formatted')
+  open(300, file='Gerlinger/batch-cantera.dat', status='replace', form='formatted')
 # endif
 
   ! p = 1 bar, T = 1200 K, stoichiometric H2/air (2 H2 + O2 + 3.76 N2)

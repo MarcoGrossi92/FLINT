@@ -71,7 +71,9 @@ mechanism with fractional reaction orders is a different model under `general`.
 Strict mode turns the fallback into a refusal (`[ERROR] FLINT Assign_Mechanism: mechanism <name>
 is not hooked and strict mode is on`, exit status 1): set the module flag
 `FLINT_strict_mechanism = .true.` (module `FLINT_Lib_Chemistry_wdot`) before `Assign_Mechanism`,
-or the environment variable `FLINT_STRICT_MECHANISM=1` (also `true`, `yes`, `on`). Default: off.
+or the environment variable `FLINT_STRICT_MECHANISM=1` (also `true`, `yes`, `on`, in any
+case; `0`, `false`, `no`, `off` or an empty value leave it off; any other value is reported with a
+`[WARNING]` on standard output and on the error unit and ignored). Default: off.
 
 ## Temperature range of the tables
 

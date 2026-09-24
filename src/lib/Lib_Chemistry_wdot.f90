@@ -159,20 +159,37 @@ contains
   end subroutine Assign_Mechanism
 
 
-  !> Strict fallback policy: the module flag or the environment variable.
+  !> Strict fallback policy: the module flag or the environment variable FLINT_STRICT_MECHANISM,
+  !> read case-insensitively: 1/true/yes/on turn strict mode on, 0/false/no/off (or an empty value)
+  !> leave the module flag as it is; any other value is reported with a WARNING on both units and
+  !> ignored (a value such as 'Yes' or 'On' was silently ignored by an exact-case comparison).
   function strict_mechanism() result(strict)
     implicit none
     logical :: strict
-    character(len=16) :: val
-    integer :: istat
+    character(len=64) :: val
+    integer :: istat, k, c
     strict = FLINT_strict_mechanism
+    val = ''
     call get_environment_variable('FLINT_STRICT_MECHANISM', value=val, status=istat)
+    if (istat == 1 .or. istat == 2) return      ! not set / no environment on this processor
+    val = adjustl(val)
+    do k = 1, len_trim(val)
+      c = iachar(val(k:k))
+      if (c >= iachar('A') .and. c <= iachar('Z')) val(k:k) = achar(c + 32)
+    enddo
     if (istat == 0) then
-      select case (trim(adjustl(val)))
-      case ('1', 'true', 'TRUE', 'True', 'yes', 'YES', 'on', 'ON')
+      select case (trim(val))
+      case ('1', 'true', 'yes', 'on')
         strict = .true.
+        return
+      case ('', '0', 'false', 'no', 'off')
+        return
       end select
     endif
+    write(*,'(A)') "[WARNING] FLINT Assign_Mechanism: FLINT_STRICT_MECHANISM='"//trim(val)// &
+      "' is not one of 1/true/yes/on or 0/false/no/off: ignored"
+    write(error_unit,'(A)') "[WARNING] FLINT Assign_Mechanism: FLINT_STRICT_MECHANISM='"//trim(val)// &
+      "' is not one of 1/true/yes/on or 0/false/no/off: ignored"
   end function strict_mechanism
 
   ! General mechanism

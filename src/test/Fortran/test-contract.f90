@@ -9,7 +9,8 @@
 !  7. a name that is not hooked is not checked (general fallback);
 !  8-9. the mechanism name is the whole first line of chemistry-info.txt;
 !  10. in child processes (this program with the argument child-strict / child-refusal): the strict
-!      fallback policy (FLINT_STRICT_MECHANISM=1 stops an unhooked name, =0 falls back to general) and
+!      fallback policy (FLINT_STRICT_MECHANISM=1 or Yes stops an unhooked name, =0 falls back to general,
+!      an unrecognised value is reported on the error unit and ignored) and
 !      the contract refusal stop the process, and their messages are on the error unit.
 ! Needs no Cantera. Exit code 1 on failure.
 program test
@@ -188,6 +189,15 @@ program test
   call verdict('10c strict mode off: the child falls back to the general procedure (exit code 0)', err == 0)
   call execute_command_line("command grep -q 'defaulting to the general procedure' tables/child-nostrict.err", exitstat=err)
   call verdict('10d strict mode off: the fallback WARNING is on the error unit', err == 0)
+  call execute_command_line('FLINT_STRICT_MECHANISM=Yes '//trim(self)// &
+    ' child-strict > tables/child-strict-yes.out 2> tables/child-strict-yes.err', exitstat=err)
+  call verdict('10h strict mode: the value is case-insensitive (Yes stops the child, exit code /= 0)', err /= 0)
+  call execute_command_line('FLINT_STRICT_MECHANISM=maybe '//trim(self)// &
+    ' child-strict > tables/child-strict-maybe.out 2> tables/child-strict-maybe.err', exitstat=err)
+  call verdict('10i strict mode: an unrecognised value leaves the fallback (exit code 0)', err == 0)
+  call execute_command_line("command grep -q 'FLINT_STRICT_MECHANISM=.maybe. is not one of' tables/child-strict-maybe.err", &
+    exitstat=err)
+  call verdict('10j strict mode: an unrecognised value is reported on the error unit', err == 0)
   call execute_command_line(trim(self)//' child-refusal > tables/child-refusal.out 2> tables/child-refusal.err', exitstat=err)
   call verdict('10e contract refusal: Assign_Mechanism stops the child process (exit code /= 0)', err /= 0)
   call execute_command_line("command grep -q 'expected: 5 species' tables/child-refusal.err", exitstat=err)

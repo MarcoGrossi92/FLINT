@@ -6,7 +6,11 @@
 !  4. species appended after the routine slots are accepted (prefix semantics);
 !  5. a calibrated species under another name with the same composition is accepted by a hand-written routine;
 !  6. without composition data the molecular weight of phase.txt stands in for the composition;
-!  7. a name that is not hooked is not checked (general fallback).
+!  7. a name that is not hooked is not checked (general fallback);
+!  8-9. the mechanism name is the whole first line of chemistry-info.txt;
+!  10. in child processes (this program with the argument child-strict / child-refusal): the strict
+!      fallback policy (FLINT_STRICT_MECHANISM=1 stops an unhooked name, =0 falls back to general) and
+!      the contract refusal stop the process, and their messages are on the error unit.
 ! Needs no Cantera. Exit code 1 on failure.
 program test
   use FLINT_Lib_Thermodynamic
@@ -21,8 +25,31 @@ program test
   real(8), allocatable :: comp0(:,:), comp1(:,:)
   integer :: err, ns0, nfail
   logical :: ok
+  character(len=512) :: self, arg
 
   nfail = 0
+  call get_command_argument(0, self)
+  call get_command_argument(1, arg)
+  if (arg == 'child-strict') then
+    ! an unhooked name ('Nassini Original', written by case 9) through Assign_Mechanism
+    err = read_idealgas_thermo('../database/WD/')
+    err = read_chemistry(folder='tables/name-nassini', mech_name=mech_name)
+    if (err /= 0) then; write(*,'(A,I0)') '[FAIL] child-strict: read_chemistry ios=', err; stop 2; endif
+    call Assign_Mechanism(mech_name)
+    write(*,'(A)') 'child-strict: fallback to the general procedure'
+    stop
+  else if (arg == 'child-refusal') then
+    ! the old alphabetical order (slots 2 and 5 swapped) through Assign_Mechanism
+    err = read_idealgas_thermo('../database/WD/')
+    err = read_chemistry(folder='../database/WD/', mech_name=mech_name)
+    if (err /= 0) then; write(*,'(A,I0)') '[FAIL] child-refusal: read_chemistry ios=', err; stop 2; endif
+    names0 = species_names; comp0 = species_composition
+    species_names(2) = names0(5); species_names(5) = names0(2)
+    species_composition(:,2) = comp0(:,5); species_composition(:,5) = comp0(:,2)
+    call Assign_Mechanism(mech_name)
+    write(*,'(A)') 'child-refusal: the contract did not stop the process'
+    stop
+  endif
   err = read_idealgas_thermo('../database/WD/')
   if (err /= 0) then; write(*,'(A,I0)') '[FAIL] read_idealgas_thermo ../database/WD: ios=', err; stop 1; endif
   err = read_chemistry(folder='../database/WD/', mech_name=mech_name)
@@ -149,6 +176,24 @@ program test
   call check_mechanism_contract('Nassini', ok)
   call verdict('9c the truncated name Nassini is hooked and the WD data are refused by its contract', .not. ok)
   call free_chemistry_data()
+
+  ! 10. child processes: strict fallback policy and the channels of the refusals
+  call execute_command_line('FLINT_STRICT_MECHANISM=1 '//trim(self)// &
+    ' child-strict > tables/child-strict.out 2> tables/child-strict.err', exitstat=err)
+  call verdict('10a strict mode: an unhooked name stops the child process (exit code /= 0)', err /= 0)
+  call execute_command_line("command grep -q 'strict mode is on' tables/child-strict.err", exitstat=err)
+  call verdict('10b strict mode: the [ERROR] line is on the error unit', err == 0)
+  call execute_command_line('FLINT_STRICT_MECHANISM=0 '//trim(self)// &
+    ' child-strict > tables/child-nostrict.out 2> tables/child-nostrict.err', exitstat=err)
+  call verdict('10c strict mode off: the child falls back to the general procedure (exit code 0)', err == 0)
+  call execute_command_line("command grep -q 'defaulting to the general procedure' tables/child-nostrict.err", exitstat=err)
+  call verdict('10d strict mode off: the fallback WARNING is on the error unit', err == 0)
+  call execute_command_line(trim(self)//' child-refusal > tables/child-refusal.out 2> tables/child-refusal.err', exitstat=err)
+  call verdict('10e contract refusal: Assign_Mechanism stops the child process (exit code /= 0)', err /= 0)
+  call execute_command_line("command grep -q 'expected: 5 species' tables/child-refusal.err", exitstat=err)
+  call verdict('10f contract refusal: the two lists are on the error unit too', err == 0)
+  call execute_command_line("command grep -q 'expected: 5 species' tables/child-refusal.out", exitstat=err)
+  call verdict('10g contract refusal: the two lists are on standard output', err == 0)
   if (nfail > 0) then
     write(*,'(A,I0,A)') ' Verdict -> fail (', nfail, ' checks)'
     stop 1

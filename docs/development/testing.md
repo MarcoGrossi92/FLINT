@@ -105,7 +105,8 @@ test-tables     rate tables are indexed by temperature whatever their first row:
                 species after the slots
 test-contract   the mechanism contract check of Assign_Mechanism: routine order accepted,
                 swapped slots / wrong reaction count refused, appended inert species accepted,
-                calibrated species with the same composition accepted, name read whole
+                calibrated species with the same composition accepted, name read whole; in child
+                processes: the strict fallback policy (FLINT_STRICT_MECHANISM) and the refusal channels
 test-falloff    the Troe/Lindemann rates where the tables vanish (Pr = 0, k_inf = 0 give a
                 zero rate, no NaN) and the k_c <= 0 convention for irreversible falloff
 test-ranges     the temperature-grid contract of the tables: falloff tables on the Arrhenius grid, transport

@@ -8,6 +8,9 @@
 !    rows were copied into arrays of another shape);
 !  - a transport table whose first row differs from the thermo one: refused (ios = 3; before this
 !    check the species-contiguous copy read rows below the table's first row).
+!  - the same for the LAST row (rates-short, rates-troe-short), for a falloff-Lindemann table and for a
+!    binary-diffusion table (ios = 3);
+!  - in a child process (argument child-grid) the five refusals are printed on the error unit too.
 ! Exit code 1 on failure.
 program test
   use FLINT_Lib_Thermodynamic
@@ -18,7 +21,18 @@ program test
   integer :: err, nfail
   real(8), allocatable :: kf_eq(:,:), kb_eq(:,:)
   character(32) :: mech_name
+  character(len=512) :: self, arg
 
+  call get_command_argument(0, self); call get_command_argument(1, arg)
+  if (arg == 'child-grid') then
+    err = read_idealgas_thermo('ranges/thermo-1400/')
+    err = read_chemistry(folder='ranges/rates-narrow', mech_name=mech_name); call free_chemistry_data()
+    err = read_chemistry(folder='ranges/rates-troe-mismatch', mech_name=mech_name); call free_chemistry_data()
+    err = read_chemistry(folder='ranges/rates-lind-mismatch', mech_name=mech_name); call free_chemistry_data()
+    err = read_idealgas_transport('ranges/transport-shifted/')
+    err = read_idealgas_diffusion('ranges/diffusion-shifted/')
+    stop
+  endif
   nfail = 0
   err = read_idealgas_thermo('ranges/thermo-1400/')
   call verdict('thermo tables 1400..1600 K loaded', err == 0 .and. merge(1, Tmin, Tmin == 0) == 1400 .and. Tmax == 1600)
@@ -50,6 +64,27 @@ program test
   call verdict('transport table starting at 1420 K with thermo from 1400 K: refused with ios = 3', err == 3)
   err = read_idealgas_transport('ranges/transport-equal/')
   call verdict('transport table on the thermo grid: accepted', err == 0)
+
+  ! the last row too, the falloff-Lindemann and the binary-diffusion tables
+  err = read_chemistry(folder='ranges/rates-short', mech_name=mech_name)
+  call verdict('rate tables ending before the thermo ones (1400..1550 K): refused with ios = 6', err == 6)
+  call free_chemistry_data()
+  err = read_chemistry(folder='ranges/rates-troe-short', mech_name=mech_name)
+  call verdict('falloff-Troe table ending before the Arrhenius one (1400..1550 K): refused with ios = 6', err == 6)
+  call free_chemistry_data()
+  err = read_chemistry(folder='ranges/rates-lind-equal', mech_name=mech_name)
+  call verdict('falloff-Lindemann table on the Arrhenius grid: accepted', err == 0 .and. nrc_lindemann == 1)
+  call free_chemistry_data()
+  err = read_chemistry(folder='ranges/rates-lind-mismatch', mech_name=mech_name)
+  call verdict('falloff-Lindemann table on another grid (1450..1600 K): refused with ios = 6', err == 6)
+  call free_chemistry_data()
+  err = read_idealgas_diffusion('ranges/diffusion-shifted/')
+  call verdict('diffusion table starting at 1420 K with thermo from 1400 K: refused with ios = 3', err == 3)
+  err = read_idealgas_diffusion('ranges/diffusion-equal/')
+  call verdict('diffusion table on the thermo grid: accepted', err == 0)
+  call execute_command_line(trim(self)//' child-grid > ranges/child-grid.out 2> ranges/child-grid.err', exitstat=err)
+  call execute_command_line('test "$(command grep -c -F ''[ERROR] FLINT read_'' ranges/child-grid.err)" = 5', exitstat=err)
+  call verdict('child process: the five grid refusals are on the error unit too', err == 0)
 
   if (nfail > 0) then
     write(*,'(A,I0,A)') ' Verdict -> fail (', nfail, ' checks)'

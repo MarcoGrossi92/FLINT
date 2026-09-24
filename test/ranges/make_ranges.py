@@ -14,6 +14,9 @@ database/WD, database/CORIA (one falloff-Troe zone) and database/Gerlinger (tran
   rates-lind-mismatch  the same Lindemann table 1450..1600 K            -> refused (ios = 6)
   diffusion-equal      diffusion.dat 1400..1600 K (10 pairs, constant D) -> accepted
   diffusion-shifted    diffusion.dat 1420..1600 K                       -> refused (ios = 3)
+  rates-missing-zone   3 Arrhenius reactions, 2 zones in the table      -> refused (ios = 4)
+  rates-step2          201 rows on a 2 K step (1400, 1402, .. 1800 K)   -> refused (ios = 6)
+  thermo-step2         thermo.dat on a 2 K step (1400..1800 K)          -> refused (ios = 4)
 The species of the transport zones are renamed to the WD species: only the grid is under test.
 Run from the repository root:  python3 test/ranges/make_ranges.py
 """
@@ -73,4 +76,15 @@ for folder, T0 in (('diffusion-equal', 1400), ('diffusion-shifted', 1420)):
     for a, b in pairs:
         txt += 'ZONE T="%s-%s"\nI=%d, F=POINT\n' % (a, b, 1600 - T0 + 1) + ''.join('%.1f 1.0e-05\n' % T for T in range(T0, 1601))
     w(folder, 'diffusion.dat', txt)
+# zone count and 1 K step
+w('rates-missing-zone', 'chemistry-info.txt', info)
+w('rates-missing-zone', 'chemistry-Arrhenius.dat', ahead + ''.join(cut(z, 1400, 1600) for z in az[:2]))
+def cut2(z, T0, T1):
+    L = z.split('\n'); rows = [r for r in L[2:] if r.strip() and T0 <= float(r.split()[0]) <= T1 and int(float(r.split()[0])) % 2 == 0]
+    return L[0] + '\n' + 'I=%d, F=POINT\n' % len(rows) + '\n'.join(rows) + '\n'
+w('rates-step2', 'chemistry-info.txt', info)
+w('rates-step2', 'chemistry-Arrhenius.dat', ahead + ''.join(cut2(z, 1400, 1800) for z in az))
+w('thermo-step2', 'thermo.dat', thead + ''.join(cut2(z, 1400, 1800) for z in tz))
+for f in ('phase.txt', 'composition.txt'):
+    w('thermo-step2', f, open(os.path.join(wd, f)).read())
 print('written', dst)

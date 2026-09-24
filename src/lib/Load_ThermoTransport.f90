@@ -50,6 +50,7 @@ contains
     use strings, only: parse
     use Lib_Tecplot
     use Lib_ORION_data
+    use iso_fortran_env, only: error_unit
     implicit none
     character(len=*), intent(in), optional :: folder
     ! Local
@@ -134,6 +135,16 @@ contains
     dummy23 = lbound(orion%block(1)%mesh, dim=3)
     Tmin = nint(orion%block(1)%mesh(1,dummy1,dummy23,dummy23))
     Tmax = Tmin + ubound(orion%block(1)%mesh, dim=2) - dummy1
+    ! 1 K step: row T of every table is the value at T kelvin only if the last row is the first + rows - 1
+    start = nint(orion%block(1)%mesh(1,ubound(orion%block(1)%mesh, dim=2),dummy23,dummy23))
+    if (start /= Tmax) then
+      write(*,'(A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_idealgas_thermo: the thermo table is not on a 1 K step (', &
+        Tmax - Tmin + 1, ' rows from ', Tmin, ' to ', start, ' K): row T must be the value at T kelvin'
+      write(error_unit,'(A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_idealgas_thermo: the thermo table is not on a 1 K step (', &
+        Tmax - Tmin + 1, ' rows from ', Tmin, ' to ', start, ' K): row T must be the value at T kelvin'
+      ios = 4
+      return
+    endif
     start = Tmin
     if (Tmin==1) Tmin = 0
     allocate(h_tab(Tmin:Tmax, 1:ns))
@@ -251,6 +262,16 @@ contains
     dummy23 = lbound(orion%block(1)%mesh, dim=3)
     Tmin_dummy = nint(orion%block(1)%mesh(1,dummy1,dummy23,dummy23))
     Tmax_dummy = Tmin_dummy + ubound(orion%block(1)%mesh, dim=2) - dummy1
+    ! 1 K step (the last row is the first + rows - 1)
+    start = nint(orion%block(1)%mesh(1,ubound(orion%block(1)%mesh, dim=2),dummy23,dummy23))
+    if (start /= Tmax_dummy) then
+      write(*,'(A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_idealgas_transport: the table is not on a 1 K step (', &
+        Tmax_dummy - Tmin_dummy + 1, ' rows from ', Tmin_dummy, ' to ', start, ' K): row T must be the value at T kelvin'
+      write(error_unit,'(A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_idealgas_transport: the table is not on a 1 K step (', &
+        Tmax_dummy - Tmin_dummy + 1, ' rows from ', Tmin_dummy, ' to ', start, ' K): row T must be the value at T kelvin'
+      ios = 3
+      return
+    endif
 
     ! Table range contract: the table ends at the last row of the thermo tables and
     ! starts at or below their first row. Row T is the value at T kelvin and the
@@ -357,6 +378,16 @@ contains
     dummy23 = lbound(orion%block(1)%mesh, dim=3)
     Tmin_dummy = nint(orion%block(1)%mesh(1,dummy1,dummy23,dummy23))
     Tmax_dummy = Tmin_dummy + ubound(orion%block(1)%mesh, dim=2) - dummy1
+    ! 1 K step (the last row is the first + rows - 1)
+    start = nint(orion%block(1)%mesh(1,ubound(orion%block(1)%mesh, dim=2),dummy23,dummy23))
+    if (start /= Tmax_dummy) then
+      write(*,'(A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_idealgas_diffusion: the table is not on a 1 K step (', &
+        Tmax_dummy - Tmin_dummy + 1, ' rows from ', Tmin_dummy, ' to ', start, ' K): row T must be the value at T kelvin'
+      write(error_unit,'(A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_idealgas_diffusion: the table is not on a 1 K step (', &
+        Tmax_dummy - Tmin_dummy + 1, ' rows from ', Tmin_dummy, ' to ', start, ' K): row T must be the value at T kelvin'
+      ios = 3
+      return
+    endif
 
     ! Table range contract: the table ends at the last row of the thermo tables and
     ! starts at or below their first row. Row T is the value at T kelvin and the

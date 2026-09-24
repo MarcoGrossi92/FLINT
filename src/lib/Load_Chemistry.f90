@@ -3,10 +3,10 @@
 ! 1 -> info file not found
 ! 2 -> error reading info file
 ! 3 -> table file not found
-! 4 -> error reading table file
+! 4 -> error reading table file (also: fewer zones than reactions of that type)
 ! 5 -> table value not admissible (a negative falloff rate coefficient, or a non-finite F_cent)
-! 6 -> chemistry-Arrhenius.dat does not cover the thermo temperature range, or a falloff table is not
-!      on the grid of chemistry-Arrhenius.dat
+! 6 -> chemistry-Arrhenius.dat does not cover the thermo temperature range, a falloff table is not
+!      on the grid of chemistry-Arrhenius.dat, or a rate table is not on a 1 K step
 
 module FLINT_Load_Chemistry
   use iso_fortran_env, only: I4 => int32, R8 => real64
@@ -182,10 +182,31 @@ contains
       ios = 3
       return
     endif
+    ! A reaction type without tables of its own (e.g. falloff-SRI) is counted as Arrhenius above:
+    ! the file then has fewer zones than Arrhenius-type reactions and the copy below indexed past
+    ! its last zone (segmentation fault in RELEASE, bounds error under -check all).
+    if (size(orion%block) < nrc_arrh) then
+      write(line,'(A,I0,A,I0,A)') '[ERROR] FLINT read_chemistry: chemistry-Arrhenius.dat has ', size(orion%block), &
+        ' zones for ', nrc_arrh, ' Arrhenius-type reactions (a reaction type without tables, e.g. falloff-SRI?)'
+      write(*,'(A)') trim(line)
+      write(error_unit,'(A)') trim(line)
+      ios = 4
+      return
+    endif
     dummy1  = lbound(orion%block(1)%mesh, dim=2)
     dummy23 = lbound(orion%block(1)%mesh, dim=3)
     Ti1 = nint(orion%block(1)%mesh(1,dummy1,dummy23,dummy23))
     Ti2 = Ti1 + ubound(orion%block(1)%mesh, dim=2) - dummy1
+    ! 1 K step: row T is the rate at T kelvin only if the last row is the first + rows - 1
+    Tf = nint(orion%block(1)%mesh(1,ubound(orion%block(1)%mesh, dim=2),dummy23,dummy23))
+    if (Tf /= Ti2) then
+      write(line,'(A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_chemistry: chemistry-Arrhenius.dat is not on a 1 K step (', &
+        Ti2 - Ti1 + 1, ' rows from ', Ti1, ' to ', Tf, ' K): row T must be the rate at T kelvin'
+      write(*,'(A)') trim(line)
+      write(error_unit,'(A)') trim(line)
+      ios = 6
+      return
+    endif
     T_tab_min = Ti1; T_tab_max = Ti2   ! row T of every rate table = rate at T kelvin
     ! Table range contract: row T of a rate table is the rate at T kelvin (the
     ! tables are allocated on their own first and last row), and the source terms
@@ -228,11 +249,28 @@ contains
         ios = 3
         return
       endif
+      if (size(orion%block) < nrc_troe) then
+        write(line,'(A,I0,A,I0,A)') '[ERROR] FLINT read_chemistry: chemistry-Troe.dat has ', size(orion%block), &
+          ' zones for ', nrc_troe, ' falloff-Troe reactions'
+        write(*,'(A)') trim(line)
+        write(error_unit,'(A)') trim(line)
+        ios = 4
+        return
+      endif
       ! Table range contract: the falloff tables share the grid of the Arrhenius table
       dummy1  = lbound(orion%block(1)%mesh, dim=2)
       dummy23 = lbound(orion%block(1)%mesh, dim=3)
       Tt1 = nint(orion%block(1)%mesh(1,dummy1,dummy23,dummy23))
       Tt2 = Tt1 + ubound(orion%block(1)%mesh, dim=2) - dummy1
+      Tf = nint(orion%block(1)%mesh(1,ubound(orion%block(1)%mesh, dim=2),dummy23,dummy23))
+      if (Tf /= Tt2) then
+        write(line,'(A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_chemistry: chemistry-Troe.dat is not on a 1 K step (', &
+          Tt2 - Tt1 + 1, ' rows from ', Tt1, ' to ', Tf, ' K): row T must be the rate at T kelvin'
+        write(*,'(A)') trim(line)
+        write(error_unit,'(A)') trim(line)
+        ios = 6
+        return
+      endif
       if (Tt1 /= Ti1 .or. Tt2 /= Ti2) then
         write(*,'(A,I0,A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_chemistry: chemistry-Troe.dat covers ', Tt1, '..', Tt2, &
           ' K, chemistry-Arrhenius.dat ', Ti1, '..', Ti2, ' K: every rate table must share one temperature grid'
@@ -281,11 +319,28 @@ contains
         ios = 3
         return
       endif
+      if (size(orion%block) < nrc_lindemann) then
+        write(line,'(A,I0,A,I0,A)') '[ERROR] FLINT read_chemistry: chemistry-Lindemann.dat has ', size(orion%block), &
+          ' zones for ', nrc_lindemann, ' falloff-Lindemann reactions'
+        write(*,'(A)') trim(line)
+        write(error_unit,'(A)') trim(line)
+        ios = 4
+        return
+      endif
       ! Table range contract: the falloff tables share the grid of the Arrhenius table
       dummy1  = lbound(orion%block(1)%mesh, dim=2)
       dummy23 = lbound(orion%block(1)%mesh, dim=3)
       Tt1 = nint(orion%block(1)%mesh(1,dummy1,dummy23,dummy23))
       Tt2 = Tt1 + ubound(orion%block(1)%mesh, dim=2) - dummy1
+      Tf = nint(orion%block(1)%mesh(1,ubound(orion%block(1)%mesh, dim=2),dummy23,dummy23))
+      if (Tf /= Tt2) then
+        write(line,'(A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_chemistry: chemistry-Lindemann.dat is not on a 1 K step (', &
+          Tt2 - Tt1 + 1, ' rows from ', Tt1, ' to ', Tf, ' K): row T must be the rate at T kelvin'
+        write(*,'(A)') trim(line)
+        write(error_unit,'(A)') trim(line)
+        ios = 6
+        return
+      endif
       if (Tt1 /= Ti1 .or. Tt2 /= Ti2) then
         write(*,'(A,I0,A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_chemistry: chemistry-Lindemann.dat covers ', Tt1, '..', Tt2, &
           ' K, chemistry-Arrhenius.dat ', Ti1, '..', Ti2, ' K: every rate table must share one temperature grid'

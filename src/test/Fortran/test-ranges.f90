@@ -10,7 +10,8 @@
 !    check the species-contiguous copy read rows below the table's first row).
 !  - the same for the LAST row (rates-short, rates-troe-short), for a falloff-Lindemann table and for a
 !    binary-diffusion table (ios = 3);
-!  - in a child process (argument child-grid) the five refusals are printed on the error unit too.
+!  - in a child process (argument child-grid) the five refusals are printed on the error unit too;
+!  - a table with fewer zones than reactions of its type (ios = 4) and tables on a 2 K step (ios = 6 / 4).
 ! Exit code 1 on failure.
 program test
   use FLINT_Lib_Thermodynamic
@@ -82,9 +83,28 @@ program test
   call verdict('diffusion table starting at 1420 K with thermo from 1400 K: refused with ios = 3', err == 3)
   err = read_idealgas_diffusion('ranges/diffusion-equal/')
   call verdict('diffusion table on the thermo grid: accepted', err == 0)
+  ! a table with fewer zones than reactions of its type (e.g. a falloff-SRI reaction counted as Arrhenius)
+  err = read_chemistry(folder='ranges/rates-missing-zone', mech_name=mech_name)
+  call verdict('Arrhenius table with 2 zones for 3 reactions: refused with ios = 4', err == 4)
+  call free_chemistry_data()
+  ! rows on a 2 K step: the first and the computed last row match the thermo grid, the temperatures do not
+  err = read_chemistry(folder='ranges/rates-step2', mech_name=mech_name)
+  call verdict('rate table on a 2 K step (1400..1800 K, 201 rows): refused with ios = 6', err == 6)
+  call free_chemistry_data()
   call execute_command_line(trim(self)//' child-grid > ranges/child-grid.out 2> ranges/child-grid.err', exitstat=err)
   call execute_command_line('test "$(command grep -c -F ''[ERROR] FLINT read_'' ranges/child-grid.err)" = 5', exitstat=err)
   call verdict('child process: the five grid refusals are on the error unit too', err == 0)
+
+  ! thermo tables on a 2 K step (last: the phase arrays are reloaded)
+  if (allocated(species_names)) deallocate(species_names)
+  if (allocated(wm_tab)) deallocate(wm_tab)
+  if (allocated(Ri_tab)) deallocate(Ri_tab)
+  if (allocated(h_tab)) deallocate(h_tab)
+  if (allocated(s_tab)) deallocate(s_tab)
+  if (allocated(cp_tab)) deallocate(cp_tab)
+  if (allocated(dcpi_tab)) deallocate(dcpi_tab)
+  err = read_idealgas_thermo('ranges/thermo-step2/')
+  call verdict('thermo table on a 2 K step (1400..1800 K): refused with ios = 4', err == 4)
 
   if (nfail > 0) then
     write(*,'(A,I0,A)') ' Verdict -> fail (', nfail, ' checks)'

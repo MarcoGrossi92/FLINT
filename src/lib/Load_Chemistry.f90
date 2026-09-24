@@ -143,10 +143,13 @@ contains
         if (ios/=0) then; ios = 2; close(unitfile); return; endif
         if (idum < 1 .or. idum > nrc) then
           write(*,'(A,I0,A)') '[ERROR] FLINT read_chemistry: Reaction orders: reaction ', idum, ' does not exist'
+          write(error_unit,'(A,I0,A)') '[ERROR] FLINT read_chemistry: Reaction orders: reaction ', idum, ' does not exist'
           ios = 2; close(unitfile); return
         endif
         if (rxn_type(idum) /= 0) then
           write(*,'(A,I0,A)') '[ERROR] FLINT read_chemistry: Reaction orders: reaction ', idum, &
+            ' is a falloff reaction (orders are supported for Arrhenius-type reactions only)'
+          write(error_unit,'(A,I0,A)') '[ERROR] FLINT read_chemistry: Reaction orders: reaction ', idum, &
             ' is a falloff reaction (orders are supported for Arrhenius-type reactions only)'
           ios = 2; close(unitfile); return
         endif
@@ -156,6 +159,7 @@ contains
         enddo
         if (isp == 0) then
           write(*,'(A)') '[ERROR] FLINT read_chemistry: Reaction orders: species '//trim(chardum)//' is not in phase.txt'
+          write(error_unit,'(A)') '[ERROR] FLINT read_chemistry: Reaction orders: species '//trim(chardum)//' is not in phase.txt'
           ios = 2; close(unitfile); return
         endif
         ord_arrh_tab(isp, count(rxn_type(1:idum) == 0)) = order
@@ -232,6 +236,8 @@ contains
       if (Tt1 /= Ti1 .or. Tt2 /= Ti2) then
         write(*,'(A,I0,A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_chemistry: chemistry-Troe.dat covers ', Tt1, '..', Tt2, &
           ' K, chemistry-Arrhenius.dat ', Ti1, '..', Ti2, ' K: every rate table must share one temperature grid'
+        write(error_unit,'(A,I0,A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_chemistry: chemistry-Troe.dat covers ', Tt1, '..', Tt2, &
+          ' K, chemistry-Arrhenius.dat ', Ti1, '..', Ti2, ' K: every rate table must share one temperature grid'
         ios = 6
         return
       endif
@@ -251,6 +257,8 @@ contains
           if (Fcent_tab(j,i) /= Fcent_tab(j,i) .or. abs(Fcent_tab(j,i)) > huge(1d0) .or. &
               kinf_troe_tab(j,i) < 0d0 .or. k0_troe_tab(j,i) < 0d0) then
             write(*,'(A,I0,A,I0,A)') '[ERROR] FLINT read_chemistry: chemistry-Troe.dat falloff-Troe reaction ', i, &
+              ' at T = ', j, ' K: k_inf/k_0 < 0 or F_cent not finite: table not admissible'
+            write(error_unit,'(A,I0,A,I0,A)') '[ERROR] FLINT read_chemistry: chemistry-Troe.dat falloff-Troe reaction ', i, &
               ' at T = ', j, ' K: k_inf/k_0 < 0 or F_cent not finite: table not admissible'
             ios = 5
             return
@@ -281,6 +289,8 @@ contains
       if (Tt1 /= Ti1 .or. Tt2 /= Ti2) then
         write(*,'(A,I0,A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_chemistry: chemistry-Lindemann.dat covers ', Tt1, '..', Tt2, &
           ' K, chemistry-Arrhenius.dat ', Ti1, '..', Ti2, ' K: every rate table must share one temperature grid'
+        write(error_unit,'(A,I0,A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_chemistry: chemistry-Lindemann.dat covers ', Tt1, '..', Tt2, &
+          ' K, chemistry-Arrhenius.dat ', Ti1, '..', Ti2, ' K: every rate table must share one temperature grid'
         ios = 6
         return
       endif
@@ -296,6 +306,8 @@ contains
         do j = Ti1, Ti2
           if (kinf_lind_tab(j,i) < 0d0 .or. k0_lind_tab(j,i) < 0d0) then
             write(*,'(A,I0,A,I0,A)') '[ERROR] FLINT read_chemistry: chemistry-Lindemann.dat falloff-Lindemann reaction ', i, &
+              ' at T = ', j, ' K: k_inf/k_0 < 0: table not admissible'
+            write(error_unit,'(A,I0,A,I0,A)') '[ERROR] FLINT read_chemistry: chemistry-Lindemann.dat falloff-Lindemann reaction ', i, &
               ' at T = ', j, ' K: k_inf/k_0 < 0: table not admissible'
             ios = 5
             return

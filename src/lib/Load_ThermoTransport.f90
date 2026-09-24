@@ -212,6 +212,7 @@ contains
     use strings, only: parse
     use Lib_Tecplot
     use Lib_ORION_data
+    use iso_fortran_env, only: error_unit
     implicit none
     character(len=*), intent(in), optional :: folder
     ! Local
@@ -260,6 +261,8 @@ contains
     if (Tmin_dummy > merge(1, Tmin, Tmin == 0) .or. Tmax_dummy /= Tmax) then
       write(*,'(A,I0,A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_idealgas_transport: the table covers ', Tmin_dummy, '..', Tmax_dummy, &
         ' K, the thermo tables ', merge(1, Tmin, Tmin == 0), '..', Tmax, ' K: a table must start at or below the first thermo temperature and end at the last one'
+      write(error_unit,'(A,I0,A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_idealgas_transport: the table covers ', Tmin_dummy, '..', Tmax_dummy, &
+        ' K, the thermo tables ', merge(1, Tmin, Tmin == 0), '..', Tmax, ' K: a table must start at or below the first thermo temperature and end at the last one'
       ios = 3
       return
     endif
@@ -293,6 +296,7 @@ contains
   function read_idealgas_diffusion(folder) result(ios)
     use Lib_Tecplot
     use Lib_ORION_data
+    use iso_fortran_env, only: error_unit
     implicit none
     character(len=*), intent(in), optional :: folder
     ! Local
@@ -362,6 +366,8 @@ contains
     ! below its first row.
     if (Tmin_dummy > merge(1, Tmin, Tmin == 0) .or. Tmax_dummy /= Tmax) then
       write(*,'(A,I0,A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_idealgas_diffusion: the table covers ', Tmin_dummy, '..', Tmax_dummy, &
+        ' K, the thermo tables ', merge(1, Tmin, Tmin == 0), '..', Tmax, ' K: a table must start at or below the first thermo temperature and end at the last one'
+      write(error_unit,'(A,I0,A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_idealgas_diffusion: the table covers ', Tmin_dummy, '..', Tmax_dummy, &
         ' K, the thermo tables ', merge(1, Tmin, Tmin == 0), '..', Tmax, ' K: a table must start at or below the first thermo temperature and end at the last one'
       ios = 3
       return

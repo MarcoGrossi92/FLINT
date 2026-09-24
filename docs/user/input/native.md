@@ -656,7 +656,7 @@ last row). FLINT checks it when the files are loaded:
   below its first row. A table that starts lower is accepted and read at T kelvin (its rows below
   the range of `thermo.dat` are not used); a table that starts higher or ends at another row is
   refused (`read_idealgas_transport`/`read_idealgas_diffusion` return `ios = 3` with an `[ERROR]`
-  line);
+  line on standard output and standard error);
 - `chemistry-Troe.dat` and `chemistry-Lindemann.dat` must have the first and last row of
   `chemistry-Arrhenius.dat` (`read_chemistry` returns `ios = 6` with an `[ERROR]` line);
 - `chemistry-Arrhenius.dat` must cover the range of `thermo.dat`: its first row at or below the

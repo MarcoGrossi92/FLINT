@@ -57,3 +57,17 @@ the routine silently read the wrong species. The tables must therefore be loaded
 `Assign_Mechanism`. A name that is not hooked is not checked (it falls back to the general
 procedure). `test-contract` exercises the rules; to add a hooked mechanism, add its record to the
 JSON and re-run the generator.
+
+## Fallback to the general procedure and strict mode
+
+A mechanism name that is not hooked in `Assign_Mechanism` selects the data-driven `general`
+procedure: FLINT prints `[WARNING] Explicit procedure for <name> not found, defaulting to the
+general procedure` on standard output **and** on the error unit (standard error), so that a
+solver log that captures only one of the two channels still records the fallback. Note that
+`general` raises the concentrations to the integer stoichiometric coefficients (`nint`): a
+mechanism with fractional reaction orders is a different model under `general`.
+
+Strict mode turns the fallback into a refusal (`[ERROR] FLINT Assign_Mechanism: mechanism <name>
+is not hooked and strict mode is on`, exit status 1): set the module flag
+`FLINT_strict_mechanism = .true.` (module `FLINT_Lib_Chemistry_wdot`) before `Assign_Mechanism`,
+or the environment variable `FLINT_STRICT_MECHANISM=1` (also `true`, `yes`, `on`). Default: off.

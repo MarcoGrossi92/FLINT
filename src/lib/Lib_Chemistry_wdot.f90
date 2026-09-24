@@ -1,6 +1,13 @@
 
 module FLINT_Lib_Chemistry_wdot
+  use iso_fortran_env, only: error_unit
   implicit none
+
+  !> Fallback policy of Assign_Mechanism for a name that is not hooked: .false.
+  !> (default) selects the general procedure and prints a WARNING on stdout and
+  !> on the error unit; .true. refuses the name (error stop). The environment
+  !> variable FLINT_STRICT_MECHANISM=1|true|yes|on turns it on as well.
+  logical, public :: FLINT_strict_mechanism = .false.
 
   !> Concrete procedure pointing to one of the subroutine realizations
   procedure(chemsource_if), pointer, public :: chemistry_source
@@ -128,6 +135,15 @@ contains
     case default
       hooked = .false.
       write(*,*) "[WARNING] Explicit procedure for "//trim(mad_world)//" not found, defaulting to the general procedure"
+      write(error_unit,'(A)') "[WARNING] FLINT Assign_Mechanism: explicit procedure for "//trim(mad_world)// &
+        " not found, defaulting to the general procedure"
+      if (strict_mechanism()) then
+        write(*,'(A)') "[ERROR] FLINT Assign_Mechanism: mechanism "//trim(mad_world)// &
+          " is not hooked and strict mode is on (FLINT_STRICT_MECHANISM / FLINT_strict_mechanism)"
+        write(error_unit,'(A)') "[ERROR] FLINT Assign_Mechanism: mechanism "//trim(mad_world)// &
+          " is not hooked and strict mode is on (FLINT_STRICT_MECHANISM / FLINT_strict_mechanism)"
+        error stop 1
+      endif
       chemistry_source => general
     end select
 
@@ -142,6 +158,22 @@ contains
 
   end subroutine Assign_Mechanism
 
+
+  !> Strict fallback policy: the module flag or the environment variable.
+  function strict_mechanism() result(strict)
+    implicit none
+    logical :: strict
+    character(len=16) :: val
+    integer :: istat
+    strict = FLINT_strict_mechanism
+    call get_environment_variable('FLINT_STRICT_MECHANISM', value=val, status=istat)
+    if (istat == 0) then
+      select case (trim(adjustl(val)))
+      case ('1', 'true', 'TRUE', 'True', 'yes', 'YES', 'on', 'ON')
+        strict = .true.
+      end select
+    endif
+  end function strict_mechanism
 
   ! General mechanism
   subroutine general(roi,temp,omegadot)

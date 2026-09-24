@@ -109,6 +109,13 @@ contains
     roi(1:ns) = max(Z(1:ns), 0.d0)
 
     ! 1) Species block: ∂omegadot/∂(roi,T) from the mechanism.
+    !    Zeroed first, as rhs_native does for droic: a mechanism routine assigns
+    !    only the slots of its own species, so species appended after them
+    !    (allowed by the mechanism contract check) stay inert here too, instead
+    !    of reading whatever the stack held (droic(ns_r+1:ns) was undefined).
+    droic = 0.d0
+    dwdr  = 0.d0
+    dwdT  = 0.d0
     call chemistry_source   ( roi, T, droic )
     call chemistry_jacobian ( roi, T, dwdr, dwdT )
 

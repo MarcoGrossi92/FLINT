@@ -46,6 +46,7 @@ program test
   do j = 1, 1
     do i = Tstart, Tend
       T = dble(i)
+      droic = 0.d0
       call Chemistry_Source ( rhoi, T, droic )
       wdot_explicit(:,i) = droic
     enddo
@@ -120,6 +121,7 @@ program test
   do j = 1, 1
     do i = Tstart, Tend
       T = dble(i)
+      droic = 0.d0
       call Chemistry_Source ( rhoi, T, droic )
       wdot_explicit(:,i) = droic
     enddo
@@ -201,6 +203,7 @@ program test
   do j = 1, 1
     do i = Tstart, Tend
       T = dble(i)
+      droic = 0.d0
       call Chemistry_Source ( rhoi, T, droic )
       wdot_explicit(:,i) = droic
     enddo
@@ -277,6 +280,7 @@ program test
   do j = 1, 1
     do i = Tstart, Tend
       T = dble(i)
+      droic = 0.d0
       call Chemistry_Source ( rhoi, T, droic )
       wdot_explicit(:,i) = droic
     enddo
@@ -353,6 +357,7 @@ program test
   do j = 1, 1
     do i = Tstart, Tend
       T = dble(i)
+      droic = 0.d0
       call Chemistry_Source ( rhoi, T, droic )
       wdot_explicit(:,i) = droic
     enddo
@@ -429,6 +434,7 @@ program test
   do j = 1, 1
     do i = Tstart, Tend
       T = dble(i)
+      droic = 0.d0
       call Chemistry_Source ( rhoi, T, droic )
       wdot_explicit(:,i) = droic
     enddo
@@ -505,6 +511,7 @@ program test
   do j = 1, 1
     do i = Tstart, Tend
       T = dble(i)
+      droic = 0.d0
       call Chemistry_Source ( rhoi, T, droic )
       wdot_explicit(:,i) = droic
     enddo
@@ -581,6 +588,7 @@ program test
   do j = 1, 1
     do i = Tstart, Tend
       T = dble(i)
+      droic = 0.d0
       call Chemistry_Source ( rhoi, T, droic )
       wdot_explicit(:,i) = droic
     enddo
@@ -657,6 +665,7 @@ program test
   do j = 1, 1
     do i = Tstart, Tend
       T = dble(i)
+      droic = 0.d0
       call Chemistry_Source ( rhoi, T, droic )
       wdot_explicit(:,i) = droic
     enddo
@@ -733,6 +742,7 @@ program test
   do j = 1, 1
     do i = Tstart, Tend
       T = dble(i)
+      droic = 0.d0
       call Chemistry_Source ( rhoi, T, droic )
       wdot_explicit(:,i) = droic
     enddo

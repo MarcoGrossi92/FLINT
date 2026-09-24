@@ -5,6 +5,8 @@
 ! 3 -> table file not found
 ! 4 -> error reading table file
 ! 5 -> table value not admissible (a negative falloff rate coefficient, or a non-finite F_cent)
+! 6 -> chemistry-Arrhenius.dat does not cover the thermo temperature range, or a falloff table is not
+!      on the grid of chemistry-Arrhenius.dat
 
 module FLINT_Load_Chemistry
   use iso_fortran_env, only: I4 => int32, R8 => real64
@@ -16,14 +18,15 @@ contains
     use Lib_ORION_Data
     use Lib_Tecplot
     use FLINT_Lib_Chemistry_data
-    use FLINT_Lib_Thermodynamic, only: ns, FLINT_phase_prefix, species_names
+    use FLINT_Lib_Thermodynamic, only: ns, FLINT_phase_prefix, species_names, Tmin, Tmax, cp_tab
+    use iso_fortran_env, only: error_unit
     implicit none
     character(len=*), intent(in), optional :: folder
     character(len=*), intent(out), optional :: mech_name
     integer :: idum, unitfile
     type(ORION_data)  :: orion
     integer :: i, j, ios, j0, j1, j2
-    integer :: Ti1, Ti2, dummy1, dummy23
+    integer :: Ti1, Ti2, dummy1, dummy23, Tt1, Tt2, Tf
     character(len=32):: chardum
     character(len=256) :: line
     integer :: nord, isp
@@ -180,6 +183,25 @@ contains
     Ti1 = nint(orion%block(1)%mesh(1,dummy1,dummy23,dummy23))
     Ti2 = Ti1 + ubound(orion%block(1)%mesh, dim=2) - dummy1
     T_tab_min = Ti1; T_tab_max = Ti2   ! row T of every rate table = rate at T kelvin
+    ! Table range contract: row T of a rate table is the rate at T kelvin (the
+    ! tables are allocated on their own first and last row), and the source terms
+    ! need a rate at every temperature of the thermo tables. A rate table that
+    ! covers the thermo range is accepted, also when it extends beyond it (e.g.
+    ! the 1..15000 K tables of a database folder with thermo tables regenerated
+    ! on a narrower range: the rows are read at T kelvin and rhs_native/jac_native
+    ! guard both ranges); a rate table that starts above or ends below the thermo
+    ! tables is refused: the kinetics would read rows outside it.
+    if (allocated(cp_tab)) then
+      Tf = merge(1, Tmin, Tmin == 0)
+      if (Ti1 > Tf .or. Ti2 < Tmax) then
+        write(*,'(A,I0,A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_chemistry: chemistry-Arrhenius.dat covers ', Ti1, '..', Ti2, &
+          ' K, the thermo tables ', Tf, '..', Tmax, ' K: the rate tables must cover the thermo temperature range'
+        write(error_unit,'(A,I0,A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_chemistry: chemistry-Arrhenius.dat covers ', Ti1, '..', Ti2, &
+          ' K, the thermo tables ', Tf, '..', Tmax, ' K: the rate tables must cover the thermo temperature range'
+        ios = 6
+        return
+      endif
+    endif
     allocate(kf_tab(Ti1:Ti2, 1:nrc_arrh))
     allocate(kb_tab(Ti1:Ti2, 1:nrc_arrh))
     dummy23 = lbound(orion%block(1)%vars, dim=3)
@@ -202,6 +224,18 @@ contains
         ios = 3
         return
       endif
+      ! Table range contract: the falloff tables share the grid of the Arrhenius table
+      dummy1  = lbound(orion%block(1)%mesh, dim=2)
+      dummy23 = lbound(orion%block(1)%mesh, dim=3)
+      Tt1 = nint(orion%block(1)%mesh(1,dummy1,dummy23,dummy23))
+      Tt2 = Tt1 + ubound(orion%block(1)%mesh, dim=2) - dummy1
+      if (Tt1 /= Ti1 .or. Tt2 /= Ti2) then
+        write(*,'(A,I0,A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_chemistry: chemistry-Troe.dat covers ', Tt1, '..', Tt2, &
+          ' K, chemistry-Arrhenius.dat ', Ti1, '..', Ti2, ' K: every rate table must share one temperature grid'
+        ios = 6
+        return
+      endif
+      dummy23 = lbound(orion%block(1)%vars, dim=3)
       allocate(Fcent_tab(Ti1:Ti2, 1:nrc_troe))
       allocate(k0_troe_tab, kinf_troe_tab, kc_troe_tab, mold=Fcent_tab)
       do i = 1, nrc_troe
@@ -239,6 +273,18 @@ contains
         ios = 3
         return
       endif
+      ! Table range contract: the falloff tables share the grid of the Arrhenius table
+      dummy1  = lbound(orion%block(1)%mesh, dim=2)
+      dummy23 = lbound(orion%block(1)%mesh, dim=3)
+      Tt1 = nint(orion%block(1)%mesh(1,dummy1,dummy23,dummy23))
+      Tt2 = Tt1 + ubound(orion%block(1)%mesh, dim=2) - dummy1
+      if (Tt1 /= Ti1 .or. Tt2 /= Ti2) then
+        write(*,'(A,I0,A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_chemistry: chemistry-Lindemann.dat covers ', Tt1, '..', Tt2, &
+          ' K, chemistry-Arrhenius.dat ', Ti1, '..', Ti2, ' K: every rate table must share one temperature grid'
+        ios = 6
+        return
+      endif
+      dummy23 = lbound(orion%block(1)%vars, dim=3)
       allocate(kinf_lind_tab(Ti1:Ti2, 1:nrc_lindemann))
       allocate(k0_lind_tab, kc_lind_tab, mold=kinf_lind_tab)
       do i = 1, nrc_lindemann

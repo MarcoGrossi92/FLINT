@@ -107,8 +107,14 @@ test-contract   the mechanism contract check of Assign_Mechanism: routine order 
                 calibrated species with the same composition accepted, name read whole
 test-falloff    the Troe/Lindemann rates where the tables vanish (Pr = 0, k_inf = 0 give a
                 zero rate, no NaN) and the k_c <= 0 convention for irreversible falloff
+test-ranges     the temperature-grid contract of the tables: falloff tables on the Arrhenius grid, transport
+                tables on the thermo grid, rate tables that do not cover the thermo grid (refusals), a
+                rate table wider than the thermo grid (accepted, same rows as on the thermo grid)
+test-inert      species appended after the slots of a compiled routine are inert on every path (direct
+                call, rhs_native, analytical Jacobian, jac_native) with sentinel-filled outputs
 test-rhs-range  rhs_native/jac_native bail out (F = -1, zero Jacobian) outside the RATE tables as
-                they do outside the thermo tables (WD thermo from 1 K, rate tables 100..400 K)
+                they do outside the thermo tables (test/tables/WD-100K loaded on one grid, the
+                rate range then narrowed in memory: a defence for tables set by another path)
 test-orders     the general procedure with the optional 'Reaction orders' block reproduces Cantera's
                 rates for JLR-frassoldati (yaml orders) and keeps the integer-rounded law without it
                 (fixture test/orders/JLR-frassoldati: tables of a table writer, references embedded)

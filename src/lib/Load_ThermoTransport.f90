@@ -251,7 +251,15 @@ contains
     Tmin_dummy = nint(orion%block(1)%mesh(1,dummy1,dummy23,dummy23))
     Tmax_dummy = Tmin_dummy + ubound(orion%block(1)%mesh, dim=2) - dummy1
 
-    if (Tmax_dummy /= Tmax) then
+    ! Table range contract: the table ends at the last row of the thermo tables and
+    ! starts at or below their first row. Row T is the value at T kelvin and the
+    ! table is read on the thermo range only (the species-contiguous copies of
+    ! build_transposed_tables, the clamped index of the diffusion loop), so rows
+    ! below that range are not used; a table that starts above it would be read
+    ! below its first row.
+    if (Tmin_dummy > merge(1, Tmin, Tmin == 0) .or. Tmax_dummy /= Tmax) then
+      write(*,'(A,I0,A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_idealgas_transport: the table covers ', Tmin_dummy, '..', Tmax_dummy, &
+        ' K, the thermo tables ', merge(1, Tmin, Tmin == 0), '..', Tmax, ' K: a table must start at or below the first thermo temperature and end at the last one'
       ios = 3
       return
     endif
@@ -346,7 +354,15 @@ contains
     Tmin_dummy = nint(orion%block(1)%mesh(1,dummy1,dummy23,dummy23))
     Tmax_dummy = Tmin_dummy + ubound(orion%block(1)%mesh, dim=2) - dummy1
 
-    if (Tmax_dummy /= Tmax) then
+    ! Table range contract: the table ends at the last row of the thermo tables and
+    ! starts at or below their first row. Row T is the value at T kelvin and the
+    ! table is read on the thermo range only (the species-contiguous copies of
+    ! build_transposed_tables, the clamped index of the diffusion loop), so rows
+    ! below that range are not used; a table that starts above it would be read
+    ! below its first row.
+    if (Tmin_dummy > merge(1, Tmin, Tmin == 0) .or. Tmax_dummy /= Tmax) then
+      write(*,'(A,I0,A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_idealgas_diffusion: the table covers ', Tmin_dummy, '..', Tmax_dummy, &
+        ' K, the thermo tables ', merge(1, Tmin, Tmin == 0), '..', Tmax, ' K: a table must start at or below the first thermo temperature and end at the last one'
       ios = 3
       return
     endif

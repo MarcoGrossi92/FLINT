@@ -462,7 +462,7 @@ The `TITLE` carries the **reference pressure** `Pref` (in Pa) at which the coeff
 | TITLE | File description (e.g. "Binary Diffusion Coefficients") |
 | VARIABLES | Column headers ("Temperature", "Dij") |
 | ZONE | One zone per **unique unordered species pair** |
-| I=N | Number of temperature points (must match `thermo.dat`) |
+| I=N | Number of temperature points (those of `thermo.dat`, more if the table starts lower) |
 | F=POINT | Data format (always POINT) |
 | Data rows | `Temperature  Dij` (space-separated floats) |
 
@@ -484,7 +484,7 @@ $$
 Only one of $(i,j)$ / $(j,i)$ is stored, since $\mathcal{D}_{ij} = \mathcal{D}_{ji}$.
 
 **Parsing Notes:**
-- The temperature range **must match** `thermo.dat` (mismatch returns error code 3).
+- The temperature range **must cover** `thermo.dat`: the last row equal to its last row, the first row at or below its first row (otherwise error code 3).
 - The number of zones **must equal** $N_s(N_s-1)/2$ (mismatch returns error code 4).
 - Coefficients are tabulated against temperature at the reference pressure `Pref` from the TITLE; FLINT rescales them to the local pressure by $p_\text{ref}/p$ (exact, since $\mathcal{D}\propto 1/p$), so the model is valid at any pressure.
 - Single-species phases have no pairs and require no `diffusion.dat`.
@@ -647,3 +647,23 @@ err = read_realfluid_transport("path/to/INPUT/")  ! optional
 ```
 
 ---
+## Temperature grid of the tables
+
+All the tables of one INPUT folder are written on one temperature grid (1 K rows, same first and
+last row). FLINT checks it when the files are loaded:
+
+- `transport.dat` and `diffusion.dat` must end at the last row of `thermo.dat` and start at or
+  below its first row. A table that starts lower is accepted and read at T kelvin (its rows below
+  the range of `thermo.dat` are not used); a table that starts higher or ends at another row is
+  refused (`read_idealgas_transport`/`read_idealgas_diffusion` return `ios = 3` with an `[ERROR]`
+  line);
+- `chemistry-Troe.dat` and `chemistry-Lindemann.dat` must have the first and last row of
+  `chemistry-Arrhenius.dat` (`read_chemistry` returns `ios = 6` with an `[ERROR]` line);
+- `chemistry-Arrhenius.dat` must cover the range of `thermo.dat`: its first row at or below the
+  first row of `thermo.dat` and its last row at or above the last one. A wider rate table (e.g. the
+  1..15000 K tables of a database folder with a `thermo.dat` regenerated on a narrower range) is
+  accepted and read at T kelvin; a rate table that starts above or ends below `thermo.dat` is
+  refused (`read_chemistry` returns `ios = 6` with an `[ERROR]` line on standard output and
+  standard error).
+
+Row T of every table is the value at T kelvin whatever the first row of the file.

@@ -1,8 +1,9 @@
 ! test-tables: the rate tables are indexed by temperature (row T = rate at T kelvin) whatever the
 ! first temperature of the table.
 !  1. database/WD (first row 1 K): f_kf/f_kb return row T at every T (regression guard);
-!  2. the same rows restricted to 100..400 K (test/tables/WD-100K, made by test/tables/make_WD-100K.py):
-!     row T is still the rate at T kelvin (f_kf/f_kb == the full 1 K table at the same T);
+!  2. the same rows restricted to 100..400 K (test/tables/WD-100K, made by test/tables/make_WD-100K.py,
+!     a complete INPUT folder on the 100..400 K grid: read_chemistry refuses rate tables on another
+!     grid than the thermo one): row T is still the rate at T kelvin (f_kf/f_kb == the full 1 K table);
 !  3. every hand-written routine (WD, Andersen, OSK, JLR, Frassoldati, CKJLR10sp, singh, Singh_WC32,
 !     singhC3H6, Coronetti, Nassini_4, Frolov_nopressure, Frolov, ONERA_7) with synthetic in-memory tables:
 !     omegadot with the tables starting at 50, 100, 300 and 799 K is BIT-IDENTICAL to omegadot with
@@ -73,6 +74,10 @@ program test
   call free_chemistry_data()
 
   ! 2) the same rows in a table starting at 100 K: row T must still be the rate at T kelvin
+  !    (the thermo tables are reloaded from the fixture: every table shares the thermo grid)
+  deallocate(wm_tab, Ri_tab, species_names, h_tab, cp_tab, dcpi_tab, s_tab)
+  err = read_idealgas_thermo('tables/WD-100K/')
+  if (err /= 0) then; write(*,'(A,I0)') '[FAIL] read_idealgas_thermo tables/WD-100K: ios=', err; stop 1; endif
   err = read_chemistry(folder='tables/WD-100K', mech_name=mech_name)
   if (err /= 0) then; write(*,'(A,I0)') '[FAIL] read_chemistry tables/WD-100K: ios=', err; stop 1; endif
   lb = lbound(kf_tab, dim=1); ub = ubound(kf_tab, dim=1)

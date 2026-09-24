@@ -96,8 +96,9 @@ program test
   call verdict('7 unhooked name: nothing to check', ok)
   call free_chemistry_data()
 
-  ! 8. the mechanism name is the whole first line of chemistry-info.txt ('WD 2026' is not 'WD')
-  call execute_command_line('mkdir -p tables/name-blank && cp tables/WD-100K/chemistry-Arrhenius.dat tables/name-blank/')
+  ! 8. the mechanism name is the whole first line of chemistry-info.txt ('WD 2026' is not 'WD');
+  !    the rate table is the database/WD one (on the grid of the loaded thermo tables)
+  call execute_command_line('mkdir -p tables/name-blank && cp ../database/WD/chemistry-Arrhenius.dat tables/name-blank/')
   open(newunit=err, file='tables/name-blank/chemistry-info.txt', status='replace', action='write')
   write(err,'(A)') '  WD 2026  '
   write(err,'(A)') 'N.ro species = 5'
@@ -139,7 +140,7 @@ program test
 
   ! 9. 'Nassini Original': a list-directed read gave 'Nassini' (hooked: Nassini_4, 3 slots O2/H2O/H2),
   !    the whole-line read gives an unhooked name; the WD data would not pass the Nassini_4 contract
-  call execute_command_line('mkdir -p tables/name-nassini && cp tables/WD-100K/chemistry-Arrhenius.dat tables/name-nassini/')
+  call execute_command_line('mkdir -p tables/name-nassini && cp ../database/WD/chemistry-Arrhenius.dat tables/name-nassini/')
   call execute_command_line("sed '1s/.*/Nassini Original/' tables/name-blank/chemistry-info.txt > tables/name-nassini/chemistry-info.txt")
   err = read_chemistry(folder='tables/name-nassini', mech_name=mech_name)
   call verdict('9a Nassini Original: read whole: '//trim(mech_name), err == 0 .and. mech_name == 'Nassini Original')

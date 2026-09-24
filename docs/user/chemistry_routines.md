@@ -77,9 +77,11 @@ or the environment variable `FLINT_STRICT_MECHANISM=1` (also `true`, `yes`, `on`
 
 `rhs_native` and `jac_native` return the bail-out value (`F = -1`, zero Jacobian) when the
 temperature is outside the thermo tables **or** outside the rate tables (`chemistry-*.dat`):
-row T of every table is the value at T kelvin, so a rate table that starts above the thermo one
-(e.g. `database/TSR-Rich-31`, 500 K) must not be read below its first row. The tables of `database/WD`
-start at 1 K with a 1 K step and cover the same range as the thermo tables.
+row T of every table is the value at T kelvin and a rate table must not be read below its first
+row. The rate tables loaded by `read_chemistry` cover the thermo range (see the temperature grid of
+the tables; a wider rate table is accepted), so the second guard is a defence for tables set by
+another path. The tables of `database/WD` start at 1 K with a 1 K step; every table of
+`database/TSR-Rich-31` (thermo and rates) starts at 500 K.
 
 ## Analytical Jacobian availability
 

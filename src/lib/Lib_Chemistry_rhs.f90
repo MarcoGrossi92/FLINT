@@ -36,9 +36,10 @@ contains
     T = Z(nz)
 
     ! Outside the thermo tables OR outside the rate tables (row T of both is the
-    ! value at T kelvin): a rate table may start above the thermo one (e.g. the
-    ! 500 K tables of database/TSR-Rich-31 with a 1 K thermo file); reading it
-    ! below its first row was an out-of-bounds read.
+    ! value at T kelvin). read_chemistry refuses rate tables on another grid than
+    ! the thermo one, so the second guard is a defence for tables set by another
+    ! path (a driver's in-memory tables): reading a rate table below its first
+    ! row was an out-of-bounds read.
     if (T < Tmin .or. T >= Tmax .or. isnan(T) .or. T < T_tab_min .or. T >= T_tab_max) then
        F(:) = -1.0d0
        return

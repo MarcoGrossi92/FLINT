@@ -101,7 +101,8 @@ test-tables     rate tables are indexed by temperature whatever their first row:
                 hand-written routine gives bit-identical omegadot with tables starting at 50, 100,
                 300 and 799 K (positive control: the assumed-shape accessor of FLINT <= 2223136);
                 the public comp_ch_tabT equals f_kf/f_kb on the 1 K, the 100..400 K and the
-                synthetic 100 K tables
+                synthetic 100 K tables; the analytical Jacobians define their whole block with
+                species after the slots
 test-contract   the mechanism contract check of Assign_Mechanism: routine order accepted,
                 swapped slots / wrong reaction count refused, appended inert species accepted,
                 calibrated species with the same composition accepted, name read whole

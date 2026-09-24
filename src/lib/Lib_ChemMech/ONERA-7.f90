@@ -145,7 +145,10 @@ enddo
 
 ! 3) Third-body M and its derivatives ----------------------------------------
 M = coi(1) + 12.d0*coi(2) + 2.5d0*coi(3) + coi(4) + coi(5) + coi(6) + coi(7)
-dM_dc(:) = epsM(:)
+! Species after the 7 routine slots (accepted by the mechanism contract) are not
+! third bodies of this routine: its M is built from the 7 slots only.
+dM_dc(:) = 0.d0
+dM_dc(1:7) = epsM(:)
 
 ! 4) Per-reaction accumulation -----------------------------------------------
 dwdr_c = 0.d0

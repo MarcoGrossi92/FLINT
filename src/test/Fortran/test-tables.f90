@@ -8,6 +8,10 @@
 !     singhC3H6, Coronetti, Nassini_4, Frolov_nopressure, Frolov, ONERA_7) with synthetic in-memory tables:
 !     omegadot with the tables starting at 50, 100, 300 and 799 K is BIT-IDENTICAL to omegadot with
 !     the same rows in tables starting at 1 K, and a sentinel-filled omegadot comes back fully defined;
+!  3b. the two analytical Jacobians (ONERA_7_jac, Frolov_nopressure_jac) with species after the routine
+!     slots (12 loaded, 7 and 3 routine slots): the whole dwdr/dwdT block is defined, the rows AND the
+!     columns of the appended species are exactly 0 (ONERA_7_jac copied its 7 third-body efficiencies
+!     into dM_dc(ns): a shape mismatch that a bounds-checked build reports and an optimised one reads past);
 !  4. positive control: the accessor of FLINT <= 2223136 (assumed-shape dummy tab(:,:), copied below
 !     as old_comp_ch_tabT) returns the rate of row T + Tmin - 1 when the table starts at Tmin /= 1;
 !  5. the public comp_ch_tabT of the library (dummy tab(T_tab_min:,:)) equals f_kf/f_kb at every row of
@@ -38,10 +42,17 @@ program test
   real(8) :: Tdiff(2), a, b, c, dmax, td
   real(8) :: roi0(nsyn), roi(nsyn), w(nsyn), w_ref(nsyn, nsamp)
   integer :: err, ir, T, k, m, Tint(2), nfail1, nfail2, nfail3, nctrl, nctrl_tot, lb, ub, nbad
+  integer :: nfail3b, ns_r, rc_child, diag
+  real(8) :: dwdr(nsyn, nsyn), dwdT(nsyn)
+  character(len=512) :: self, arg
+  logical :: child
   integer :: nctrl1, nctrl2, nctrl2_tot, nsent, nrest1, nrest2, nrest4
   character(32) :: mech_name
 
   Tdiff = [0.d0, 0.37d0]
+  ! 'child-jac': only the Jacobian checks of 3b, in a child process whose error unit the parent inspects
+  call get_command_argument(0, self); call get_command_argument(1, arg); child = (arg == 'child-jac')
+  if (.not. child) then
   err = read_idealgas_thermo('../database/WD/')
   if (err /= 0) then; write(*,'(A,I0)') '[FAIL] read_idealgas_thermo ../database/WD: ios=', err; stop 1; endif
   err = read_chemistry(folder='../database/WD/', mech_name=mech_name)
@@ -113,6 +124,7 @@ program test
     '; old assumed-shape accessor (kf, rows 100..300) /= f_kf: ', nctrl2, ' of ', nctrl2_tot, ', max rel. error ', dmax
   write(*,'(A,I0,A)') ' 100 K table : comp_ch_tabT /= f_kf|f_kb at every row: ', nrest2, ' (expected 0)'
   call free_chemistry_data()
+  endif
 
   ! 3) hand-written routines with synthetic tables: bit identity for tables starting at Tmin /= 1
   ns = nsyn
@@ -131,6 +143,7 @@ program test
   enddo
   roi0 = [0.05d0, 0.30d0, 0.10d0, 0.08d0, 0.12d0, 0.20d0, 0.01d0, 0.002d0, 0.004d0, 0.05d0, 0.03d0, 0.40d0]
   nfail3 = 0; nsent = 0
+  if (.not. child) then
   do ir = 1, nroutine
     call set_tables(1)
     do k = 1, nsamp
@@ -154,6 +167,42 @@ program test
   enddo
   write(*,'(A,I0,A,I0,A)') ' sentinel    : ', nsent, ' of ', nroutine*nsamp, &
     ' direct calls left the sentinel 7.0 in a slot the routine did not define (expected 0: whole block defined)'
+  endif
+
+  ! 3b) analytical Jacobians with species after the routine slots: whole block defined, tail rows and
+  !     columns exactly 0 (a third body built from the routine slots only, no read past epsM)
+  nfail3b = 0
+  call set_tables(1)
+  do ir = 1, 2
+    roi = roi0; dwdr = 7.0d0; dwdT = 7.0d0
+    if (ir == 1) then
+      ns_r = 7; call ONERA_7_jac(roi, Tsamp(2), dwdr, dwdT)
+    else
+      ns_r = 3; call Frolov_nopressure_jac(roi, Tsamp(2), dwdr, dwdT)
+    endif
+    nbad = 0
+    if (any(dwdr /= dwdr) .or. any(dwdT /= dwdT)) nbad = nbad + 1                         ! NaN
+    if (any(dwdr == 7.0d0) .or. any(dwdT == 7.0d0)) nbad = nbad + 1                       ! sentinel left
+    if (any(dwdr(ns_r+1:nsyn, :) /= 0d0) .or. any(dwdT(ns_r+1:nsyn) /= 0d0)) nbad = nbad + 1   ! tail rows
+    if (any(dwdr(:, ns_r+1:nsyn) /= 0d0)) nbad = nbad + 1                                 ! tail columns
+    if (all(dwdr(1:ns_r, 1:ns_r) == 0d0)) nbad = nbad + 1                                 ! own block reacting
+    write(*,'(A,A18,A,I0,A)') ' Jacobian ', merge('ONERA_7_jac       ', 'Frolov_nopressure_', ir == 1), &
+      ': ', nbad, ' of 5 checks failed (whole block defined, tail rows and columns 0, own block nonzero)'
+    nfail3b = nfail3b + nbad
+  enddo
+  if (child) then
+    if (nfail3b > 0) stop 1
+    stop
+  endif
+  ! 3c) the same checks in a child process whose error unit is inspected: with the shape
+  !     mismatch of the old ONERA_7_jac a bounds-checked build aborts there (gfortran -fcheck)
+  !     or prints a runtime diagnostic and goes on (ifx -check: warning 406)
+  call execute_command_line(trim(self)//' child-jac > tables/child-jac.out 2> tables/child-jac.err', exitstat=rc_child)
+  call execute_command_line("command grep -q -E 'Shape mismatch|bound|Subscript|runtime error|forrtl' tables/child-jac.err", &
+    exitstat=diag)
+  write(*,'(A,I0,A,I0,A)') ' Jacobian child process: exit code ', rc_child, ', runtime diagnostics on its error unit: ', &
+    merge(1, 0, diag == 0), ' (expected 0 and 0)'
+  if (rc_child /= 0 .or. diag == 0) nfail3b = nfail3b + 1
 
   ! 4) positive control: the assumed-shape accessor of FLINT <= 2223136 reads row T + Tmin - 1
   call set_tables(100)
@@ -172,7 +221,7 @@ program test
   write(*,'(A,I0,A,I0,A)') ' comp_ch_tabT (tables from 100 K): differs from f_kf|f_kb in ', nrest4, ' of ', 2*nctrl_tot, &
     ' samples (expected 0)'
   call free_chemistry_data()
-  if (nfail1 + nfail2 + nfail3 > 0 .or. nctrl /= nctrl_tot .or. nctrl1 /= 0 .or. nctrl2 /= nctrl2_tot .or. nsent /= 0 &
+  if (nfail1 + nfail2 + nfail3 + nfail3b > 0 .or. nctrl /= nctrl_tot .or. nctrl1 /= 0 .or. nctrl2 /= nctrl2_tot .or. nsent /= 0 &
       .or. nrest1 + nrest2 + nrest4 /= 0) then
     write(*,'(A)') ' Verdict -> fail (row T of a rate table must be the rate at T kelvin)'
     stop 1

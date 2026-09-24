@@ -70,6 +70,11 @@ contains
 
   end function comp_ch_tabT
 
+  !> Linear interpolation of the forward (f_kf) / backward (f_kb) rate of the
+  !> Arrhenius reaction `ireact` between the rows Tint(1) = int(T) and
+  !> Tint(2) = int(T)+1 of the module tables, whose row T is the rate at T kelvin
+  !> whatever the first temperature of the table.
+
   pure function f_kf(ireact,Tint,Tdiff) result(result)
     implicit none
     integer, intent(in) :: ireact, Tint(2)

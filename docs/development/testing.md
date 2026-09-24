@@ -97,9 +97,11 @@ Three drivers that need no Cantera and no fixture beyond `database/WD` and `test
 
 ```
 test-tables     rate tables are indexed by temperature whatever their first row:
-                comp_ch_tabT == f_kf/f_kb on database/WD and on the 100..400 K copy, and every
+                f_kf/f_kb return row T on database/WD and on the 100..400 K copy, and every
                 hand-written routine gives bit-identical omegadot with tables starting at 50, 100,
-                300 and 799 K (positive control: the assumed-shape accessor of FLINT <= 2223136)
+                300 and 799 K (positive control: the assumed-shape accessor of FLINT <= 2223136);
+                the public comp_ch_tabT equals f_kf/f_kb on the 1 K, the 100..400 K and the
+                synthetic 100 K tables
 test-contract   the mechanism contract check of Assign_Mechanism: routine order accepted,
                 swapped slots / wrong reaction count refused, appended inert species accepted,
                 calibrated species with the same composition accepted, name read whole

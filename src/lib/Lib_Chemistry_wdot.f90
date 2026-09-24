@@ -220,7 +220,12 @@ contains
       prod_fwd = 1.0d0
       prod_rev = 1.0d0
       do is = 1, ns
-        if (ni1_arrh_tab(is, ir) /= 0) prod_fwd = prod_fwd * ipow(coi(is), nint(ni1_arrh_tab(is, ir)))
+        if (have_orders) then
+          ! explicit reaction orders (optional block of chemistry-info.txt, this contract)
+          if (ord_arrh_tab(is, ir) /= 0) prod_fwd = prod_fwd * pow_order(coi(is), ord_arrh_tab(is, ir))
+        else
+          if (ni1_arrh_tab(is, ir) /= 0) prod_fwd = prod_fwd * ipow(coi(is), nint(ni1_arrh_tab(is, ir)))
+        endif
         if (ni2_arrh_tab(is, ir) /= 0) prod_rev = prod_rev * ipow(coi(is), nint(ni2_arrh_tab(is, ir)))
       enddo
       rate_fwd = f_kf(ir,Tint,Tdiff) * prod_fwd * coM
@@ -310,6 +315,23 @@ contains
   !> libgcc's __powidf2. Orders of 1, 2 and 3 cover every
   !> reaction in the shipped mechanisms and are expanded inline here; anything
   !> else falls back to the intrinsic, so results are unchanged.
+  !> c**o for a reaction order o: an integer-valued order goes through ipow (bit-identical to the
+  !> stoichiometric path), a non-integer one through the real power of max(c, 0); a negative order
+  !> at zero concentration gives 0, the convention of Cantera (its forward rate of progress is 0
+  !> there, verified with Cantera 3.0.1) so that the same mechanism gives the same rates.
+  pure function pow_order(c, o) result(y)
+    implicit none
+    real(8), intent(in) :: c, o
+    real(8) :: y
+    if (c <= 0d0 .and. o < 0d0) then
+      y = 0d0
+    else if (o == dble(nint(o))) then
+      y = ipow(c, nint(o))
+    else
+      y = max(c, 0d0)**o
+    endif
+  end function pow_order
+
   pure function ipow(x, n) result(y)
     implicit none
     real(8), intent(in) :: x

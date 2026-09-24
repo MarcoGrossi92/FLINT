@@ -25,6 +25,13 @@ module FLINT_Lib_Chemistry_data
   real(8), dimension(:,:), allocatable :: k0_lind_tab
   real(8), dimension(:,:), allocatable :: kc_lind_tab
   ! Arrhenius (for the general loop only)
+  !> Forward reaction orders of the Arrhenius reactions from the optional 'Reaction orders' block
+  !> of chemistry-info.txt: ord_arrh_tab(is, ir) = order of species is in the
+  !> Arrhenius reaction ir (the explicit yaml order where given, the stoichiometric reactant
+  !> coefficient elsewhere). have_orders = .false. (no block): the general loop raises the
+  !> concentrations to the integer-rounded stoichiometric coefficients, as before.
+  logical                              :: have_orders = .false.
+  real(8), dimension(:,:), allocatable :: ord_arrh_tab
   real(8), dimension(:,:), allocatable :: ni1_arrh_tab
   real(8), dimension(:,:), allocatable :: ni2_arrh_tab
   real(8), dimension(:,:), allocatable :: epsch_arrh_tab
@@ -194,6 +201,8 @@ contains
     if (allocated(k0_troe_tab)) deallocate(k0_troe_tab)
     if (allocated(kc_troe_tab)) deallocate(kc_troe_tab)
     if (allocated(Fcent_tab)) deallocate(Fcent_tab)
+    have_orders = .false.
+    if (allocated(ord_arrh_tab)) deallocate(ord_arrh_tab)
     if (allocated(ni1_arrh_tab)) deallocate(ni1_arrh_tab)
     if (allocated(ni2_arrh_tab)) deallocate(ni2_arrh_tab)
     if (allocated(epsch_arrh_tab)) deallocate(epsch_arrh_tab)

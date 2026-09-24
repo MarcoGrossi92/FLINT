@@ -307,6 +307,23 @@ I=15000, F=POINT
 
 The same `k_c` convention holds for the `k_c` column of `chemistry-Lindemann.dat` (`Temperature`, `k_inf`, `k_0`, `k_c`).
 
+**Reaction orders (optional block at the end of `chemistry-info.txt`).** A mechanism whose yaml gives
+explicit `orders:` (e.g. `CH4 + 0.5 O2 => CO + 2 H2` with `orders: {CH4: 0.5, O2: 1.3}`) carries, after
+the last `Reaction definition` row and a blank line:
+
+```
+Reaction orders
+<n>
+<ir> <species name> <order>      (n rows: ir = index in the 'Reaction type' list, real order)
+```
+
+With the block, the `general` procedure raises the concentrations of the Arrhenius-type reactions to
+these orders (the explicit ones where given, the stoichiometric reactant coefficient elsewhere, as in
+Cantera's mass-action law); an integer-valued order uses the integer power, a negative order at zero
+concentration gives a zero rate (Cantera's convention). Without the block (every INPUT folder written
+before it existed) the integer-rounded stoichiometric coefficients are used, as before. Orders on
+falloff reactions are not supported (`read_chemistry` returns `ios = 2`).
+
 **Troe Fall-off Theory:**
 
 The Troe correction extends the 2-body rate to handle pressure effects:

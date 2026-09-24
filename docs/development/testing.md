@@ -107,6 +107,9 @@ test-falloff    the Troe/Lindemann rates where the tables vanish (Pr = 0, k_inf 
                 zero rate, no NaN) and the k_c <= 0 convention for irreversible falloff
 test-rhs-range  rhs_native/jac_native bail out (F = -1, zero Jacobian) outside the RATE tables as
                 they do outside the thermo tables (WD thermo from 1 K, rate tables 100..400 K)
+test-orders     the general procedure with the optional 'Reaction orders' block reproduces Cantera's
+                rates for JLR-frassoldati (yaml orders) and keeps the integer-rounded law without it
+                (fixture test/orders/JLR-frassoldati: tables of a table writer, references embedded)
 ```
 
 ## Running the Test Suite

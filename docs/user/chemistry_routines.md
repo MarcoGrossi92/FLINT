@@ -64,7 +64,8 @@ A mechanism name that is not hooked in `Assign_Mechanism` selects the data-drive
 procedure: FLINT prints `[WARNING] Explicit procedure for <name> not found, defaulting to the
 general procedure` on standard output **and** on the error unit (standard error), so that a
 solver log that captures only one of the two channels still records the fallback. Note that
-`general` raises the concentrations to the integer stoichiometric coefficients (`nint`): a
+`general` raises the concentrations to the integer stoichiometric coefficients (`nint`) unless the
+INPUT folder carries the optional `Reaction orders` block (see *Native input*): without it a
 mechanism with fractional reaction orders is a different model under `general`.
 
 Strict mode turns the fallback into a refusal (`[ERROR] FLINT Assign_Mechanism: mechanism <name>

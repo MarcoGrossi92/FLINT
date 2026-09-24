@@ -16,7 +16,7 @@ contains
     use Lib_ORION_Data
     use Lib_Tecplot
     use FLINT_Lib_Chemistry_data
-    use FLINT_Lib_Thermodynamic, only: ns, FLINT_phase_prefix
+    use FLINT_Lib_Thermodynamic, only: ns, FLINT_phase_prefix, species_names
     implicit none
     character(len=*), intent(in), optional :: folder
     character(len=*), intent(out), optional :: mech_name
@@ -25,6 +25,9 @@ contains
     integer :: i, j, ios, j0, j1, j2
     integer :: Ti1, Ti2, dummy1, dummy23
     character(len=32):: chardum
+    character(len=256) :: line
+    integer :: nord, isp
+    real(8) :: order
 
     nrc_arrh = 0
     nrc_troe = 0
@@ -113,6 +116,51 @@ contains
         enddo
       endif
     enddo 
+    ! Trailing block: explicit forward reaction orders; a table writer always ends the file with
+    ! it (n = 0 when the mechanism has none). An older INPUT folder has no block: the general
+    ! procedure then warns once (warn_no_orders_block) and uses the reactant coefficients.
+    !   (blank lines)
+    !   Reaction orders
+    !   <n>
+    !   <ir> <species name> <order>     n rows; ir = index in the 'Reaction type' list above
+    ! Species not listed keep their stoichiometric reactant coefficient as order (real, as in
+    ! Cantera's mass-action law). Orders on falloff reactions are not supported (ios = 2).
+    have_orders = .false.
+    allocate(ord_arrh_tab(1:ns, 1:nrc_arrh))
+    ord_arrh_tab = ni1_arrh_tab(1:ns, 1:nrc_arrh)
+    do
+      read(unitfile,'(A)',iostat=ios) line
+      if (ios /= 0) exit                                   ! end of file: no block
+      if (len_trim(line) == 0) cycle
+      if (trim(adjustl(line)) /= 'Reaction orders') exit  ! anything else: not a block
+      read(unitfile,*,iostat=ios) nord
+      if (ios/=0) then; ios = 2; close(unitfile); return; endif
+      do i = 1, nord
+        read(unitfile,*,iostat=ios) idum, chardum, order
+        if (ios/=0) then; ios = 2; close(unitfile); return; endif
+        if (idum < 1 .or. idum > nrc) then
+          write(*,'(A,I0,A)') '[ERROR] FLINT read_chemistry: Reaction orders: reaction ', idum, ' does not exist'
+          ios = 2; close(unitfile); return
+        endif
+        if (rxn_type(idum) /= 0) then
+          write(*,'(A,I0,A)') '[ERROR] FLINT read_chemistry: Reaction orders: reaction ', idum, &
+            ' is a falloff reaction (orders are supported for Arrhenius-type reactions only)'
+          ios = 2; close(unitfile); return
+        endif
+        isp = 0
+        do j = 1, ns
+          if (trim(species_names(j)) == trim(chardum)) then; isp = j; exit; endif
+        enddo
+        if (isp == 0) then
+          write(*,'(A)') '[ERROR] FLINT read_chemistry: Reaction orders: species '//trim(chardum)//' is not in phase.txt'
+          ios = 2; close(unitfile); return
+        endif
+        ord_arrh_tab(isp, count(rxn_type(1:idum) == 0)) = order
+      enddo
+      have_orders = .true.
+      exit
+    enddo
+    ios = 0
     close(unitfile)
 
     !! Rate Arrhenius

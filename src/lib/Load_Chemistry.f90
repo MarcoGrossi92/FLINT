@@ -40,10 +40,19 @@ contains
       ios = 1
       return
     endif
-    ! Read mechanism name
+    ! Read mechanism name: the whole first line, leading/trailing blanks removed.
+    ! (A list-directed read cut the name at the first blank, comma or slash:
+    ! 'Aramco 2.0' became 'Aramco'. Every name hooked in Assign_Mechanism is a
+    ! single token, so existing INPUT folders select the same routine as before.)
     if (present(mech_name)) then
-      read(unitfile,*,iostat=ios) mech_name
+      read(unitfile,'(A)',iostat=ios) mech_name
       if (ios/=0) then; ios = 2; close(unitfile); return; endif
+      ! TAB and CR were blanks for the list-directed read this replaces (hand-edited or
+      ! CRLF files): turn them into blanks before trimming, so 'WD<TAB>' still hooks WD.
+      do i = 1, len_trim(mech_name)
+        if (mech_name(i:i) == achar(9) .or. mech_name(i:i) == achar(13)) mech_name(i:i) = ' '
+      enddo
+      mech_name = trim(adjustl(mech_name))
     else
       read(unitfile,*,iostat=ios)
       if (ios/=0) then; ios = 2; close(unitfile); return; endif

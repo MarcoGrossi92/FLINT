@@ -94,7 +94,59 @@ program test
   ! 7. a name that is not hooked is not checked
   call check_mechanism_contract('nemo', ok)
   call verdict('7 unhooked name: nothing to check', ok)
+  call free_chemistry_data()
 
+  ! 8. the mechanism name is the whole first line of chemistry-info.txt ('WD 2026' is not 'WD')
+  call execute_command_line('mkdir -p tables/name-blank && cp tables/WD-100K/chemistry-Arrhenius.dat tables/name-blank/')
+  open(newunit=err, file='tables/name-blank/chemistry-info.txt', status='replace', action='write')
+  write(err,'(A)') '  WD 2026  '
+  write(err,'(A)') 'N.ro species = 5'
+  write(err,'(A)') 'N.ro reactions = 3'
+  write(err,'(A)') ''
+  write(err,'(A)') 'General loop info. They are not used if the mechanism is exlplicitly defined'
+  write(err,'(A)') ''
+  write(err,'(A)') 'Reaction type'
+  write(err,'(A)') '1 Arrhenius'
+  write(err,'(A)') '2 Arrhenius'
+  write(err,'(A)') '3 Arrhenius'
+  write(err,'(A)') ''
+  write(err,'(A)') 'Reaction definition'
+  close(err)
+  err = read_chemistry(folder='tables/name-blank', mech_name=mech_name)
+  call verdict('8a name with a blank: read_chemistry returns 0', err == 0)
+  call verdict('8b name with a blank read whole and trimmed: '//trim(mech_name), mech_name == 'WD 2026')
+  call check_mechanism_contract(mech_name, ok)
+  call verdict('8c the name with a blank is not a hooked name (general fallback)', ok)
+  call free_chemistry_data()
+  ! 8d. TAB and CR are blanks, as they were for the list-directed read ('WD<TAB><CR>' is 'WD')
+  open(newunit=err, file='tables/name-blank/chemistry-info.txt', status='replace', action='write')
+  write(err,'(A)') achar(9)//'WD'//achar(9)//achar(13)
+  write(err,'(A)') 'N.ro species = 5'
+  write(err,'(A)') 'N.ro reactions = 3'
+  write(err,'(A)') ''
+  write(err,'(A)') 'General loop info. They are not used if the mechanism is exlplicitly defined'
+  write(err,'(A)') ''
+  write(err,'(A)') 'Reaction type'
+  write(err,'(A)') '1 Arrhenius'
+  write(err,'(A)') '2 Arrhenius'
+  write(err,'(A)') '3 Arrhenius'
+  write(err,'(A)') ''
+  write(err,'(A)') 'Reaction definition'
+  close(err)
+  err = read_chemistry(folder='tables/name-blank', mech_name=mech_name)
+  call verdict('8d TAB/CR around the name are blanks: ['//trim(mech_name)//']', err == 0 .and. mech_name == 'WD')
+  call free_chemistry_data()
+
+  ! 9. 'Nassini Original': a list-directed read gave 'Nassini' (hooked: Nassini_4, 3 slots O2/H2O/H2),
+  !    the whole-line read gives an unhooked name; the WD data would not pass the Nassini_4 contract
+  call execute_command_line('mkdir -p tables/name-nassini && cp tables/WD-100K/chemistry-Arrhenius.dat tables/name-nassini/')
+  call execute_command_line("sed '1s/.*/Nassini Original/' tables/name-blank/chemistry-info.txt > tables/name-nassini/chemistry-info.txt")
+  err = read_chemistry(folder='tables/name-nassini', mech_name=mech_name)
+  call verdict('9a Nassini Original: read whole: '//trim(mech_name), err == 0 .and. mech_name == 'Nassini Original')
+  call check_mechanism_contract(mech_name, ok)
+  call verdict('9b Nassini Original is not a hooked name: nothing to check', ok)
+  call check_mechanism_contract('Nassini', ok)
+  call verdict('9c the truncated name Nassini is hooked and the WD data are refused by its contract', .not. ok)
   call free_chemistry_data()
   if (nfail > 0) then
     write(*,'(A,I0,A)') ' Verdict -> fail (', nfail, ' checks)'

@@ -17,6 +17,8 @@ database/WD, database/CORIA (one falloff-Troe zone) and database/Gerlinger (tran
   rates-missing-zone   3 Arrhenius reactions, 2 zones in the table      -> refused (ios = 4)
   rates-step2          201 rows on a 2 K step (1400, 1402, .. 1800 K)   -> refused (ios = 6)
   thermo-step2         thermo.dat on a 2 K step (1400..1800 K)          -> refused (ios = 4)
+  rates-troe-negk      Troe table with k_inf < 0 at 1500 K              -> refused (ios = 5)
+  rates-lind-negk      Lindemann table with k_0 < 0 at 1500 K           -> refused (ios = 5)
 The species of the transport zones are renamed to the WD species: only the grid is under test.
 Run from the repository root:  python3 test/ranges/make_ranges.py
 """
@@ -87,4 +89,18 @@ w('rates-step2', 'chemistry-Arrhenius.dat', ahead + ''.join(cut2(z, 1400, 1800) 
 w('thermo-step2', 'thermo.dat', thead + ''.join(cut2(z, 1400, 1800) for z in tz))
 for f in ('phase.txt', 'composition.txt'):
     w('thermo-step2', f, open(os.path.join(wd, f)).read())
+# a negative limiting rate coefficient in one row of a falloff table (column 1 = k_inf, 2 = k_0)
+def negate(z, T, col):
+    L = z.split('\n')
+    for i in range(2, len(L)):
+        t = L[i].split()
+        if t and float(t[0]) == T:
+            t[col] = '-' + t[col].lstrip('-'); L[i] = ' '.join(t)
+    return '\n'.join(L)
+w('rates-troe-negk', 'chemistry-info.txt', info.replace('3 Arrhenius', '3 Troe'))
+w('rates-troe-negk', 'chemistry-Arrhenius.dat', ahead + ''.join(cut(z, 1400, 1600) for z in az))
+w('rates-troe-negk', 'chemistry-Troe.dat', fhead + negate(cut(fz[0], 1400, 1600, 'Reaction 1'), 1500.0, 1))
+w('rates-lind-negk', 'chemistry-info.txt', info.replace('3 Arrhenius', '3 Lindemann'))
+w('rates-lind-negk', 'chemistry-Arrhenius.dat', ahead + ''.join(cut(z, 1400, 1600) for z in az))
+w('rates-lind-negk', 'chemistry-Lindemann.dat', lhead + negate(cut(lz[0], 1400, 1600, 'Reaction 1'), 1500.0, 2))
 print('written', dst)

@@ -11,7 +11,8 @@
 !  - the same for the LAST row (rates-short, rates-troe-short), for a falloff-Lindemann table and for a
 !    binary-diffusion table (ios = 3);
 !  - in a child process (argument child-grid) the five refusals are printed on the error unit too;
-!  - a table with fewer zones than reactions of its type (ios = 4) and tables on a 2 K step (ios = 6 / 4).
+!  - a table with fewer zones than reactions of its type (ios = 4) and tables on a 2 K step (ios = 6 / 4);
+!  - a negative k_inf / k_0 in a falloff table (ios = 5).
 ! Exit code 1 on failure.
 program test
   use FLINT_Lib_Thermodynamic
@@ -86,6 +87,13 @@ program test
   ! a table with fewer zones than reactions of its type (e.g. a falloff-SRI reaction counted as Arrhenius)
   err = read_chemistry(folder='ranges/rates-missing-zone', mech_name=mech_name)
   call verdict('Arrhenius table with 2 zones for 3 reactions: refused with ios = 4', err == 4)
+  call free_chemistry_data()
+  ! a negative limiting rate coefficient in a falloff table
+  err = read_chemistry(folder='ranges/rates-troe-negk', mech_name=mech_name)
+  call verdict('falloff-Troe table with k_inf < 0 at 1500 K: refused with ios = 5', err == 5)
+  call free_chemistry_data()
+  err = read_chemistry(folder='ranges/rates-lind-negk', mech_name=mech_name)
+  call verdict('falloff-Lindemann table with k_0 < 0 at 1500 K: refused with ios = 5', err == 5)
   call free_chemistry_data()
   ! rows on a 2 K step: the first and the computed last row match the thermo grid, the temperatures do not
   err = read_chemistry(folder='ranges/rates-step2', mech_name=mech_name)

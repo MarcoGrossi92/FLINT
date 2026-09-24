@@ -4,6 +4,7 @@
 ! 2 -> error reading info file
 ! 3 -> table file not found
 ! 4 -> error reading table file
+! 5 -> table value not admissible (a negative falloff rate coefficient, or a non-finite F_cent)
 
 module FLINT_Load_Chemistry
   use iso_fortran_env, only: I4 => int32, R8 => real64
@@ -152,6 +153,19 @@ contains
         kc_troe_tab(Ti1:Ti2,i)   = orion%block(i)%vars(3,:,dummy23,dummy23)
         Fcent_tab(Ti1:Ti2,i) = orion%block(i)%vars(4,:,dummy23,dummy23)
       enddo
+      ! Negative limiting rate coefficients and a non-finite F_cent are not admissible;
+      ! F_cent <= 0 is (published parameter sets reach it at high T: see f_F)
+      do i = 1, nrc_troe
+        do j = Ti1, Ti2
+          if (Fcent_tab(j,i) /= Fcent_tab(j,i) .or. abs(Fcent_tab(j,i)) > huge(1d0) .or. &
+              kinf_troe_tab(j,i) < 0d0 .or. k0_troe_tab(j,i) < 0d0) then
+            write(*,'(A,I0,A,I0,A)') '[ERROR] FLINT read_chemistry: chemistry-Troe.dat falloff-Troe reaction ', i, &
+              ' at T = ', j, ' K: k_inf/k_0 < 0 or F_cent not finite: table not admissible'
+            ios = 5
+            return
+          endif
+        enddo
+      enddo
     endif
   
     !! Rate Lindemann
@@ -174,6 +188,16 @@ contains
         kinf_lind_tab(Ti1:Ti2,i) = orion%block(i)%vars(1,:,dummy23,dummy23)
         k0_lind_tab(Ti1:Ti2,i)   = orion%block(i)%vars(2,:,dummy23,dummy23)
         kc_lind_tab(Ti1:Ti2,i)   = orion%block(i)%vars(3,:,dummy23,dummy23)
+      enddo
+      do i = 1, nrc_lindemann
+        do j = Ti1, Ti2
+          if (kinf_lind_tab(j,i) < 0d0 .or. k0_lind_tab(j,i) < 0d0) then
+            write(*,'(A,I0,A,I0,A)') '[ERROR] FLINT read_chemistry: chemistry-Lindemann.dat falloff-Lindemann reaction ', i, &
+              ' at T = ', j, ' K: k_inf/k_0 < 0: table not admissible'
+            ios = 5
+            return
+          endif
+        enddo
       enddo
     endif
 

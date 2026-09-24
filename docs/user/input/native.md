@@ -302,8 +302,10 @@ I=15000, F=POINT
 | `Temperature` | Temperature (K) | 1.0 to 15000.0 |
 | `k_inf` | High-pressure limit rate | Computed from Arrhenius A, b, Ea |
 | `k_0` | Low-pressure limit rate | Third-order rate coefficient |
-| `k_c` | Blending coefficient | Intermediate value for fall-off |
-| `F_cent` | Centering factor | Troe fall-off correction factor |
+| `k_c` | Equilibrium constant in concentration units: the reverse rate is `k_b = k_f / k_c`. **A value `<= 0` marks an irreversible reaction (no reverse step).** Tables written before this contract carry `k_c` also for irreversible fall-off reactions and get a spurious reverse rate. | `k_f / k_b` from the thermodynamics |
+| `F_cent` | Centering factor. A value `<= 0` (published Troe parameter sets with `a < 0` or `a > 1`, e.g. C2H4 + H (+M) of AramcoMech 2.0/3.0 and FFCM-1 above 4871 K) is taken as `1e-300` inside `log10`, as Cantera does; NaN/Inf are refused (`ios = 5`) | Troe fall-off correction factor |
+
+The same `k_c` convention holds for the `k_c` column of `chemistry-Lindemann.dat` (`Temperature`, `k_inf`, `k_0`, `k_c`).
 
 **Troe Fall-off Theory:**
 

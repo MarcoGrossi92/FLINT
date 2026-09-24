@@ -8,6 +8,7 @@
 !  6. without composition data the molecular weight of phase.txt stands in for the composition;
 !  7. a name that is not hooked is not checked (general fallback);
 !  8-9. the mechanism name is the whole first line of chemistry-info.txt;
+!  11. a generated routine (Gerlinger9) also needs the slot NAME: H2OX in the H2O slot is refused;
 !  10. in child processes (this program with the argument child-strict / child-refusal): the strict
 !      fallback policy (FLINT_STRICT_MECHANISM=1 or Yes stops an unhooked name, =0 falls back to general,
 !      an unrecognised value is reported on the error unit and ignored) and
@@ -27,6 +28,7 @@ program test
   integer :: err, ns0, nfail
   logical :: ok
   character(len=512) :: self, arg
+  integer :: err11, i11
 
   nfail = 0
   call get_command_argument(0, self)
@@ -177,6 +179,30 @@ program test
   call check_mechanism_contract('Nassini', ok)
   call verdict('9c the truncated name Nassini is hooked and the WD data are refused by its contract', .not. ok)
   call free_chemistry_data()
+
+  ! 11. a GENERATED routine needs the slot name too (database/Gerlinger: no composition.txt, so the slot test
+  !     is weight + name prefix): 'H2OX' passes that test for the H2O slot but not the exact-name test
+  call free_chemistry_data()
+  if (allocated(species_names)) deallocate(species_names)
+  if (allocated(wm_tab)) deallocate(wm_tab)
+  if (allocated(Ri_tab)) deallocate(Ri_tab)
+  if (allocated(h_tab)) deallocate(h_tab)
+  if (allocated(s_tab)) deallocate(s_tab)
+  if (allocated(cp_tab)) deallocate(cp_tab)
+  if (allocated(dcpi_tab)) deallocate(dcpi_tab)
+  err = read_idealgas_thermo('../database/Gerlinger/')
+  err11 = read_chemistry(folder='../database/Gerlinger/', mech_name=mech_name)
+  call check_mechanism_contract('Gerlinger-9', ok)
+  ! (read_idealgas_thermo returns 5 when composition.txt is absent, as for this legacy folder)
+  write(*,'(A,I0,A,I0)') '    database/Gerlinger: read_idealgas_thermo ios = ', err, ', read_chemistry ios = ', err11
+  call verdict('11a database/Gerlinger accepted by the generated routine Gerlinger9', (err == 0 .or. err == 5) .and. err11 == 0 .and. ok)
+  do i11 = 1, ns
+    if (trim(species_names(i11)) == 'H2O') exit
+  enddo
+  if (i11 <= ns) species_names(i11) = 'H2OX'
+  call check_mechanism_contract('Gerlinger-9', ok)
+  call verdict('11b generated routine: a slot species under another name (H2OX for H2O) is refused', i11 <= ns .and. .not. ok)
+  if (i11 <= ns) species_names(i11) = 'H2O'
 
   ! 10. child processes: strict fallback policy and the channels of the refusals
   call execute_command_line('FLINT_STRICT_MECHANISM=1 '//trim(self)// &

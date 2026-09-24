@@ -121,6 +121,7 @@ contains
     dummy23 = lbound(orion%block(1)%mesh, dim=3)
     Ti1 = nint(orion%block(1)%mesh(1,dummy1,dummy23,dummy23))
     Ti2 = Ti1 + ubound(orion%block(1)%mesh, dim=2) - dummy1
+    T_tab_min = Ti1; T_tab_max = Ti2   ! row T of every rate table = rate at T kelvin
     allocate(kf_tab(Ti1:Ti2, 1:nrc_arrh))
     allocate(kb_tab(Ti1:Ti2, 1:nrc_arrh))
     dummy23 = lbound(orion%block(1)%vars, dim=3)

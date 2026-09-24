@@ -3,6 +3,12 @@ module FLINT_Lib_Chemistry_data
 
   integer                              :: nrc
   integer, dimension(:), allocatable   :: rxn_type ! 0 -> Arrhenius, 1 -> Troe, 2 -> Lindemann
+  !> Temperature bounds [K] of the loaded rate tables: every table below is
+  !> allocated as tab(T_tab_min:T_tab_max, :) and row T holds the rate at T kelvin
+  !> (the first row of chemistry-*.dat gives T_tab_min, e.g. 1 K for the tables of
+  !> database/WD). Set by read_chemistry, reset by free_chemistry_data.
+  integer                              :: T_tab_min = 1
+  integer                              :: T_tab_max = 0
   ! Arrhenius
   integer                              :: nrc_arrh
   real(8), dimension(:,:), allocatable :: kf_tab
@@ -33,14 +39,24 @@ module FLINT_Lib_Chemistry_data
 
 contains
 
+  !> Linear interpolation of the rate of reaction `ireact` in the rate table `tab`
+  !> between the rows Tint(1) = int(T) and Tint(2) = int(T)+1. `tab` is one of the
+  !> module rate tables (kf_tab, kb_tab, the falloff tables) or any table on the
+  !> same temperature grid: the dummy argument takes the lower bound T_tab_min of
+  !> the loaded tables, so row T is the rate at T kelvin whatever the first
+  !> temperature of the table. (Up to FLINT 2223136 the dummy was tab(:,:), which
+  !> renumbers the rows from 1: for a table starting at T0 > 1 K that version
+  !> returned the rate at T + T0 - 1; for tables starting at 1 K both versions
+  !> return the same numbers.) The routines of FLINT read
+  !> the tables through f_kf/f_kb and the other accessors below.
   pure function comp_ch_tabT(ireact,tab,Tint,Tdiff) result(result)
     implicit none
     integer, intent(in) :: ireact, Tint(2)
-    real(8), intent(in) :: tab(:,:), Tdiff
+    real(8), intent(in) :: tab(T_tab_min:,:), Tdiff
     ! Local
     real(8) :: a, b
     real(8) :: result
-      
+
     a = tab(Tint(1),ireact)      ! int(T)   <- Tint(1)
     b = tab(Tint(2),ireact)      ! int(T)+1 <- Tint(2)
     result = a+(b-a)*Tdiff
@@ -168,6 +184,7 @@ contains
   subroutine free_chemistry_data()
     implicit none
     if (allocated(rxn_type)) deallocate(rxn_type)
+    T_tab_min = 1; T_tab_max = 0
     if (allocated(kf_tab)) deallocate(kf_tab)
     if (allocated(kb_tab)) deallocate(kb_tab)
     if (allocated(kinf_lind_tab)) deallocate(kinf_lind_tab)

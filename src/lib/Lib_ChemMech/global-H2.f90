@@ -189,10 +189,10 @@ contains
     Tint(2) = T_i + 1
 
     ! H2 + 0.5 O2 --> H2O
-    prod1 = comp_ch_tabT(1,kf_tab,Tint,Tdiff)*coi(3)*coi(1)
+    prod1 = f_kf(1,Tint,Tdiff)*coi(3)*coi(1)
 
     ! H2O --> H2 + 0.5 O2
-    prod2 = comp_ch_tabT(2,kf_tab,Tint,Tdiff)*coi(2)
+    prod2 = f_kf(2,Tint,Tdiff)*coi(2)
 
     ! Chemical Source Terms
     omegadot = 0d0

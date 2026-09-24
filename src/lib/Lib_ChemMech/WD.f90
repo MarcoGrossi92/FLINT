@@ -28,13 +28,13 @@
     ! species: [CH4, O2, CO2, H2O, CO]
 
     ! CH4 + 1.5 O2 => CO + 2 H2O
-    prod1 = comp_ch_tabT(1,kf_tab,Tint,Tdiff)*(coi(1)**0.70)*(coi(2)**0.80)
+    prod1 = f_kf(1,Tint,Tdiff)*(coi(1)**0.70)*(coi(2)**0.80)
 
     ! CO + 0.5 O2 + H2O => CO2 + H2O
-    prod2 = comp_ch_tabT(2,kf_tab,Tint,Tdiff)*(coi(4)**0.5)*coi(5)*(coi(2)**0.25)
+    prod2 = f_kf(2,Tint,Tdiff)*(coi(4)**0.5)*coi(5)*(coi(2)**0.25)
 
     ! CO2 => CO + 0.5 O2
-    prod3 = comp_ch_tabT(3,kf_tab,Tint,Tdiff)*coi(3)
+    prod3 = f_kf(3,Tint,Tdiff)*coi(3)
      
     ! Chemical Source Terms
     omegadot = 0d0
@@ -70,13 +70,13 @@
     ! species: [CH4, O2, CO2, H2O, CO]
 
     ! CH4 + 1.5 O2 => CO + 2 H2O
-    prod1 = comp_ch_tabT(1,kf_tab,Tint,Tdiff)*(coi(1)**0.70)*(coi(2)**0.80)
+    prod1 = f_kf(1,Tint,Tdiff)*(coi(1)**0.70)*(coi(2)**0.80)
 
     ! CO + 0.5 O2 + H2O => CO2 + H2O
-    prod2 = comp_ch_tabT(2,kf_tab,Tint,Tdiff)*(coi(4)**0.5)*coi(5)*(coi(2)**0.25)
+    prod2 = f_kf(2,Tint,Tdiff)*(coi(4)**0.5)*coi(5)*(coi(2)**0.25)
 
     ! CO2 => CO + 0.5 O2
-    prod3 = comp_ch_tabT(3,kf_tab,Tint,Tdiff)*(coi(3)**1.25)
+    prod3 = f_kf(3,Tint,Tdiff)*(coi(3)**1.25)
      
     ! Chemical Source Terms
     omegadot = 0d0
@@ -112,7 +112,7 @@
     ! species: [O2, CH4, H2O, CO2]
 
     ! CH4 + 2 O2 => CO2 + 2 H2O
-    prod1 = comp_ch_tabT(1,kf_tab,Tint,Tdiff)*(coi(2)**0.7)*(coi(1)**0.8)
+    prod1 = f_kf(1,Tint,Tdiff)*(coi(2)**0.7)*(coi(1)**0.8)
 
      
     ! Chemical Source Terms

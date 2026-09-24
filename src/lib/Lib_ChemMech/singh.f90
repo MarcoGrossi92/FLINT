@@ -29,44 +29,44 @@ contains
     ! 3rd body eff: 2.5 H2, 16.0 H2O, 1.0 else
     M = sum(coi(iH:iCO2)) + 2.5d0*coi(iH2) + 16d0*coi(iH2O) + coi(iO2) + coi(iO)
     ! C2H4 + O2 <-> 2CO+ 2H2
-    prodf(1)=comp_ch_tabT(1,kf_tab,Tint,Tdiff)*coi(iC2H4)*coi(iO2)
-    prodb(1)=comp_ch_tabT(1,kb_tab,Tint,Tdiff)*coi(iCO)**2*coi(iH2)**2
+    prodf(1)=f_kf(1,Tint,Tdiff)*coi(iC2H4)*coi(iO2)
+    prodb(1)=f_kb(1,Tint,Tdiff)*coi(iCO)**2*coi(iH2)**2
     prod(1)=prodf(1)-prodb(1)
     ! CO + O + M <-> CO2 + M
-    prodf(2)=comp_ch_tabT(2,kf_tab,Tint,Tdiff)*coi(iCO)*coi(iO)*M
-    prodb(2)=comp_ch_tabT(2,kb_tab,Tint,Tdiff)*coi(iCO2)*M
+    prodf(2)=f_kf(2,Tint,Tdiff)*coi(iCO)*coi(iO)*M
+    prodb(2)=f_kb(2,Tint,Tdiff)*coi(iCO2)*M
     prod(2)=prodf(2)-prodb(2)
     !CO + OH <-> CO2 + H
-    prodf(3)=comp_ch_tabT(3,kf_tab,Tint,Tdiff)*coi(iCO)*coi(iOH)
-    prodb(3)=comp_ch_tabT(3,kb_tab,Tint,Tdiff)*coi(iCO2)*coi(iH)
+    prodf(3)=f_kf(3,Tint,Tdiff)*coi(iCO)*coi(iOH)
+    prodb(3)=f_kb(3,Tint,Tdiff)*coi(iCO2)*coi(iH)
     prod(3)=prodf(3)-prodb(3)
     !H2 + O2 <-> OH+OH
-    prodf(4)=comp_ch_tabT(4,kf_tab,Tint,Tdiff)*coi(iH2)*coi(iO2)
-    prodb(4)=comp_ch_tabT(4,kb_tab,Tint,Tdiff)*coi(iOH)**2
+    prodf(4)=f_kf(4,Tint,Tdiff)*coi(iH2)*coi(iO2)
+    prodb(4)=f_kb(4,Tint,Tdiff)*coi(iOH)**2
     prod(4)=prodf(4)-prodb(4)
     !H + O2 <-> OH + O
-    prodf(5)=comp_ch_tabT(5,kf_tab,Tint,Tdiff)*coi(iH)*coi(iO2)
-    prodb(5)=comp_ch_tabT(5,kb_tab,Tint,Tdiff)*coi(iOH)*coi(iO)
+    prodf(5)=f_kf(5,Tint,Tdiff)*coi(iH)*coi(iO2)
+    prodb(5)=f_kb(5,Tint,Tdiff)*coi(iOH)*coi(iO)
     prod(5)=prodf(5)-prodb(5)
     !OH +H2 <-> H2O + H
-    prodf(6)=comp_ch_tabT(6,kf_tab,Tint,Tdiff)*coi(iOH)*coi(iH2)
-    prodb(6)=comp_ch_tabT(6,kb_tab,Tint,Tdiff)*coi(iH2O)*coi(iH)
+    prodf(6)=f_kf(6,Tint,Tdiff)*coi(iOH)*coi(iH2)
+    prodb(6)=f_kb(6,Tint,Tdiff)*coi(iH2O)*coi(iH)
     prod(6)=prodf(6)-prodb(6)
     !O + H2 <-> OH + H
-    prodf(7)=comp_ch_tabT(7,kf_tab,Tint,Tdiff)*coi(iO)*coi(iH2)
-    prodb(7)=comp_ch_tabT(7,kb_tab,Tint,Tdiff)*coi(iOH)*coi(iH)
+    prodf(7)=f_kf(7,Tint,Tdiff)*coi(iO)*coi(iH2)
+    prodb(7)=f_kb(7,Tint,Tdiff)*coi(iOH)*coi(iH)
     prod(7)=prodf(7)-prodb(7)
     !OH + OH <-> H2O + O
-    prodf(8)=comp_ch_tabT(8,kf_tab,Tint,Tdiff)*coi(iOH)**2
-    prodb(8)=comp_ch_tabT(8,kb_tab,Tint,Tdiff)*coi(iH2O)*coi(iO)
+    prodf(8)=f_kf(8,Tint,Tdiff)*coi(iOH)**2
+    prodb(8)=f_kb(8,Tint,Tdiff)*coi(iH2O)*coi(iO)
     prod(8)=prodf(8)-prodb(8)
     !H + H + M <-> H2 + M
-    prodf(9)=comp_ch_tabT(9,kf_tab,Tint,Tdiff)*coi(iH)**2*M
-    prodb(9)=comp_ch_tabT(9,kb_tab,Tint,Tdiff)*coi(iH2)*M
+    prodf(9)=f_kf(9,Tint,Tdiff)*coi(iH)**2*M
+    prodb(9)=f_kb(9,Tint,Tdiff)*coi(iH2)*M
     prod(9)=prodf(9)-prodb(9)
     !H + OH <-> H2O + M
-    prodf(10)=comp_ch_tabT(10,kf_tab,Tint,Tdiff)*coi(iH)*coi(iOH)*M
-    prodb(10)=comp_ch_tabT(10,kb_tab,Tint,Tdiff)*coi(iH2O)*M
+    prodf(10)=f_kf(10,Tint,Tdiff)*coi(iH)*coi(iOH)*M
+    prodb(10)=f_kb(10,Tint,Tdiff)*coi(iH2O)*M
     prod(10)=prodf(10)-prodb(10)
 
     ! H
@@ -119,48 +119,48 @@ contains
     ! 3rd body eff: 2.5 H2, 16.0 H2O, 1.0 else
     M = sum(coi(iH:iCO2)) + 2.5d0*coi(iH2) + 16d0*coi(iH2O) + coi(iO2) + coi(iO)
     ! C2H4 + O2 <-> 2CO+ 2H2
-    prodf(1)=comp_ch_tabT(1,kf_tab,Tint,Tdiff)*coi(iC2H4)*coi(iO2)
-    prodb(1)=comp_ch_tabT(1,kb_tab,Tint,Tdiff)*coi(iCO)**2*coi(iH2)**2
+    prodf(1)=f_kf(1,Tint,Tdiff)*coi(iC2H4)*coi(iO2)
+    prodb(1)=f_kb(1,Tint,Tdiff)*coi(iCO)**2*coi(iH2)**2
     prod(1)=prodf(1)-prodb(1)
     ! CO + O + M <-> CO2 + M
-    prodf(2)=comp_ch_tabT(2,kf_tab,Tint,Tdiff)*coi(iCO)*coi(iO)*M
-    prodb(2)=comp_ch_tabT(2,kb_tab,Tint,Tdiff)*coi(iCO2)*M
+    prodf(2)=f_kf(2,Tint,Tdiff)*coi(iCO)*coi(iO)*M
+    prodb(2)=f_kb(2,Tint,Tdiff)*coi(iCO2)*M
     prod(2)=prodf(2)-prodb(2)
     !CO + OH <-> CO2 + H
-    prodf(3)=comp_ch_tabT(3,kf_tab,Tint,Tdiff)*coi(iCO)*coi(iOH)
-    prodb(3)=comp_ch_tabT(3,kb_tab,Tint,Tdiff)*coi(iCO2)*coi(iH)
+    prodf(3)=f_kf(3,Tint,Tdiff)*coi(iCO)*coi(iOH)
+    prodb(3)=f_kb(3,Tint,Tdiff)*coi(iCO2)*coi(iH)
     prod(3)=prodf(3)-prodb(3)
     !H2 + O2 <-> OH+OH
-    prodf(4)=comp_ch_tabT(4,kf_tab,Tint,Tdiff)*coi(iH2)*coi(iO2)
-    prodb(4)=comp_ch_tabT(4,kb_tab,Tint,Tdiff)*coi(iOH)**2
+    prodf(4)=f_kf(4,Tint,Tdiff)*coi(iH2)*coi(iO2)
+    prodb(4)=f_kb(4,Tint,Tdiff)*coi(iOH)**2
     prod(4)=prodf(4)-prodb(4)
     !H + O2 <-> OH + O
-    prodf(5)=comp_ch_tabT(5,kf_tab,Tint,Tdiff)*coi(iH)*coi(iO2)
-    prodb(5)=comp_ch_tabT(5,kb_tab,Tint,Tdiff)*coi(iOH)*coi(iO)
+    prodf(5)=f_kf(5,Tint,Tdiff)*coi(iH)*coi(iO2)
+    prodb(5)=f_kb(5,Tint,Tdiff)*coi(iOH)*coi(iO)
     prod(5)=prodf(5)-prodb(5)
     !OH +H2 <-> H2O + H
-    prodf(6)=comp_ch_tabT(6,kf_tab,Tint,Tdiff)*coi(iOH)*coi(iH2)
-    prodb(6)=comp_ch_tabT(6,kb_tab,Tint,Tdiff)*coi(iH2O)*coi(iH)
+    prodf(6)=f_kf(6,Tint,Tdiff)*coi(iOH)*coi(iH2)
+    prodb(6)=f_kb(6,Tint,Tdiff)*coi(iH2O)*coi(iH)
     prod(6)=prodf(6)-prodb(6)
     !O + H2 <-> OH + H
-    prodf(7)=comp_ch_tabT(7,kf_tab,Tint,Tdiff)*coi(iO)*coi(iH2)
-    prodb(7)=comp_ch_tabT(7,kb_tab,Tint,Tdiff)*coi(iOH)*coi(iH)
+    prodf(7)=f_kf(7,Tint,Tdiff)*coi(iO)*coi(iH2)
+    prodb(7)=f_kb(7,Tint,Tdiff)*coi(iOH)*coi(iH)
     prod(7)=prodf(7)-prodb(7)
     !OH + OH <-> H2O + O
-    prodf(8)=comp_ch_tabT(8,kf_tab,Tint,Tdiff)*coi(iOH)**2
-    prodb(8)=comp_ch_tabT(8,kb_tab,Tint,Tdiff)*coi(iH2O)*coi(iO)
+    prodf(8)=f_kf(8,Tint,Tdiff)*coi(iOH)**2
+    prodb(8)=f_kb(8,Tint,Tdiff)*coi(iH2O)*coi(iO)
     prod(8)=prodf(8)-prodb(8)
     !H + H + M <-> H2 + M
-    prodf(9)=comp_ch_tabT(9,kf_tab,Tint,Tdiff)*coi(iH)**2*M
-    prodb(9)=comp_ch_tabT(9,kb_tab,Tint,Tdiff)*coi(iH2)*M
+    prodf(9)=f_kf(9,Tint,Tdiff)*coi(iH)**2*M
+    prodb(9)=f_kb(9,Tint,Tdiff)*coi(iH2)*M
     prod(9)=prodf(9)-prodb(9)
     !H + OH <-> H2O + M
-    prodf(10)=comp_ch_tabT(10,kf_tab,Tint,Tdiff)*coi(iH)*coi(iOH)*M
-    prodb(10)=comp_ch_tabT(10,kb_tab,Tint,Tdiff)*coi(iH2O)*M
+    prodf(10)=f_kf(10,Tint,Tdiff)*coi(iH)*coi(iOH)*M
+    prodb(10)=f_kb(10,Tint,Tdiff)*coi(iH2O)*M
     prod(10)=prodf(10)-prodb(10)
     !C32H66 --> 16C2H4 + H2
     if (coi(iC32H66)>1d-10) then
-      prodf(11)=comp_ch_tabT(11,kf_tab,Tint,Tdiff)*(coi(iC32H66))
+      prodf(11)=f_kf(11,Tint,Tdiff)*(coi(iC32H66))
     else
       prodf(11)=0d0
     endif
@@ -219,44 +219,44 @@ contains
     ! 3rd body eff: 2.5 H2, 16.0 H2O, 1.0 else
     M = sum(coi(iH:iCO2)) + 2.5d0*coi(iH2) + 16d0*coi(iH2O) + coi(iO2) + coi(iO)
     ! C3H6 + 1.5 O2 => 3 CO + 3 H2
-    prodf(1)=comp_ch_tabT(1,kf_tab,Tint,Tdiff)*coi(iC3H6)*coi(iO2)**1.5d0
-    prodb(1)=comp_ch_tabT(1,kb_tab,Tint,Tdiff)*coi(iCO)**3*coi(iH2)**3
+    prodf(1)=f_kf(1,Tint,Tdiff)*coi(iC3H6)*coi(iO2)**1.5d0
+    prodb(1)=f_kb(1,Tint,Tdiff)*coi(iCO)**3*coi(iH2)**3
     prod(1)=prodf(1)-prodb(1)
     ! CO + O + M <-> CO2 + M
-    prodf(2)=comp_ch_tabT(2,kf_tab,Tint,Tdiff)*coi(iCO)*coi(iO)*M
-    prodb(2)=comp_ch_tabT(2,kb_tab,Tint,Tdiff)*coi(iCO2)*M
+    prodf(2)=f_kf(2,Tint,Tdiff)*coi(iCO)*coi(iO)*M
+    prodb(2)=f_kb(2,Tint,Tdiff)*coi(iCO2)*M
     prod(2)=prodf(2)-prodb(2)
     !CO + OH <-> CO2 + H
-    prodf(3)=comp_ch_tabT(3,kf_tab,Tint,Tdiff)*coi(iCO)*coi(iOH)
-    prodb(3)=comp_ch_tabT(3,kb_tab,Tint,Tdiff)*coi(iCO2)*coi(iH)
+    prodf(3)=f_kf(3,Tint,Tdiff)*coi(iCO)*coi(iOH)
+    prodb(3)=f_kb(3,Tint,Tdiff)*coi(iCO2)*coi(iH)
     prod(3)=prodf(3)-prodb(3)
     !H2 + O2 <-> OH+OH
-    prodf(4)=comp_ch_tabT(4,kf_tab,Tint,Tdiff)*coi(iH2)*coi(iO2)
-    prodb(4)=comp_ch_tabT(4,kb_tab,Tint,Tdiff)*coi(iOH)**2
+    prodf(4)=f_kf(4,Tint,Tdiff)*coi(iH2)*coi(iO2)
+    prodb(4)=f_kb(4,Tint,Tdiff)*coi(iOH)**2
     prod(4)=prodf(4)-prodb(4)
     !H + O2 <-> OH + O
-    prodf(5)=comp_ch_tabT(5,kf_tab,Tint,Tdiff)*coi(iH)*coi(iO2)
-    prodb(5)=comp_ch_tabT(5,kb_tab,Tint,Tdiff)*coi(iOH)*coi(iO)
+    prodf(5)=f_kf(5,Tint,Tdiff)*coi(iH)*coi(iO2)
+    prodb(5)=f_kb(5,Tint,Tdiff)*coi(iOH)*coi(iO)
     prod(5)=prodf(5)-prodb(5)
     !OH +H2 <-> H2O + H
-    prodf(6)=comp_ch_tabT(6,kf_tab,Tint,Tdiff)*coi(iOH)*coi(iH2)
-    prodb(6)=comp_ch_tabT(6,kb_tab,Tint,Tdiff)*coi(iH2O)*coi(iH)
+    prodf(6)=f_kf(6,Tint,Tdiff)*coi(iOH)*coi(iH2)
+    prodb(6)=f_kb(6,Tint,Tdiff)*coi(iH2O)*coi(iH)
     prod(6)=prodf(6)-prodb(6)
     !O + H2 <-> OH + H
-    prodf(7)=comp_ch_tabT(7,kf_tab,Tint,Tdiff)*coi(iO)*coi(iH2)
-    prodb(7)=comp_ch_tabT(7,kb_tab,Tint,Tdiff)*coi(iOH)*coi(iH)
+    prodf(7)=f_kf(7,Tint,Tdiff)*coi(iO)*coi(iH2)
+    prodb(7)=f_kb(7,Tint,Tdiff)*coi(iOH)*coi(iH)
     prod(7)=prodf(7)-prodb(7)
     !OH + OH <-> H2O + O
-    prodf(8)=comp_ch_tabT(8,kf_tab,Tint,Tdiff)*coi(iOH)**2
-    prodb(8)=comp_ch_tabT(8,kb_tab,Tint,Tdiff)*coi(iH2O)*coi(iO)
+    prodf(8)=f_kf(8,Tint,Tdiff)*coi(iOH)**2
+    prodb(8)=f_kb(8,Tint,Tdiff)*coi(iH2O)*coi(iO)
     prod(8)=prodf(8)-prodb(8)
     !H + H + M <-> H2 + M
-    prodf(9)=comp_ch_tabT(9,kf_tab,Tint,Tdiff)*coi(iH)**2*M
-    prodb(9)=comp_ch_tabT(9,kb_tab,Tint,Tdiff)*coi(iH2)*M
+    prodf(9)=f_kf(9,Tint,Tdiff)*coi(iH)**2*M
+    prodb(9)=f_kb(9,Tint,Tdiff)*coi(iH2)*M
     prod(9)=prodf(9)-prodb(9)
     !H + OH <-> H2O + M
-    prodf(10)=comp_ch_tabT(10,kf_tab,Tint,Tdiff)*coi(iH)*coi(iOH)*M
-    prodb(10)=comp_ch_tabT(10,kb_tab,Tint,Tdiff)*coi(iH2O)*M
+    prodf(10)=f_kf(10,Tint,Tdiff)*coi(iH)*coi(iOH)*M
+    prodb(10)=f_kb(10,Tint,Tdiff)*coi(iH2O)*M
     prod(10)=prodf(10)-prodb(10)
 
     ! H

@@ -17,6 +17,11 @@ real(8) :: prodf(1:14), prodb(1:14)
 real(8) :: k(2) !< Falloff rate coefficients
 
 
+! Define the whole INTENT(OUT) block first: an INTENT(OUT) dummy is undefined on
+! entry, so species after this routine's own slots (allowed by the mechanism
+! contract: they are inert) would otherwise receive whatever the caller passed.
+omegadot = 0d0
+
 do is = 1, ns 
  coi(is)=roi(is)/Wm_tab(is) ! kmol/m^3
 enddo 
@@ -116,6 +121,12 @@ real(8) :: dwdr_c(ns,ns)     ! wrt coi; converted to wrt roi at the end
 real(8), parameter :: epsM(7) = [1.d0, 12.d0, 2.5d0, 1.d0, 1.d0, 1.d0, 1.d0]
 
 ! 1) coi and T setup ---------------------------------------------------------
+! Define the whole INTENT(OUT) block first: an INTENT(OUT) dummy is undefined on
+! entry, so rows of species after this routine's own slots (allowed by the
+! mechanism contract: inert species) would otherwise be left undefined.
+dwdr = 0d0
+dwdT = 0d0
+
 do j = 1, ns
   coi(j) = roi(j)/Wm_tab(j)
 enddo

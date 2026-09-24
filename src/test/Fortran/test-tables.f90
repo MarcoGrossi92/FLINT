@@ -4,9 +4,9 @@
 !  2. the same rows restricted to 100..400 K (test/tables/WD-100K, made by test/tables/make_WD-100K.py):
 !     row T is still the rate at T kelvin (f_kf/f_kb == the full 1 K table at the same T);
 !  3. every hand-written routine (WD, Andersen, OSK, JLR, Frassoldati, CKJLR10sp, singh, Singh_WC32,
-!     singhC3H6, Coronetti, Nassini_4, Frolov_nopressure, Frolov) with synthetic in-memory tables:
+!     singhC3H6, Coronetti, Nassini_4, Frolov_nopressure, Frolov, ONERA_7) with synthetic in-memory tables:
 !     omegadot with the tables starting at 50, 100, 300 and 799 K is BIT-IDENTICAL to omegadot with
-!     the same rows in tables starting at 1 K;
+!     the same rows in tables starting at 1 K, and a sentinel-filled omegadot comes back fully defined;
 !  4. positive control: the accessor of FLINT <= 2223136 (assumed-shape dummy tab(:,:), copied below
 !     as old_comp_ch_tabT) returns the rate of row T + Tmin - 1 when the table starts at Tmin /= 1;
 !  5. the public comp_ch_tabT of the library (dummy tab(T_tab_min:,:)) equals f_kf/f_kb at every row of
@@ -23,20 +23,21 @@ program test
   use singh_mod
   use coronetti_mod
   use globH2_mod
+  use ONERA7_mod
   implicit none
   integer, parameter :: T0 = 100, T1 = 400
-  integer, parameter :: nsyn = 12, nrc_syn = 12, Tmax_syn = 3000, nroutine = 13, nsamp = 3, ntmin = 4
+  integer, parameter :: nsyn = 12, nrc_syn = 14, Tmax_syn = 3000, nroutine = 14, nsamp = 3, ntmin = 4
   integer, parameter :: Tmins(ntmin) = [50, 100, 300, 799]
   real(8), parameter :: Tsamp(nsamp) = [800.0d0, 1234.5d0, 2998.37d0]
   real(8), parameter :: Tctrl(nsamp) = [800.0d0, 1234.5d0, 2500.37d0]
   character(len=18), parameter :: rname(nroutine) = [character(len=18) :: 'WD', 'Andersen', 'OSK', 'JLR', &
     'Frassoldati', 'CKJLR10sp', 'singh', 'Singh_WC32', 'singhC3H6', 'Coronetti', 'Nassini_4', &
-    'Frolov_nopressure', 'Frolov']
+    'Frolov_nopressure', 'Frolov', 'ONERA_7']
   real(8), allocatable :: kf_full(:,:), kb_full(:,:), kf_ref(:,:), kb_ref(:,:)
   real(8) :: Tdiff(2), a, b, c, dmax, td
   real(8) :: roi0(nsyn), roi(nsyn), w(nsyn), w_ref(nsyn, nsamp)
   integer :: err, ir, T, k, m, Tint(2), nfail1, nfail2, nfail3, nctrl, nctrl_tot, lb, ub, nbad
-  integer :: nctrl1, nctrl2, nctrl2_tot, nrest1, nrest2, nrest4
+  integer :: nctrl1, nctrl2, nctrl2_tot, nsent, nrest1, nrest2, nrest4
   character(32) :: mech_name
 
   Tdiff = [0.d0, 0.37d0]
@@ -124,19 +125,20 @@ program test
     enddo
   enddo
   roi0 = [0.05d0, 0.30d0, 0.10d0, 0.08d0, 0.12d0, 0.20d0, 0.01d0, 0.002d0, 0.004d0, 0.05d0, 0.03d0, 0.40d0]
-  nfail3 = 0
+  nfail3 = 0; nsent = 0
   do ir = 1, nroutine
     call set_tables(1)
     do k = 1, nsamp
-      roi = roi0; w = 0.d0
+      roi = roi0; w = 7.0d0          ! sentinel: a slot the routine does not define keeps it
       call call_routine(ir, roi, Tsamp(k), w)
       w_ref(:,k) = w
+      if (any(w == 7.0d0)) nsent = nsent + 1
     enddo
     nbad = 0
     do m = 1, ntmin
       call set_tables(Tmins(m))
       do k = 1, nsamp
-        roi = roi0; w = 0.d0
+        roi = roi0; w = 7.0d0          ! same sentinel as the reference run: the tail is equal on both sides
         call call_routine(ir, roi, Tsamp(k), w)
         if (any(w /= w_ref(:,k)) .or. any(w /= w)) nbad = nbad + 1
       enddo
@@ -145,6 +147,8 @@ program test
       ' (Tmin, T) states differ from the 1 K tables; max |omegadot| at 1 K = ', maxval(abs(w_ref))
     nfail3 = nfail3 + nbad
   enddo
+  write(*,'(A,I0,A,I0,A)') ' sentinel    : ', nsent, ' of ', nroutine*nsamp, &
+    ' direct calls left the sentinel 7.0 in a slot the routine did not define (expected 0: whole block defined)'
 
   ! 4) positive control: the assumed-shape accessor of FLINT <= 2223136 reads row T + Tmin - 1
   call set_tables(100)
@@ -163,7 +167,7 @@ program test
   write(*,'(A,I0,A,I0,A)') ' comp_ch_tabT (tables from 100 K): differs from f_kf|f_kb in ', nrest4, ' of ', 2*nctrl_tot, &
     ' samples (expected 0)'
   call free_chemistry_data()
-  if (nfail1 + nfail2 + nfail3 > 0 .or. nctrl /= nctrl_tot .or. nctrl1 /= 0 .or. nctrl2 /= nctrl2_tot &
+  if (nfail1 + nfail2 + nfail3 > 0 .or. nctrl /= nctrl_tot .or. nctrl1 /= 0 .or. nctrl2 /= nctrl2_tot .or. nsent /= 0 &
       .or. nrest1 + nrest2 + nrest4 /= 0) then
     write(*,'(A)') ' Verdict -> fail (row T of a rate table must be the rate at T kelvin)'
     stop 1
@@ -200,6 +204,7 @@ contains
     case (11); call Nassini_4(roi, temp, w)
     case (12); call Frolov_nopressure(roi, temp, w)
     case (13); call Frolov(roi, temp, w)
+    case (14); call ONERA_7(roi, temp, w)
     end select
   end subroutine call_routine
 

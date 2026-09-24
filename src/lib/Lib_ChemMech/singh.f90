@@ -17,6 +17,11 @@ contains
     real(8) :: coi(ns), Tdiff
     real(8) :: M, prodf(11), prodb(11), prod(10)
 
+    ! Define the whole INTENT(OUT) block first: an INTENT(OUT) dummy is undefined on
+    ! entry, so species after this routine's own slots (allowed by the mechanism
+    ! contract: they are inert) would otherwise receive whatever the caller passed.
+    omegadot = 0d0
+
     do is = 1, ns
       coi(is)=roi(is)/Wm_tab(is)  ! kmol/m^3
       if (coi(is).lt.1d-12) coi(is) = 0d0
@@ -106,6 +111,11 @@ contains
     integer, parameter :: iH2=6, iH2O=7, iO2=8, iO=9, iC32H66=10
     real(8) :: coi(ns), Tdiff
     real(8) :: M, prodf(11), prodb(11), prod(11)
+
+    ! Define the whole INTENT(OUT) block first: an INTENT(OUT) dummy is undefined on
+    ! entry, so species after this routine's own slots (allowed by the mechanism
+    ! contract: they are inert) would otherwise receive whatever the caller passed.
+    omegadot = 0d0
 
     do is = 1, ns
       coi(is)=roi(is)/Wm_tab(is)  ! kmol/m^3
@@ -206,6 +216,11 @@ contains
     integer, parameter :: iH2=6, iH2O=7, iO2=8, iO=9
     real(8) :: coi(ns), Tdiff
     real(8) :: M, prodf(11), prodb(11), prod(10)
+
+    ! Define the whole INTENT(OUT) block first: an INTENT(OUT) dummy is undefined on
+    ! entry, so species after this routine's own slots (allowed by the mechanism
+    ! contract: they are inert) would otherwise receive whatever the caller passed.
+    omegadot = 0d0
 
     do is = 1, ns
       coi(is)=roi(is)/Wm_tab(is)  ! kmol/m^3

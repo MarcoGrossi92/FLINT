@@ -82,6 +82,11 @@ contains
     integer :: is, T_i, Tint(2)
     real(8) :: kf, kb, net_rate
 
+    ! Define the whole INTENT(OUT) block first: an INTENT(OUT) dummy is undefined on
+    ! entry, so species after this routine's own slots (allowed by the mechanism
+    ! contract: they are inert) would otherwise receive whatever the caller passed.
+    omegadot = 0d0
+
     do is = 1, ns
       coi(is) = roi(is) / Wm_tab(is)   ! kmol/m^3
     end do
@@ -127,6 +132,12 @@ contains
     real(8) :: kf, kb, dkf_dT, dkb_dT
     real(8) :: dnet_dc(ns), dnet_dT_r
     real(8) :: dwdr_c(ns, ns)
+
+    ! Define the whole INTENT(OUT) block first: an INTENT(OUT) dummy is undefined on
+    ! entry, so rows of species after this routine's own slots (allowed by the
+    ! mechanism contract: inert species) would otherwise be left undefined.
+    dwdr = 0d0
+    dwdT = 0d0
 
     do is = 1, ns
       coi(is) = roi(is) / Wm_tab(is)

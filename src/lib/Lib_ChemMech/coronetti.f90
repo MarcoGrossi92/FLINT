@@ -17,6 +17,11 @@ contains
     real(8) :: kf, kb, CP1, CP2, xi, lin1, lin2
     real(8), parameter :: limitH2 = 1d-10, limitO2 = 1d-10, sigma = 23d0, tau = 17d0
 
+    ! Define the whole INTENT(OUT) block first: an INTENT(OUT) dummy is undefined on
+    ! entry, so species after this routine's own slots (allowed by the mechanism
+    ! contract: they are inert) would otherwise receive whatever the caller passed.
+    omegadot = 0d0
+
     do is = 1, ns
       roi(is) = max(roi(is), 0.d0)
       coi(is)=roi(is)/Wm_tab(is)  ! kmol/m^3

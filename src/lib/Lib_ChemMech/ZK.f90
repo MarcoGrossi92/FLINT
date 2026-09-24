@@ -17,6 +17,11 @@ real(8) :: prodf(1:51), prodb(1:51)
 real(8) :: k(2) !< Troe rate coefficients
 
 
+! Define the whole INTENT(OUT) block first: an INTENT(OUT) dummy is undefined on
+! entry, so species after this routine's own slots (allowed by the mechanism
+! contract: they are inert) would otherwise receive whatever the caller passed.
+omegadot = 0d0
+
 do is = 1, ns 
  coi(is)=roi(is)/Wm_tab(is) ! kmol/m^3
 enddo 

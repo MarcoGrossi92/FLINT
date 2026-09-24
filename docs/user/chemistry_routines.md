@@ -71,3 +71,11 @@ Strict mode turns the fallback into a refusal (`[ERROR] FLINT Assign_Mechanism: 
 is not hooked and strict mode is on`, exit status 1): set the module flag
 `FLINT_strict_mechanism = .true.` (module `FLINT_Lib_Chemistry_wdot`) before `Assign_Mechanism`,
 or the environment variable `FLINT_STRICT_MECHANISM=1` (also `true`, `yes`, `on`). Default: off.
+
+## Analytical Jacobian availability
+
+`chemistry_jacobian` (module `FLINT_Lib_Chemistry_wdot`) is a null pointer by default: only the
+`ONERA-7` (`ONERA_7_jac`) and `Frolov_nopressure` (`Frolov_nopressure_jac`) routines set it. For
+every other mechanism `set_analytical_jacobian(.true.)` prints `[JAC] analytical Jacobian
+requested but the active mechanism has none; falling back to finite differences` and the
+integrator builds the Jacobian by finite differences.

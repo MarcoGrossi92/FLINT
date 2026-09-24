@@ -2,7 +2,14 @@ module globH2_mod
   implicit none
 contains
 
-  ! Frolov: hydrogen/air with 3 species, one reaction 
+  ! Frolov: hydrogen/air global step 2 H2 + O2 -> 2 H2O with the rate law
+  ! HARD-CODED below (A = 8e11 on the progress rate with the -0.5 factor, i.e.
+  ! 4e11 on the reaction rate, (p/101325)^-1.15, Ea/R = 10000 K); the kf/kb
+  ! tables of chemistry-Arrhenius.dat are IGNORED, the INPUT folder only
+  ! supplies the species (names, molecular weights, thermodynamics).
+  ! Species slots (layout since 6e12db2, merge of dc1caa3; before it the slots
+  ! were 2 H2, 3 H2O, 5 O2):  1 O2, 2 H2O, 3 H2, any further species inert
+  ! (omegadot is zeroed before the assignments). p = sum(roi*Ri)*T (e7eaa00).
   subroutine Frolov(roi,temp,omegadot)
     use FLINT_Lib_Thermodynamic
     use FLINT_Lib_Chemistry_data
@@ -43,15 +50,17 @@ contains
   end subroutine Frolov
 
 
-  ! Frolov_nopressure: the same single-step H2/O2 reaction as Frolov above, but
-  ! without the (p/p0)^-1.15 pressure correction, and with the reverse rate taken
-  ! from kb_tab instead of being omitted.
+  ! Frolov_nopressure: the CFD++ variant of the global H2/O2 step (the reaction
+  ! panel/file used in CFD++), NOT the paper formula of Frolov et al. coded in
+  ! the Frolov routine above:
   !
-  !     2 H2 + O2  <=>  2 H2O
-  !     forward Arrhenius: A = 8e11, b = 0, Ea = 8.314e7 J/kmol
+  !     2 H2 + O2  <=>  2 H2O      reversible, no pressure dependence
+  !     forward Arrhenius (yaml): A = 8e11 on the progress rate, b = 0,
+  !     Ea = 8.314e7 J/kmol -- twice the published Frolov rate at 1 atm
   !
-  ! Reverse rate comes from the equilibrium constant computed by the chemistry
-  ! loader and supplied through kb_tab (same convention as ONERA-7, general, ...).
+  ! kf comes from the Arrhenius table of chemistry-Arrhenius.dat, the reverse
+  ! rate from the equilibrium constant computed by the chemistry writer and
+  ! supplied through kb_tab (same convention as ONERA-7, general, ...).
   !
   ! Species ordering (matches the YAML phase `species: [O2,H2O,H2,N2]`):
   !     1: O2   2: H2O   3: H2   4: N2 (inert; row is all zero)
@@ -163,7 +172,16 @@ contains
   end subroutine Frolov_nopressure_jac
 
 
-  ! Nassini
+  ! Nassini: hydrogen/air global scheme with TWO IRREVERSIBLE reactions read
+  ! from the Arrhenius tables at 1 atm (T-only tables):
+  !     reaction 1  H2 + 0.5 O2 -> H2O     rate kf_tab(:,1) [H2][O2]
+  !     reaction 2  H2O -> H2 + 0.5 O2     rate kf_tab(:,2) [H2O]
+  ! Since dc1caa3 (merged in 6e12db2) reaction 2 is the backward step and
+  ! kb_tab is not used; before it the routine had one reaction with the reverse
+  ! from kb_tab(:,1), which the tables of a `=>` reaction leave at zero.
+  ! Species slots: 1 O2, 2 H2O, 3 H2, any further species inert (omegadot is
+  ! zeroed before the assignments). The reaction orders are the exponents
+  ! coded here ({H2:1, O2:1} and {H2O:1}), not the yaml orders.
   subroutine Nassini_4(roi,temp,omegadot)
     use FLINT_Lib_Thermodynamic
     use FLINT_Lib_Chemistry_data

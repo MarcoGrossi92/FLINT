@@ -8,8 +8,9 @@ FLINT includes a curated collection of chemical reaction mechanisms for combusti
 
 | Mechanism | Type | Species | Reactions | Primary Application |
 |-----------|------|---------|-----------|---------------------|
-| **Frolov** | Global | 3 | 1 | Hydrogen combustion (ultra-fast) |
-| **Nassini** | Global | 3 | 1 | Hydrogen combustion (ultra-fast) |
+| **Frolov** | Global | 3 (+ inert) | 1 (rate hard-coded, tables ignored) | Hydrogen combustion (ultra-fast) |
+| **Frolov_nopressure** | Global | 4 | 1 (reversible, tables; CFD++ variant) | Hydrogen combustion (ultra-fast), analytical Jacobian |
+| **Nassini** | Global | 3 (+ inert) | 2 irreversible (tables at 1 atm) | Hydrogen combustion (ultra-fast) |
 | **WD** | Global | 5 | 3 | CH₄ global reaction, CFD |
 | **JLR** | Global | 9 | 7 | CH₄ rocket engines |
 | **ONERA-7** | Reduced | 7 | 14 | H₂/air scramjet |
@@ -43,6 +44,28 @@ A reduced H₂/O₂ mechanism with 7 species developed for supersonic combustion
 - **Application**: Scramjet, supersonic combustor, hypersonic flow  
 - **Accuracy**: Reduced mechanism, suitable for hypersonic simulations  
 - **File**: `ONERA-7.f90`
+
+---
+
+### Global hydrogen schemes (`global-H2.f90`)
+
+- **Frolov** (`Frolov`): one global step 2 H₂ + O₂ → 2 H₂O with the rate law **hard-coded** in the
+  routine (A = 8e11 on the progress rate, (p/101325)^-1.15, Ea/R = 10000 K); the kf/kb tables of
+  `chemistry-Arrhenius.dat` are **ignored**, the INPUT folder only supplies the species, their
+  molecular weights and thermodynamics. Species slots `O2, H2O, H2` (+ inert species after them);
+  this layout exists since commit 6e12db2 (the older routine addressed slots 2/3/5).
+- **Frolov_nopressure** (`Frolov_nopressure`): the **CFD++ variant** of the global step (the reaction
+  panel/file used in CFD++), not the paper formula: 2 H₂ + O₂ ⇌ 2 H₂O reversible, kf/kb read from the
+  tables (forward A = 8e11 on the progress rate, i.e. twice the published Frolov rate at 1 atm, no
+  pressure dependence), slots `O2, H2O, H2, N2`; carries an analytical Jacobian.
+- **Nassini** (`Nassini_4`): **two irreversible reactions** read from the Arrhenius tables at 1 atm
+  (temperature-only tables): reaction 1 H₂ + ½ O₂ → H₂O with rate kf₁[H₂][O₂], reaction 2
+  H₂O → H₂ + ½ O₂ with rate kf₂[H₂O]. Since commit dc1caa3 (merged in 6e12db2) reaction 2 is the
+  backward step (kb is not used); the older routine had a single reaction with its reverse from
+  kb, which the tables of an irreversible reaction leave at zero. Slots `O2, H2O, H2` (+ inert).
+
+The species slots and the reaction counts of every hooked routine are checked at
+`Assign_Mechanism` (see *Mechanism contract check* in the chemistry routines page).
 
 ---
 

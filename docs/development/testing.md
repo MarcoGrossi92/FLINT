@@ -90,6 +90,23 @@ test-CEA
 
 ---
 
+### 5. Contract and Table Unit Tests
+
+Three drivers that need no Cantera and no fixture beyond `database/WD` and `test/tables/WD-100K`
+(made by `test/tables/make_WD-100K.py`); each prints ` Verdict -> pass|fail` and exits 1 on failure:
+
+```
+test-tables     rate tables are indexed by temperature whatever their first row:
+                comp_ch_tabT == f_kf/f_kb on database/WD and on the 100..400 K copy, and every
+                hand-written routine gives bit-identical omegadot with tables starting at 50, 100,
+                300 and 799 K (positive control: the assumed-shape accessor of FLINT <= 2223136)
+test-contract   the mechanism contract check of Assign_Mechanism: routine order accepted,
+                swapped slots / wrong reaction count refused, appended inert species accepted,
+                calibrated species with the same composition accepted, name read whole
+test-falloff    the Troe/Lindemann rates where the tables vanish (Pr = 0, k_inf = 0 give a
+                zero rate, no NaN) and the k_c <= 0 convention for irreversible falloff
+```
+
 ## Running the Test Suite
 
 From the `test` directory:

@@ -5,7 +5,7 @@ phases:
 - name: WD
   thermo: ideal-gas
   elements: [O, H, C]
-  species: [CH4, CO, CO2, H2O, O2]
+  species: [CH4, O2, CO2, H2O, CO]
   kinetics: gas
   reactions: all
   transport: mixture-averaged

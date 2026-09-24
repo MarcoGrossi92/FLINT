@@ -13,6 +13,7 @@ program test
   use FLINT_Lib_Chemistry_data
   use FLINT_Lib_Chemistry_wdot
   use FLINT_Lib_Chemistry_rhs
+  use, intrinsic :: ieee_arithmetic, only: ieee_value, ieee_quiet_nan
   implicit none
   character(32) :: mech_name
   integer :: err, nz, nfail
@@ -34,6 +35,7 @@ program test
   call verdict('tables/WD-100K loaded on one grid: rate range 100..400 K', T_tab_min == 100 .and. T_tab_max == 400)
   call check_T(50.d0,  .true.,  '50 K (below the thermo and the rate tables)')
   call check_T(250.d0, .false., '250 K (inside both)')
+  call check_T(ieee_value(1d0, ieee_quiet_nan), .true., 'NaN (bit test: survives -ffast-math and FPE traps)')
   ! the rate range narrowed in memory (tables set by another path): 200..300 K inside the thermo tables
   T_tab_min = 200; T_tab_max = 300
   call check_T(150.d0,  .true.,  '150 K (inside the thermo tables, below the rate range)')

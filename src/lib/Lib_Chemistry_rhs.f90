@@ -40,6 +40,13 @@ contains
     ! the thermo one, so the second guard is a defence for tables set by another
     ! path (a driver's in-memory tables): reading a rate table below its first
     ! row was an out-of-bounds read.
+    ! NaN first and on its own: under -ffast-math (FLINT's RELEASE flags) isnan(T) is folded to
+    ! .false. and every comparison below is false for a NaN, so int(T) indexed the tables at
+    ! -huge (segmentation fault); under -ffpe-trap=invalid the ordered comparisons trap.
+    if (nan_bits(T)) then
+       F(:) = -1.0d0
+       return
+    end if
     if (T < Tmin .or. T >= Tmax .or. isnan(T) .or. T < T_tab_min .or. T >= T_tab_max) then
        F(:) = -1.0d0
        return
@@ -105,6 +112,10 @@ contains
     ! Mirror rhs_native's bail-out: out-of-range T → F is the constant -1 there,
     ! whose Jacobian is zero. Returning zero keeps Newton in a benign state until
     ! the step is rejected and the integrator retries with smaller H.
+    if (nan_bits(T)) then
+      DFY(1:nz, 1:nz) = 0.d0
+      return
+    end if
     if (T < Tmin .or. T >= Tmax .or. isnan(T) .or. T < T_tab_min .or. T >= T_tab_max) then
       DFY(1:nz, 1:nz) = 0.d0
       return
@@ -323,5 +334,12 @@ contains
 
   end subroutine rhs_cantera
 # endif
+
+  !> NaN (or infinity) test on the bit pattern (exponent bits all set): unlike isnan(x) or x /= x it
+  !> is not folded away by -ffast-math / -ffinite-math-only and it raises no floating-point exception.
+  pure logical function nan_bits(x)
+    real(8), intent(in) :: x
+    nan_bits = iand(shiftr(transfer(x, 0_8), 52), 2047_8) == 2047_8
+  end function nan_bits
 
 end module FLINT_Lib_Chemistry_rhs

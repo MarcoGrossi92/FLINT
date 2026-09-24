@@ -179,6 +179,11 @@ contains
       file = 'INPUT/'//trim(FLINT_phase_prefix)//'composition.txt'
     endif
 
+    ! Drop the composition of a previously loaded phase first: a missing or
+    ! unreadable composition.txt must leave no stale (allocated) data behind.
+    if (allocated(elements_names)) deallocate(elements_names)
+    if (allocated(species_composition)) deallocate(species_composition)
+
     ! File 1: phase
     open(newunit=unitFile,file=trim(file),status='old',iostat=ios)
     if (ios/=0) then

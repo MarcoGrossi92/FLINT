@@ -59,12 +59,15 @@ contains
     use sandiego_mod
     use FFCMy_12_mod
     use Gerlinger9_mod
+    use FLINT_Lib_Chemistry_contract, only: check_mechanism_contract
     implicit none
     character(*), intent(in) :: mad_world
+    logical :: hooked, ok
 
     ! Default: no analytical Jacobian available. Each mechanism that has one
     ! overrides this below.
     chemistry_jacobian => null()
+    hooked = .true.
 
     select case(mad_world)
     case('WD')
@@ -123,9 +126,19 @@ contains
       chemistry_source => Gerlinger9
 
     case default
+      hooked = .false.
       write(*,*) "[WARNING] Explicit procedure for "//trim(mad_world)//" not found, defaulting to the general procedure"
       chemistry_source => general
     end select
+
+    ! Mechanism contract: a hooked name selects a compiled routine whose species
+    ! slots and reaction tables are fixed; the loaded data must match them
+    ! (see FLINT_Lib_Chemistry_contract for the rules). The tables must have been
+    ! loaded (read_idealgas_thermo, read_chemistry) before this call.
+    if (hooked) then
+      call check_mechanism_contract(mad_world, ok)
+      if (.not. ok) error stop '[ERROR] FLINT Assign_Mechanism: mechanism contract violated (see the two lists above)'
+    endif
 
   end subroutine Assign_Mechanism
 

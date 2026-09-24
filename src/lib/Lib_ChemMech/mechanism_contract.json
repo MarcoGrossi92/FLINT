@@ -1,0 +1,3289 @@
+{
+ "schema": "FLINT mechanism contract v1: for each name hooked in Assign_Mechanism, the species slots (name + elemental composition) and the reaction counts per table type that the compiled routine expects; utils/mechanism_contract.py turns it into src/lib/Lib_Chemistry_contract.f90",
+ "origin": "transcribed from the routines of src/lib/Lib_ChemMech at 2223136 + Singh slots from singh.f90:15-16",
+ "cases": {
+  "WD": {
+   "routine": "WD",
+   "file": "WD.f90",
+   "kind": "hand-written",
+   "ns": 5,
+   "nrc": {
+    "arrhenius": 3,
+    "troe": 0,
+    "lindemann": 0
+   },
+   "species": [
+    {
+     "slot": 1,
+     "name": "CH4",
+     "composition": {
+      "C": 1,
+      "H": 4
+     }
+    },
+    {
+     "slot": 2,
+     "name": "O2",
+     "composition": {
+      "O": 2
+     }
+    },
+    {
+     "slot": 3,
+     "name": "CO2",
+     "composition": {
+      "C": 1,
+      "O": 2
+     }
+    },
+    {
+     "slot": 4,
+     "name": "H2O",
+     "composition": {
+      "H": 2,
+      "O": 1
+     }
+    },
+    {
+     "slot": 5,
+     "name": "CO",
+     "composition": {
+      "C": 1,
+      "O": 1
+     }
+    }
+   ],
+   "tables_used": true,
+   "zeroes_omegadot": true,
+   "jacobian": null,
+   "source": "hand-written routine in WD.f90"
+  },
+  "JLR-Nasuti": {
+   "routine": "JLR",
+   "file": "JLR.f90",
+   "kind": "hand-written",
+   "ns": 9,
+   "nrc": {
+    "arrhenius": 7,
+    "troe": 0,
+    "lindemann": 0
+   },
+   "species": [
+    {
+     "slot": 1,
+     "name": "O2",
+     "composition": {
+      "O": 2
+     }
+    },
+    {
+     "slot": 2,
+     "name": "CH4",
+     "composition": {
+      "C": 1,
+      "H": 4
+     }
+    },
+    {
+     "slot": 3,
+     "name": "H2O",
+     "composition": {
+      "H": 2,
+      "O": 1
+     }
+    },
+    {
+     "slot": 4,
+     "name": "CO",
+     "composition": {
+      "C": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 5,
+     "name": "CO2",
+     "composition": {
+      "C": 1,
+      "O": 2
+     }
+    },
+    {
+     "slot": 6,
+     "name": "H2",
+     "composition": {
+      "H": 2
+     }
+    },
+    {
+     "slot": 7,
+     "name": "H",
+     "composition": {
+      "H": 1
+     }
+    },
+    {
+     "slot": 8,
+     "name": "O",
+     "composition": {
+      "O": 1
+     }
+    },
+    {
+     "slot": 9,
+     "name": "OH",
+     "composition": {
+      "O": 1,
+      "H": 1
+     }
+    }
+   ],
+   "tables_used": true,
+   "zeroes_omegadot": true,
+   "jacobian": null,
+   "source": "hand-written routine in JLR.f90"
+  },
+  "Frassoldati": {
+   "routine": "Frassoldati",
+   "file": "JLR.f90",
+   "kind": "hand-written",
+   "ns": 9,
+   "nrc": {
+    "arrhenius": 6,
+    "troe": 0,
+    "lindemann": 0
+   },
+   "species": [
+    {
+     "slot": 1,
+     "name": "O2",
+     "composition": {
+      "O": 2
+     }
+    },
+    {
+     "slot": 2,
+     "name": "CH4",
+     "composition": {
+      "C": 1,
+      "H": 4
+     }
+    },
+    {
+     "slot": 3,
+     "name": "H2O",
+     "composition": {
+      "H": 2,
+      "O": 1
+     }
+    },
+    {
+     "slot": 4,
+     "name": "CO",
+     "composition": {
+      "C": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 5,
+     "name": "CO2",
+     "composition": {
+      "C": 1,
+      "O": 2
+     }
+    },
+    {
+     "slot": 6,
+     "name": "H2",
+     "composition": {
+      "H": 2
+     }
+    },
+    {
+     "slot": 7,
+     "name": "H",
+     "composition": {
+      "H": 1
+     }
+    },
+    {
+     "slot": 8,
+     "name": "O",
+     "composition": {
+      "O": 1
+     }
+    },
+    {
+     "slot": 9,
+     "name": "OH",
+     "composition": {
+      "O": 1,
+      "H": 1
+     }
+    }
+   ],
+   "tables_used": true,
+   "zeroes_omegadot": true,
+   "jacobian": null,
+   "source": "hand-written routine in JLR.f90"
+  },
+  "Smooke": {
+   "routine": "smooke",
+   "file": "smooke.f90",
+   "kind": "generated",
+   "ns": 16,
+   "nrc": {
+    "arrhenius": 35,
+    "troe": 0,
+    "lindemann": 0
+   },
+   "species": [
+    {
+     "slot": 1,
+     "name": "CH4",
+     "composition": {
+      "C": 1,
+      "H": 4
+     }
+    },
+    {
+     "slot": 2,
+     "name": "H2",
+     "composition": {
+      "H": 2
+     }
+    },
+    {
+     "slot": 3,
+     "name": "O2",
+     "composition": {
+      "O": 2
+     }
+    },
+    {
+     "slot": 4,
+     "name": "O",
+     "composition": {
+      "O": 1
+     }
+    },
+    {
+     "slot": 5,
+     "name": "H",
+     "composition": {
+      "H": 1
+     }
+    },
+    {
+     "slot": 6,
+     "name": "OH",
+     "composition": {
+      "H": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 7,
+     "name": "HO2",
+     "composition": {
+      "H": 1,
+      "O": 2
+     }
+    },
+    {
+     "slot": 8,
+     "name": "H2O2",
+     "composition": {
+      "H": 2,
+      "O": 2
+     }
+    },
+    {
+     "slot": 9,
+     "name": "H2O",
+     "composition": {
+      "H": 2,
+      "O": 1
+     }
+    },
+    {
+     "slot": 10,
+     "name": "CO",
+     "composition": {
+      "C": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 11,
+     "name": "CH3",
+     "composition": {
+      "C": 1,
+      "H": 3
+     }
+    },
+    {
+     "slot": 12,
+     "name": "CH2O",
+     "composition": {
+      "C": 1,
+      "H": 2,
+      "O": 1
+     }
+    },
+    {
+     "slot": 13,
+     "name": "HCO",
+     "composition": {
+      "C": 1,
+      "H": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 14,
+     "name": "CH3O",
+     "composition": {
+      "C": 1,
+      "H": 3,
+      "O": 1
+     }
+    },
+    {
+     "slot": 15,
+     "name": "CO2",
+     "composition": {
+      "C": 1,
+      "O": 2
+     }
+    },
+    {
+     "slot": 16,
+     "name": "N2",
+     "composition": {
+      "N": 2
+     }
+    }
+   ],
+   "tables_used": true,
+   "zeroes_omegadot": false,
+   "jacobian": null,
+   "source": "parsed from smooke.f90 (generated format of FLINT utils/YTF.py)"
+  },
+  "CORIA-CNRS": {
+   "routine": "coria",
+   "file": "coria.f90",
+   "kind": "generated",
+   "ns": 17,
+   "nrc": {
+    "arrhenius": 40,
+    "troe": 4,
+    "lindemann": 0
+   },
+   "species": [
+    {
+     "slot": 1,
+     "name": "H2",
+     "composition": {
+      "H": 2
+     }
+    },
+    {
+     "slot": 2,
+     "name": "H",
+     "composition": {
+      "H": 1
+     }
+    },
+    {
+     "slot": 3,
+     "name": "O",
+     "composition": {
+      "O": 1
+     }
+    },
+    {
+     "slot": 4,
+     "name": "O2",
+     "composition": {
+      "O": 2
+     }
+    },
+    {
+     "slot": 5,
+     "name": "OH",
+     "composition": {
+      "H": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 6,
+     "name": "H2O",
+     "composition": {
+      "H": 2,
+      "O": 1
+     }
+    },
+    {
+     "slot": 7,
+     "name": "HO2",
+     "composition": {
+      "H": 1,
+      "O": 2
+     }
+    },
+    {
+     "slot": 8,
+     "name": "CH3",
+     "composition": {
+      "C": 1,
+      "H": 3
+     }
+    },
+    {
+     "slot": 9,
+     "name": "CH4",
+     "composition": {
+      "C": 1,
+      "H": 4
+     }
+    },
+    {
+     "slot": 10,
+     "name": "CO",
+     "composition": {
+      "C": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 11,
+     "name": "CO2",
+     "composition": {
+      "C": 1,
+      "O": 2
+     }
+    },
+    {
+     "slot": 12,
+     "name": "H2O2",
+     "composition": {
+      "H": 2,
+      "O": 2
+     }
+    },
+    {
+     "slot": 13,
+     "name": "HCO",
+     "composition": {
+      "C": 1,
+      "H": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 14,
+     "name": "CH2O",
+     "composition": {
+      "C": 1,
+      "H": 2,
+      "O": 1
+     }
+    },
+    {
+     "slot": 15,
+     "name": "CH3O",
+     "composition": {
+      "C": 1,
+      "H": 3,
+      "O": 1
+     }
+    },
+    {
+     "slot": 16,
+     "name": "C2H6",
+     "composition": {
+      "C": 2,
+      "H": 6
+     }
+    },
+    {
+     "slot": 17,
+     "name": "CH3O2",
+     "composition": {
+      "C": 1,
+      "H": 3,
+      "O": 2
+     }
+    }
+   ],
+   "tables_used": true,
+   "zeroes_omegadot": false,
+   "jacobian": null,
+   "source": "parsed from coria.f90 (generated format of FLINT utils/YTF.py)"
+  },
+  "TSR-CDF-13": {
+   "routine": "TSRCDF13",
+   "file": "TSR-CDF-13.f90",
+   "kind": "generated",
+   "ns": 13,
+   "nrc": {
+    "arrhenius": 43,
+    "troe": 3,
+    "lindemann": 0
+   },
+   "species": [
+    {
+     "slot": 1,
+     "name": "OH",
+     "composition": {
+      "H": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 2,
+     "name": "HO2",
+     "composition": {
+      "H": 1,
+      "O": 2
+     }
+    },
+    {
+     "slot": 3,
+     "name": "H2",
+     "composition": {
+      "H": 2
+     }
+    },
+    {
+     "slot": 4,
+     "name": "CO2",
+     "composition": {
+      "C": 1,
+      "O": 2
+     }
+    },
+    {
+     "slot": 5,
+     "name": "CO",
+     "composition": {
+      "C": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 6,
+     "name": "H2O",
+     "composition": {
+      "H": 2,
+      "O": 1
+     }
+    },
+    {
+     "slot": 7,
+     "name": "CH4",
+     "composition": {
+      "C": 1,
+      "H": 4
+     }
+    },
+    {
+     "slot": 8,
+     "name": "H",
+     "composition": {
+      "H": 1
+     }
+    },
+    {
+     "slot": 9,
+     "name": "CH3",
+     "composition": {
+      "C": 1,
+      "H": 3
+     }
+    },
+    {
+     "slot": 10,
+     "name": "O2",
+     "composition": {
+      "O": 2
+     }
+    },
+    {
+     "slot": 11,
+     "name": "CH2O",
+     "composition": {
+      "C": 1,
+      "H": 2,
+      "O": 1
+     }
+    },
+    {
+     "slot": 12,
+     "name": "HCO",
+     "composition": {
+      "C": 1,
+      "H": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 13,
+     "name": "O",
+     "composition": {
+      "O": 1
+     }
+    }
+   ],
+   "tables_used": true,
+   "zeroes_omegadot": false,
+   "jacobian": null,
+   "source": "parsed from TSR-CDF-13.f90 (generated format of FLINT utils/YTF.py)"
+  },
+  "TSR-GP-24": {
+   "routine": "TSRGP24",
+   "file": "TSR-GP-24.f90",
+   "kind": "generated",
+   "ns": 24,
+   "nrc": {
+    "arrhenius": 102,
+    "troe": 8,
+    "lindemann": 0
+   },
+   "species": [
+    {
+     "slot": 1,
+     "name": "HO2",
+     "composition": {
+      "H": 1,
+      "O": 2
+     }
+    },
+    {
+     "slot": 2,
+     "name": "H2O2",
+     "composition": {
+      "H": 2,
+      "O": 2
+     }
+    },
+    {
+     "slot": 3,
+     "name": "CO",
+     "composition": {
+      "C": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 4,
+     "name": "OH",
+     "composition": {
+      "H": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 5,
+     "name": "H2",
+     "composition": {
+      "H": 2
+     }
+    },
+    {
+     "slot": 6,
+     "name": "HCO",
+     "composition": {
+      "C": 1,
+      "H": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 7,
+     "name": "CH3O",
+     "composition": {
+      "C": 1,
+      "H": 3,
+      "O": 1
+     }
+    },
+    {
+     "slot": 8,
+     "name": "CH2(S)",
+     "composition": {
+      "C": 1,
+      "H": 2
+     }
+    },
+    {
+     "slot": 9,
+     "name": "H",
+     "composition": {
+      "H": 1
+     }
+    },
+    {
+     "slot": 10,
+     "name": "O",
+     "composition": {
+      "O": 1
+     }
+    },
+    {
+     "slot": 11,
+     "name": "C3H2",
+     "composition": {
+      "C": 3,
+      "H": 2
+     }
+    },
+    {
+     "slot": 12,
+     "name": "CH3",
+     "composition": {
+      "C": 1,
+      "H": 3
+     }
+    },
+    {
+     "slot": 13,
+     "name": "C2H2",
+     "composition": {
+      "C": 2,
+      "H": 2
+     }
+    },
+    {
+     "slot": 14,
+     "name": "CH2O",
+     "composition": {
+      "C": 1,
+      "H": 2,
+      "O": 1
+     }
+    },
+    {
+     "slot": 15,
+     "name": "C3H3",
+     "composition": {
+      "C": 3,
+      "H": 3
+     }
+    },
+    {
+     "slot": 16,
+     "name": "C2H",
+     "composition": {
+      "C": 2,
+      "H": 1
+     }
+    },
+    {
+     "slot": 17,
+     "name": "H2O",
+     "composition": {
+      "H": 2,
+      "O": 1
+     }
+    },
+    {
+     "slot": 18,
+     "name": "CH3O2",
+     "composition": {
+      "C": 1,
+      "H": 3,
+      "O": 2
+     }
+    },
+    {
+     "slot": 19,
+     "name": "O2",
+     "composition": {
+      "O": 2
+     }
+    },
+    {
+     "slot": 20,
+     "name": "CH2",
+     "composition": {
+      "C": 1,
+      "H": 2
+     }
+    },
+    {
+     "slot": 21,
+     "name": "C2H6",
+     "composition": {
+      "C": 2,
+      "H": 6
+     }
+    },
+    {
+     "slot": 22,
+     "name": "CH4",
+     "composition": {
+      "C": 1,
+      "H": 4
+     }
+    },
+    {
+     "slot": 23,
+     "name": "HCO2",
+     "composition": {
+      "C": 1,
+      "H": 1,
+      "O": 2
+     }
+    },
+    {
+     "slot": 24,
+     "name": "CO2",
+     "composition": {
+      "C": 1,
+      "O": 2
+     }
+    }
+   ],
+   "tables_used": true,
+   "zeroes_omegadot": false,
+   "jacobian": null,
+   "source": "parsed from TSR-GP-24.f90 (generated format of FLINT utils/YTF.py)"
+  },
+  "TSR-Rich-31": {
+   "routine": "TSRRich31",
+   "file": "TSR-Rich-31.f90",
+   "kind": "generated",
+   "ns": 31,
+   "nrc": {
+    "arrhenius": 185,
+    "troe": 12,
+    "lindemann": 0
+   },
+   "species": [
+    {
+     "slot": 1,
+     "name": "IC3H7CO",
+     "composition": {
+      "C": 4.0,
+      "H": 7.0,
+      "O": 1.0
+     }
+    },
+    {
+     "slot": 2,
+     "name": "CH2CHO",
+     "composition": {
+      "C": 2.0,
+      "H": 3.0,
+      "O": 1.0
+     }
+    },
+    {
+     "slot": 3,
+     "name": "H",
+     "composition": {
+      "H": 1.0
+     }
+    },
+    {
+     "slot": 4,
+     "name": "CH4",
+     "composition": {
+      "C": 1.0,
+      "H": 4.0
+     }
+    },
+    {
+     "slot": 5,
+     "name": "C2H2",
+     "composition": {
+      "C": 2.0,
+      "H": 2.0
+     }
+    },
+    {
+     "slot": 6,
+     "name": "C3H3",
+     "composition": {
+      "C": 3.0,
+      "H": 3.0
+     }
+    },
+    {
+     "slot": 7,
+     "name": "C2H3",
+     "composition": {
+      "C": 2.0,
+      "H": 3.0
+     }
+    },
+    {
+     "slot": 8,
+     "name": "O",
+     "composition": {
+      "O": 1.0
+     }
+    },
+    {
+     "slot": 9,
+     "name": "H2O2",
+     "composition": {
+      "H": 2.0,
+      "O": 2.0
+     }
+    },
+    {
+     "slot": 10,
+     "name": "CO",
+     "composition": {
+      "C": 1.0,
+      "O": 1.0
+     }
+    },
+    {
+     "slot": 11,
+     "name": "CH2O",
+     "composition": {
+      "C": 1.0,
+      "H": 2.0,
+      "O": 1.0
+     }
+    },
+    {
+     "slot": 12,
+     "name": "C2H6",
+     "composition": {
+      "C": 2.0,
+      "H": 6.0
+     }
+    },
+    {
+     "slot": 13,
+     "name": "CH2CO",
+     "composition": {
+      "C": 2.0,
+      "H": 2.0,
+      "O": 1.0
+     }
+    },
+    {
+     "slot": 14,
+     "name": "IC3H7",
+     "composition": {
+      "C": 3.0,
+      "H": 7.0
+     }
+    },
+    {
+     "slot": 15,
+     "name": "H2O",
+     "composition": {
+      "H": 2.0,
+      "O": 1.0
+     }
+    },
+    {
+     "slot": 16,
+     "name": "O2",
+     "composition": {
+      "O": 2.0
+     }
+    },
+    {
+     "slot": 17,
+     "name": "CH2(S)",
+     "composition": {
+      "C": 1.0,
+      "H": 2.0
+     }
+    },
+    {
+     "slot": 18,
+     "name": "HCO",
+     "composition": {
+      "C": 1.0,
+      "H": 1.0,
+      "O": 1.0
+     }
+    },
+    {
+     "slot": 19,
+     "name": "CH3",
+     "composition": {
+      "C": 1.0,
+      "H": 3.0
+     }
+    },
+    {
+     "slot": 20,
+     "name": "H2",
+     "composition": {
+      "H": 2.0
+     }
+    },
+    {
+     "slot": 21,
+     "name": "CH3CO",
+     "composition": {
+      "C": 2.0,
+      "H": 3.0,
+      "O": 1.0
+     }
+    },
+    {
+     "slot": 22,
+     "name": "C3H6O1-3",
+     "composition": {
+      "C": 3.0,
+      "H": 6.0,
+      "O": 1.0
+     }
+    },
+    {
+     "slot": 23,
+     "name": "C2H4O1-2",
+     "composition": {
+      "C": 2.0,
+      "H": 4.0,
+      "O": 1.0
+     }
+    },
+    {
+     "slot": 24,
+     "name": "C2H3O1-2",
+     "composition": {
+      "C": 2.0,
+      "H": 3.0,
+      "O": 1.0
+     }
+    },
+    {
+     "slot": 25,
+     "name": "HO2",
+     "composition": {
+      "H": 1.0,
+      "O": 2.0
+     }
+    },
+    {
+     "slot": 26,
+     "name": "C2H4",
+     "composition": {
+      "C": 2.0,
+      "H": 4.0
+     }
+    },
+    {
+     "slot": 27,
+     "name": "CH",
+     "composition": {
+      "C": 1.0,
+      "H": 1.0
+     }
+    },
+    {
+     "slot": 28,
+     "name": "OH",
+     "composition": {
+      "H": 1.0,
+      "O": 1.0
+     }
+    },
+    {
+     "slot": 29,
+     "name": "C2H5",
+     "composition": {
+      "C": 2.0,
+      "H": 5.0
+     }
+    },
+    {
+     "slot": 30,
+     "name": "CH2",
+     "composition": {
+      "C": 1.0,
+      "H": 2.0
+     }
+    },
+    {
+     "slot": 31,
+     "name": "CO2",
+     "composition": {
+      "C": 1.0,
+      "O": 2.0
+     }
+    }
+   ],
+   "tables_used": true,
+   "zeroes_omegadot": false,
+   "jacobian": null,
+   "source": "parsed from TSR-Rich-31.f90 (generated format of FLINT utils/YTF.py)"
+  },
+  "ZK": {
+   "routine": "ZK",
+   "file": "ZK.f90",
+   "kind": "generated",
+   "ns": 25,
+   "nrc": {
+    "arrhenius": 45,
+    "troe": 6,
+    "lindemann": 0
+   },
+   "species": [
+    {
+     "slot": 1,
+     "name": "AR",
+     "composition": {
+      "Ar": 1
+     }
+    },
+    {
+     "slot": 2,
+     "name": "N2",
+     "composition": {
+      "N": 2
+     }
+    },
+    {
+     "slot": 3,
+     "name": "H2",
+     "composition": {
+      "H": 2
+     }
+    },
+    {
+     "slot": 4,
+     "name": "H",
+     "composition": {
+      "H": 1
+     }
+    },
+    {
+     "slot": 5,
+     "name": "O",
+     "composition": {
+      "O": 1
+     }
+    },
+    {
+     "slot": 6,
+     "name": "O2",
+     "composition": {
+      "O": 2
+     }
+    },
+    {
+     "slot": 7,
+     "name": "OH",
+     "composition": {
+      "H": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 8,
+     "name": "H2O",
+     "composition": {
+      "H": 2,
+      "O": 1
+     }
+    },
+    {
+     "slot": 9,
+     "name": "HO2",
+     "composition": {
+      "H": 1,
+      "O": 2
+     }
+    },
+    {
+     "slot": 10,
+     "name": "H2O2",
+     "composition": {
+      "H": 2,
+      "O": 2
+     }
+    },
+    {
+     "slot": 11,
+     "name": "CO",
+     "composition": {
+      "C": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 12,
+     "name": "CO2",
+     "composition": {
+      "C": 1,
+      "O": 2
+     }
+    },
+    {
+     "slot": 13,
+     "name": "C",
+     "composition": {
+      "C": 1
+     }
+    },
+    {
+     "slot": 14,
+     "name": "CH",
+     "composition": {
+      "C": 1,
+      "H": 1
+     }
+    },
+    {
+     "slot": 15,
+     "name": "CH2",
+     "composition": {
+      "C": 1,
+      "H": 2
+     }
+    },
+    {
+     "slot": 16,
+     "name": "CH3",
+     "composition": {
+      "C": 1,
+      "H": 3
+     }
+    },
+    {
+     "slot": 17,
+     "name": "CH4",
+     "composition": {
+      "C": 1,
+      "H": 4
+     }
+    },
+    {
+     "slot": 18,
+     "name": "HCO",
+     "composition": {
+      "C": 1,
+      "H": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 19,
+     "name": "CH2O",
+     "composition": {
+      "C": 1,
+      "H": 2,
+      "O": 1
+     }
+    },
+    {
+     "slot": 20,
+     "name": "CH3O",
+     "composition": {
+      "C": 1,
+      "H": 3,
+      "O": 1
+     }
+    },
+    {
+     "slot": 21,
+     "name": "C2H3",
+     "composition": {
+      "C": 2,
+      "H": 3
+     }
+    },
+    {
+     "slot": 22,
+     "name": "C2H4",
+     "composition": {
+      "C": 2,
+      "H": 4
+     }
+    },
+    {
+     "slot": 23,
+     "name": "C2H5",
+     "composition": {
+      "C": 2,
+      "H": 5
+     }
+    },
+    {
+     "slot": 24,
+     "name": "C2H6",
+     "composition": {
+      "C": 2,
+      "H": 6
+     }
+    },
+    {
+     "slot": 25,
+     "name": "CH3O2",
+     "composition": {
+      "C": 1,
+      "H": 3,
+      "O": 2
+     }
+    }
+   ],
+   "tables_used": true,
+   "zeroes_omegadot": false,
+   "jacobian": null,
+   "source": "parsed from ZK.f90 (generated format of FLINT utils/YTF.py)"
+  },
+  "CoronettiC4H6": {
+   "routine": "Coronetti",
+   "file": "coronetti.f90",
+   "kind": "hand-written",
+   "ns": 9,
+   "nrc": {
+    "arrhenius": 6,
+    "troe": 0,
+    "lindemann": 0
+   },
+   "species": [
+    {
+     "slot": 1,
+     "name": "O2",
+     "composition": {
+      "O": 2
+     }
+    },
+    {
+     "slot": 2,
+     "name": "C4H6",
+     "composition": {
+      "C": 4,
+      "H": 6
+     }
+    },
+    {
+     "slot": 3,
+     "name": "H2O",
+     "composition": {
+      "H": 2,
+      "O": 1
+     }
+    },
+    {
+     "slot": 4,
+     "name": "CO",
+     "composition": {
+      "C": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 5,
+     "name": "CO2",
+     "composition": {
+      "C": 1,
+      "O": 2
+     }
+    },
+    {
+     "slot": 6,
+     "name": "H2",
+     "composition": {
+      "H": 2
+     }
+    },
+    {
+     "slot": 7,
+     "name": "O",
+     "composition": {
+      "O": 1
+     }
+    },
+    {
+     "slot": 8,
+     "name": "H",
+     "composition": {
+      "H": 1
+     }
+    },
+    {
+     "slot": 9,
+     "name": "OH",
+     "composition": {
+      "O": 1,
+      "H": 1
+     }
+    }
+   ],
+   "tables_used": true,
+   "zeroes_omegadot": false,
+   "jacobian": null,
+   "source": "hand-written routine in coronetti.f90"
+  },
+  "CKJLR-10sp": {
+   "routine": "CKJLR10sp",
+   "file": "JLR.f90",
+   "kind": "hand-written",
+   "ns": 10,
+   "nrc": {
+    "arrhenius": 8,
+    "troe": 0,
+    "lindemann": 0
+   },
+   "species": [
+    {
+     "slot": 1,
+     "name": "O2",
+     "composition": {
+      "O": 2
+     }
+    },
+    {
+     "slot": 2,
+     "name": "C2H4",
+     "composition": {
+      "C": 2,
+      "H": 4
+     }
+    },
+    {
+     "slot": 3,
+     "name": "H2O",
+     "composition": {
+      "H": 2,
+      "O": 1
+     }
+    },
+    {
+     "slot": 4,
+     "name": "CO",
+     "composition": {
+      "C": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 5,
+     "name": "CO2",
+     "composition": {
+      "C": 1,
+      "O": 2
+     }
+    },
+    {
+     "slot": 6,
+     "name": "H2",
+     "composition": {
+      "H": 2
+     }
+    },
+    {
+     "slot": 7,
+     "name": "H",
+     "composition": {
+      "H": 1
+     }
+    },
+    {
+     "slot": 8,
+     "name": "O",
+     "composition": {
+      "O": 1
+     }
+    },
+    {
+     "slot": 9,
+     "name": "OH",
+     "composition": {
+      "O": 1,
+      "H": 1
+     }
+    },
+    {
+     "slot": 10,
+     "name": "C12H24",
+     "composition": {
+      "C": 12,
+      "H": 24
+     }
+    }
+   ],
+   "tables_used": true,
+   "zeroes_omegadot": true,
+   "jacobian": null,
+   "source": "hand-written routine in JLR.f90"
+  },
+  "Singh": {
+   "routine": "singh",
+   "file": "singh.f90",
+   "kind": "hand-written",
+   "ns": 9,
+   "nrc": {
+    "arrhenius": 10,
+    "troe": 0,
+    "lindemann": 0
+   },
+   "species": [
+    {
+     "slot": 1,
+     "name": "H",
+     "composition": {
+      "H": 1
+     }
+    },
+    {
+     "slot": 2,
+     "name": "C2H4",
+     "composition": {
+      "C": 2,
+      "H": 4
+     }
+    },
+    {
+     "slot": 3,
+     "name": "OH",
+     "composition": {
+      "O": 1,
+      "H": 1
+     }
+    },
+    {
+     "slot": 4,
+     "name": "CO",
+     "composition": {
+      "C": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 5,
+     "name": "CO2",
+     "composition": {
+      "C": 1,
+      "O": 2
+     }
+    },
+    {
+     "slot": 6,
+     "name": "H2",
+     "composition": {
+      "H": 2
+     }
+    },
+    {
+     "slot": 7,
+     "name": "H2O",
+     "composition": {
+      "H": 2,
+      "O": 1
+     }
+    },
+    {
+     "slot": 8,
+     "name": "O2",
+     "composition": {
+      "O": 2
+     }
+    },
+    {
+     "slot": 9,
+     "name": "O",
+     "composition": {
+      "O": 1
+     }
+    }
+   ],
+   "tables_used": true,
+   "zeroes_omegadot": false,
+   "jacobian": null,
+   "source": "hand-written routine singh.f90:6-94 (integer, parameter :: iH=1, iC2H4=2, iOH=3, iCO=4, iCO2=5, iH2=6, iH2O=7, iO2=8, iO=9 at :15-16; 10 reactions)"
+  },
+  "Singh-WC32": {
+   "routine": "Singh_WC32",
+   "file": "singh.f90",
+   "kind": "hand-written",
+   "ns": 10,
+   "nrc": {
+    "arrhenius": 11,
+    "troe": 0,
+    "lindemann": 0
+   },
+   "species": [
+    {
+     "slot": 1,
+     "name": "H",
+     "composition": {
+      "H": 1
+     }
+    },
+    {
+     "slot": 2,
+     "name": "C2H4",
+     "composition": {
+      "C": 2,
+      "H": 4
+     }
+    },
+    {
+     "slot": 3,
+     "name": "OH",
+     "composition": {
+      "O": 1,
+      "H": 1
+     }
+    },
+    {
+     "slot": 4,
+     "name": "CO",
+     "composition": {
+      "C": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 5,
+     "name": "CO2",
+     "composition": {
+      "C": 1,
+      "O": 2
+     }
+    },
+    {
+     "slot": 6,
+     "name": "H2",
+     "composition": {
+      "H": 2
+     }
+    },
+    {
+     "slot": 7,
+     "name": "H2O",
+     "composition": {
+      "H": 2,
+      "O": 1
+     }
+    },
+    {
+     "slot": 8,
+     "name": "O2",
+     "composition": {
+      "O": 2
+     }
+    },
+    {
+     "slot": 9,
+     "name": "O",
+     "composition": {
+      "O": 1
+     }
+    },
+    {
+     "slot": 10,
+     "name": "C32H66",
+     "composition": {
+      "C": 32,
+      "H": 66
+     }
+    }
+   ],
+   "tables_used": true,
+   "zeroes_omegadot": false,
+   "jacobian": null,
+   "source": "hand-written routine in singh.f90"
+  },
+  "Frolov": {
+   "routine": "Frolov",
+   "file": "global-H2.f90",
+   "kind": "hand-written",
+   "ns": 3,
+   "nrc": {
+    "arrhenius": 1,
+    "troe": 0,
+    "lindemann": 0
+   },
+   "species": [
+    {
+     "slot": 1,
+     "name": "O2",
+     "composition": {
+      "O": 2
+     }
+    },
+    {
+     "slot": 2,
+     "name": "H2O",
+     "composition": {
+      "H": 2,
+      "O": 1
+     }
+    },
+    {
+     "slot": 3,
+     "name": "H2",
+     "composition": {
+      "H": 2
+     }
+    }
+   ],
+   "tables_used": false,
+   "zeroes_omegadot": true,
+   "jacobian": null,
+   "source": "hand-written routine in global-H2.f90"
+  },
+  "Nassini": {
+   "routine": "Nassini_4",
+   "file": "global-H2.f90",
+   "kind": "hand-written",
+   "ns": 3,
+   "nrc": {
+    "arrhenius": 2,
+    "troe": 0,
+    "lindemann": 0
+   },
+   "species": [
+    {
+     "slot": 1,
+     "name": "O2",
+     "composition": {
+      "O": 2
+     }
+    },
+    {
+     "slot": 2,
+     "name": "H2O",
+     "composition": {
+      "H": 2,
+      "O": 1
+     }
+    },
+    {
+     "slot": 3,
+     "name": "H2",
+     "composition": {
+      "H": 2
+     }
+    }
+   ],
+   "tables_used": true,
+   "zeroes_omegadot": true,
+   "jacobian": null,
+   "source": "hand-written routine in global-H2.f90"
+  },
+  "Troyes": {
+   "routine": "troyes",
+   "file": "troyes.f90",
+   "kind": "generated",
+   "ns": 12,
+   "nrc": {
+    "arrhenius": 17,
+    "troe": 0,
+    "lindemann": 0
+   },
+   "species": [
+    {
+     "slot": 1,
+     "name": "H",
+     "composition": {
+      "H": 1
+     }
+    },
+    {
+     "slot": 2,
+     "name": "O2",
+     "composition": {
+      "O": 2
+     }
+    },
+    {
+     "slot": 3,
+     "name": "OH",
+     "composition": {
+      "O": 1,
+      "H": 1
+     }
+    },
+    {
+     "slot": 4,
+     "name": "O",
+     "composition": {
+      "O": 1
+     }
+    },
+    {
+     "slot": 5,
+     "name": "H2O",
+     "composition": {
+      "H": 2,
+      "O": 1
+     }
+    },
+    {
+     "slot": 6,
+     "name": "H2",
+     "composition": {
+      "H": 2
+     }
+    },
+    {
+     "slot": 7,
+     "name": "CO",
+     "composition": {
+      "C": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 8,
+     "name": "CO2",
+     "composition": {
+      "C": 1,
+      "O": 2
+     }
+    },
+    {
+     "slot": 9,
+     "name": "CL",
+     "composition": {
+      "Cl": 1
+     }
+    },
+    {
+     "slot": 10,
+     "name": "CL2",
+     "composition": {
+      "Cl": 2
+     }
+    },
+    {
+     "slot": 11,
+     "name": "HCL",
+     "composition": {
+      "Cl": 1,
+      "H": 1
+     }
+    },
+    {
+     "slot": 12,
+     "name": "N2",
+     "composition": {
+      "N": 2
+     }
+    }
+   ],
+   "tables_used": true,
+   "zeroes_omegadot": false,
+   "jacobian": null,
+   "source": "parsed from troyes.f90 (generated format of FLINT utils/YTF.py)"
+  },
+  "Ecker": {
+   "routine": "ecker",
+   "file": "ecker.f90",
+   "kind": "generated",
+   "ns": 14,
+   "nrc": {
+    "arrhenius": 28,
+    "troe": 0,
+    "lindemann": 0
+   },
+   "species": [
+    {
+     "slot": 1,
+     "name": "H2",
+     "composition": {
+      "H": 2
+     }
+    },
+    {
+     "slot": 2,
+     "name": "O2",
+     "composition": {
+      "O": 2
+     }
+    },
+    {
+     "slot": 3,
+     "name": "HO2",
+     "composition": {
+      "H": 1,
+      "O": 2
+     }
+    },
+    {
+     "slot": 4,
+     "name": "H",
+     "composition": {
+      "H": 1
+     }
+    },
+    {
+     "slot": 5,
+     "name": "O",
+     "composition": {
+      "O": 1
+     }
+    },
+    {
+     "slot": 6,
+     "name": "OH",
+     "composition": {
+      "O": 1,
+      "H": 1
+     }
+    },
+    {
+     "slot": 7,
+     "name": "H2O",
+     "composition": {
+      "H": 2,
+      "O": 1
+     }
+    },
+    {
+     "slot": 8,
+     "name": "H2O2",
+     "composition": {
+      "H": 2,
+      "O": 2
+     }
+    },
+    {
+     "slot": 9,
+     "name": "CO",
+     "composition": {
+      "C": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 10,
+     "name": "CO2",
+     "composition": {
+      "C": 1,
+      "O": 2
+     }
+    },
+    {
+     "slot": 11,
+     "name": "HCL",
+     "composition": {
+      "Cl": 1,
+      "H": 1
+     }
+    },
+    {
+     "slot": 12,
+     "name": "CL2",
+     "composition": {
+      "Cl": 2
+     }
+    },
+    {
+     "slot": 13,
+     "name": "CL",
+     "composition": {
+      "Cl": 1
+     }
+    },
+    {
+     "slot": 14,
+     "name": "N2",
+     "composition": {
+      "N": 2
+     }
+    }
+   ],
+   "tables_used": true,
+   "zeroes_omegadot": false,
+   "jacobian": null,
+   "source": "parsed from ecker.f90 (generated format of FLINT utils/YTF.py)"
+  },
+  "Cross": {
+   "routine": "cross",
+   "file": "cross.f90",
+   "kind": "generated",
+   "ns": 19,
+   "nrc": {
+    "arrhenius": 33,
+    "troe": 0,
+    "lindemann": 0
+   },
+   "species": [
+    {
+     "slot": 1,
+     "name": "C2H2",
+     "composition": {
+      "C": 2,
+      "H": 2
+     }
+    },
+    {
+     "slot": 2,
+     "name": "CH2O",
+     "composition": {
+      "H": 2,
+      "C": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 3,
+     "name": "CH2",
+     "composition": {
+      "C": 1,
+      "H": 2
+     }
+    },
+    {
+     "slot": 4,
+     "name": "CH3",
+     "composition": {
+      "C": 1,
+      "H": 3
+     }
+    },
+    {
+     "slot": 5,
+     "name": "CH4",
+     "composition": {
+      "C": 1,
+      "H": 4
+     }
+    },
+    {
+     "slot": 6,
+     "name": "CO",
+     "composition": {
+      "C": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 7,
+     "name": "CO2",
+     "composition": {
+      "C": 1,
+      "O": 2
+     }
+    },
+    {
+     "slot": 8,
+     "name": "CL",
+     "composition": {
+      "Cl": 1
+     }
+    },
+    {
+     "slot": 9,
+     "name": "CL2",
+     "composition": {
+      "Cl": 2
+     }
+    },
+    {
+     "slot": 10,
+     "name": "CLO",
+     "composition": {
+      "Cl": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 11,
+     "name": "H",
+     "composition": {
+      "H": 1
+     }
+    },
+    {
+     "slot": 12,
+     "name": "H2",
+     "composition": {
+      "H": 2
+     }
+    },
+    {
+     "slot": 13,
+     "name": "H2O",
+     "composition": {
+      "H": 2,
+      "O": 1
+     }
+    },
+    {
+     "slot": 14,
+     "name": "HCN",
+     "composition": {
+      "H": 1,
+      "C": 1,
+      "N": 1
+     }
+    },
+    {
+     "slot": 15,
+     "name": "HCO",
+     "composition": {
+      "H": 1,
+      "C": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 16,
+     "name": "HCL",
+     "composition": {
+      "H": 1,
+      "Cl": 1
+     }
+    },
+    {
+     "slot": 17,
+     "name": "N2",
+     "composition": {
+      "N": 2
+     }
+    },
+    {
+     "slot": 18,
+     "name": "O",
+     "composition": {
+      "O": 1
+     }
+    },
+    {
+     "slot": 19,
+     "name": "OH",
+     "composition": {
+      "O": 1,
+      "H": 1
+     }
+    }
+   ],
+   "tables_used": true,
+   "zeroes_omegadot": false,
+   "jacobian": null,
+   "source": "parsed from cross.f90 (generated format of FLINT utils/YTF.py)"
+  },
+  "Pelucchi": {
+   "routine": "pelucchi",
+   "file": "pelucchi.f90",
+   "kind": "generated",
+   "ns": 25,
+   "nrc": {
+    "arrhenius": 97,
+    "troe": 2,
+    "lindemann": 4
+   },
+   "species": [
+    {
+     "slot": 1,
+     "name": "HCL",
+     "composition": {
+      "Cl": 1,
+      "H": 1
+     }
+    },
+    {
+     "slot": 2,
+     "name": "CL2",
+     "composition": {
+      "Cl": 2
+     }
+    },
+    {
+     "slot": 3,
+     "name": "CL",
+     "composition": {
+      "Cl": 1
+     }
+    },
+    {
+     "slot": 4,
+     "name": "CLO",
+     "composition": {
+      "Cl": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 5,
+     "name": "HOCL",
+     "composition": {
+      "Cl": 1,
+      "H": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 6,
+     "name": "CLOO",
+     "composition": {
+      "Cl": 1,
+      "O": 2
+     }
+    },
+    {
+     "slot": 7,
+     "name": "OCLO",
+     "composition": {
+      "Cl": 1,
+      "O": 2
+     }
+    },
+    {
+     "slot": 8,
+     "name": "CLCHO",
+     "composition": {
+      "C": 1,
+      "H": 1,
+      "Cl": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 9,
+     "name": "CLCO",
+     "composition": {
+      "C": 1,
+      "Cl": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 10,
+     "name": "CH2O",
+     "composition": {
+      "C": 1,
+      "H": 2,
+      "O": 1
+     }
+    },
+    {
+     "slot": 11,
+     "name": "HE",
+     "composition": {
+      "He": 1
+     }
+    },
+    {
+     "slot": 12,
+     "name": "AR",
+     "composition": {
+      "Ar": 1
+     }
+    },
+    {
+     "slot": 13,
+     "name": "N2",
+     "composition": {
+      "N": 2
+     }
+    },
+    {
+     "slot": 14,
+     "name": "O2",
+     "composition": {
+      "O": 2
+     }
+    },
+    {
+     "slot": 15,
+     "name": "H2",
+     "composition": {
+      "H": 2
+     }
+    },
+    {
+     "slot": 16,
+     "name": "H2O",
+     "composition": {
+      "H": 2,
+      "O": 1
+     }
+    },
+    {
+     "slot": 17,
+     "name": "H2O2",
+     "composition": {
+      "H": 2,
+      "O": 2
+     }
+    },
+    {
+     "slot": 18,
+     "name": "CO",
+     "composition": {
+      "C": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 19,
+     "name": "CO2",
+     "composition": {
+      "C": 1,
+      "O": 2
+     }
+    },
+    {
+     "slot": 20,
+     "name": "O3",
+     "composition": {
+      "O": 3
+     }
+    },
+    {
+     "slot": 21,
+     "name": "O",
+     "composition": {
+      "O": 1
+     }
+    },
+    {
+     "slot": 22,
+     "name": "H",
+     "composition": {
+      "H": 1
+     }
+    },
+    {
+     "slot": 23,
+     "name": "OH",
+     "composition": {
+      "H": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 24,
+     "name": "HO2",
+     "composition": {
+      "H": 1,
+      "O": 2
+     }
+    },
+    {
+     "slot": 25,
+     "name": "HCO",
+     "composition": {
+      "C": 1,
+      "H": 1,
+      "O": 1
+     }
+    }
+   ],
+   "tables_used": true,
+   "zeroes_omegadot": false,
+   "jacobian": null,
+   "source": "parsed from pelucchi.f90 (generated format of FLINT utils/YTF.py)"
+  },
+  "WD-Andersen": {
+   "routine": "Andersen",
+   "file": "WD.f90",
+   "kind": "hand-written",
+   "ns": 5,
+   "nrc": {
+    "arrhenius": 3,
+    "troe": 0,
+    "lindemann": 0
+   },
+   "species": [
+    {
+     "slot": 1,
+     "name": "CH4",
+     "composition": {
+      "C": 1,
+      "H": 4
+     }
+    },
+    {
+     "slot": 2,
+     "name": "O2",
+     "composition": {
+      "O": 2
+     }
+    },
+    {
+     "slot": 3,
+     "name": "CO2",
+     "composition": {
+      "C": 1,
+      "O": 2
+     }
+    },
+    {
+     "slot": 4,
+     "name": "H2O",
+     "composition": {
+      "H": 2,
+      "O": 1
+     }
+    },
+    {
+     "slot": 5,
+     "name": "CO",
+     "composition": {
+      "C": 1,
+      "O": 1
+     }
+    }
+   ],
+   "tables_used": true,
+   "zeroes_omegadot": true,
+   "jacobian": null,
+   "source": "hand-written routine in WD.f90"
+  },
+  "OSK": {
+   "routine": "OSK",
+   "file": "WD.f90",
+   "kind": "hand-written",
+   "ns": 4,
+   "nrc": {
+    "arrhenius": 1,
+    "troe": 0,
+    "lindemann": 0
+   },
+   "species": [
+    {
+     "slot": 1,
+     "name": "O2",
+     "composition": {
+      "O": 2
+     }
+    },
+    {
+     "slot": 2,
+     "name": "CH4",
+     "composition": {
+      "C": 1,
+      "H": 4
+     }
+    },
+    {
+     "slot": 3,
+     "name": "H2O",
+     "composition": {
+      "H": 2,
+      "O": 1
+     }
+    },
+    {
+     "slot": 4,
+     "name": "CO2",
+     "composition": {
+      "C": 1,
+      "O": 2
+     }
+    }
+   ],
+   "tables_used": true,
+   "zeroes_omegadot": true,
+   "jacobian": null,
+   "source": "hand-written routine in WD.f90"
+  },
+  "ONERA-7": {
+   "routine": "ONERA_7",
+   "file": "ONERA-7.f90",
+   "kind": "generated",
+   "ns": 7,
+   "nrc": {
+    "arrhenius": 14,
+    "troe": 0,
+    "lindemann": 0
+   },
+   "species": [
+    {
+     "slot": 1,
+     "name": "O2",
+     "composition": {
+      "O": 2
+     }
+    },
+    {
+     "slot": 2,
+     "name": "H2O",
+     "composition": {
+      "H": 2,
+      "O": 1
+     }
+    },
+    {
+     "slot": 3,
+     "name": "H2",
+     "composition": {
+      "H": 2
+     }
+    },
+    {
+     "slot": 4,
+     "name": "H",
+     "composition": {
+      "H": 1
+     }
+    },
+    {
+     "slot": 5,
+     "name": "O",
+     "composition": {
+      "O": 1
+     }
+    },
+    {
+     "slot": 6,
+     "name": "OH",
+     "composition": {
+      "H": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 7,
+     "name": "N2",
+     "composition": {
+      "N": 2
+     }
+    }
+   ],
+   "tables_used": true,
+   "zeroes_omegadot": false,
+   "jacobian": "ONERA_7_jac",
+   "source": "parsed from ONERA-7.f90 (generated format of FLINT utils/YTF.py)"
+  },
+  "Frolov_nopressure": {
+   "routine": "Frolov_nopressure",
+   "file": "global-H2.f90",
+   "kind": "hand-written",
+   "ns": 4,
+   "nrc": {
+    "arrhenius": 1,
+    "troe": 0,
+    "lindemann": 0
+   },
+   "species": [
+    {
+     "slot": 1,
+     "name": "O2",
+     "composition": {
+      "O": 2
+     }
+    },
+    {
+     "slot": 2,
+     "name": "H2O",
+     "composition": {
+      "H": 2,
+      "O": 1
+     }
+    },
+    {
+     "slot": 3,
+     "name": "H2",
+     "composition": {
+      "H": 2
+     }
+    },
+    {
+     "slot": 4,
+     "name": "N2",
+     "composition": {
+      "N": 2
+     }
+    }
+   ],
+   "tables_used": true,
+   "zeroes_omegadot": false,
+   "jacobian": "Frolov_nopressure_jac",
+   "source": "hand-written routine in global-H2.f90"
+  },
+  "SanDiego": {
+   "routine": "sandiego20161214",
+   "file": "sandiego20161214.f90",
+   "kind": "generated",
+   "ns": 57,
+   "nrc": {
+    "arrhenius": 245,
+    "troe": 23,
+    "lindemann": 0
+   },
+   "species": [
+    {
+     "slot": 1,
+     "name": "N2",
+     "composition": {
+      "N": 2
+     }
+    },
+    {
+     "slot": 2,
+     "name": "AR",
+     "composition": {
+      "Ar": 1
+     }
+    },
+    {
+     "slot": 3,
+     "name": "HE",
+     "composition": {
+      "He": 1
+     }
+    },
+    {
+     "slot": 4,
+     "name": "H",
+     "composition": {
+      "H": 1
+     }
+    },
+    {
+     "slot": 5,
+     "name": "O2",
+     "composition": {
+      "O": 2
+     }
+    },
+    {
+     "slot": 6,
+     "name": "OH",
+     "composition": {
+      "O": 1,
+      "H": 1
+     }
+    },
+    {
+     "slot": 7,
+     "name": "O",
+     "composition": {
+      "O": 1
+     }
+    },
+    {
+     "slot": 8,
+     "name": "H2",
+     "composition": {
+      "H": 2
+     }
+    },
+    {
+     "slot": 9,
+     "name": "H2O",
+     "composition": {
+      "O": 1,
+      "H": 2
+     }
+    },
+    {
+     "slot": 10,
+     "name": "HO2",
+     "composition": {
+      "O": 2,
+      "H": 1
+     }
+    },
+    {
+     "slot": 11,
+     "name": "H2O2",
+     "composition": {
+      "O": 2,
+      "H": 2
+     }
+    },
+    {
+     "slot": 12,
+     "name": "CO",
+     "composition": {
+      "O": 1,
+      "C": 1
+     }
+    },
+    {
+     "slot": 13,
+     "name": "CO2",
+     "composition": {
+      "O": 2,
+      "C": 1
+     }
+    },
+    {
+     "slot": 14,
+     "name": "HCO",
+     "composition": {
+      "O": 1,
+      "C": 1,
+      "H": 1
+     }
+    },
+    {
+     "slot": 15,
+     "name": "CH3",
+     "composition": {
+      "C": 1,
+      "H": 3
+     }
+    },
+    {
+     "slot": 16,
+     "name": "CH4",
+     "composition": {
+      "C": 1,
+      "H": 4
+     }
+    },
+    {
+     "slot": 17,
+     "name": "CH2O",
+     "composition": {
+      "O": 1,
+      "C": 1,
+      "H": 2
+     }
+    },
+    {
+     "slot": 18,
+     "name": "T-CH2",
+     "composition": {
+      "C": 1,
+      "H": 2
+     }
+    },
+    {
+     "slot": 19,
+     "name": "S-CH2",
+     "composition": {
+      "C": 1,
+      "H": 2
+     }
+    },
+    {
+     "slot": 20,
+     "name": "C2H4",
+     "composition": {
+      "C": 2,
+      "H": 4
+     }
+    },
+    {
+     "slot": 21,
+     "name": "CH3O",
+     "composition": {
+      "O": 1,
+      "C": 1,
+      "H": 3
+     }
+    },
+    {
+     "slot": 22,
+     "name": "C2H5",
+     "composition": {
+      "C": 2,
+      "H": 5
+     }
+    },
+    {
+     "slot": 23,
+     "name": "C2H6",
+     "composition": {
+      "C": 2,
+      "H": 6
+     }
+    },
+    {
+     "slot": 24,
+     "name": "CH",
+     "composition": {
+      "C": 1,
+      "H": 1
+     }
+    },
+    {
+     "slot": 25,
+     "name": "C2H2",
+     "composition": {
+      "C": 2,
+      "H": 2
+     }
+    },
+    {
+     "slot": 26,
+     "name": "C2H4OOH",
+     "composition": {
+      "O": 2,
+      "C": 2,
+      "H": 5
+     }
+    },
+    {
+     "slot": 27,
+     "name": "OC2H3OOH",
+     "composition": {
+      "O": 3,
+      "C": 2,
+      "H": 4
+     }
+    },
+    {
+     "slot": 28,
+     "name": "C2H3",
+     "composition": {
+      "C": 2,
+      "H": 3
+     }
+    },
+    {
+     "slot": 29,
+     "name": "CH2CHO",
+     "composition": {
+      "O": 1,
+      "C": 2,
+      "H": 3
+     }
+    },
+    {
+     "slot": 30,
+     "name": "C2H4O",
+     "composition": {
+      "O": 1,
+      "C": 2,
+      "H": 4
+     }
+    },
+    {
+     "slot": 31,
+     "name": "HCCO",
+     "composition": {
+      "O": 1,
+      "C": 2,
+      "H": 1
+     }
+    },
+    {
+     "slot": 32,
+     "name": "CH2CO",
+     "composition": {
+      "O": 1,
+      "C": 2,
+      "H": 2
+     }
+    },
+    {
+     "slot": 33,
+     "name": "C2H",
+     "composition": {
+      "C": 2,
+      "H": 1
+     }
+    },
+    {
+     "slot": 34,
+     "name": "CH2OH",
+     "composition": {
+      "O": 1,
+      "C": 1,
+      "H": 3
+     }
+    },
+    {
+     "slot": 35,
+     "name": "CH3OH",
+     "composition": {
+      "O": 1,
+      "C": 1,
+      "H": 4
+     }
+    },
+    {
+     "slot": 36,
+     "name": "CH3CHO",
+     "composition": {
+      "O": 1,
+      "C": 2,
+      "H": 4
+     }
+    },
+    {
+     "slot": 37,
+     "name": "CH3CO",
+     "composition": {
+      "O": 1,
+      "C": 2,
+      "H": 3
+     }
+    },
+    {
+     "slot": 38,
+     "name": "C2H5OH",
+     "composition": {
+      "O": 1,
+      "C": 2,
+      "H": 6
+     }
+    },
+    {
+     "slot": 39,
+     "name": "CH2CH2OH",
+     "composition": {
+      "O": 1,
+      "C": 2,
+      "H": 5
+     }
+    },
+    {
+     "slot": 40,
+     "name": "CH3CHOH",
+     "composition": {
+      "O": 1,
+      "C": 2,
+      "H": 5
+     }
+    },
+    {
+     "slot": 41,
+     "name": "CH3CH2O",
+     "composition": {
+      "O": 1,
+      "C": 2,
+      "H": 5
+     }
+    },
+    {
+     "slot": 42,
+     "name": "C3H4",
+     "composition": {
+      "C": 3,
+      "H": 4
+     }
+    },
+    {
+     "slot": 43,
+     "name": "C3H3",
+     "composition": {
+      "C": 3,
+      "H": 3
+     }
+    },
+    {
+     "slot": 44,
+     "name": "C3H5",
+     "composition": {
+      "C": 3,
+      "H": 5
+     }
+    },
+    {
+     "slot": 45,
+     "name": "C3H6",
+     "composition": {
+      "C": 3,
+      "H": 6
+     }
+    },
+    {
+     "slot": 46,
+     "name": "C3H8",
+     "composition": {
+      "C": 3,
+      "H": 8
+     }
+    },
+    {
+     "slot": 47,
+     "name": "I-C3H7",
+     "composition": {
+      "C": 3,
+      "H": 7
+     }
+    },
+    {
+     "slot": 48,
+     "name": "N-C3H7",
+     "composition": {
+      "C": 3,
+      "H": 7
+     }
+    },
+    {
+     "slot": 49,
+     "name": "C3H6OOH",
+     "composition": {
+      "O": 2,
+      "C": 3,
+      "H": 7
+     }
+    },
+    {
+     "slot": 50,
+     "name": "OC3H5OOH",
+     "composition": {
+      "O": 3,
+      "C": 3,
+      "H": 6
+     }
+    },
+    {
+     "slot": 51,
+     "name": "C4H10",
+     "composition": {
+      "C": 4,
+      "H": 10
+     }
+    },
+    {
+     "slot": 52,
+     "name": "PC4H9",
+     "composition": {
+      "C": 4,
+      "H": 9
+     }
+    },
+    {
+     "slot": 53,
+     "name": "SC4H9",
+     "composition": {
+      "C": 4,
+      "H": 9
+     }
+    },
+    {
+     "slot": 54,
+     "name": "C4H8",
+     "composition": {
+      "C": 4,
+      "H": 8
+     }
+    },
+    {
+     "slot": 55,
+     "name": "SC4H9O2",
+     "composition": {
+      "O": 2,
+      "C": 4,
+      "H": 9
+     }
+    },
+    {
+     "slot": 56,
+     "name": "C4H8OOH1-3",
+     "composition": {
+      "O": 2,
+      "C": 4,
+      "H": 9
+     }
+    },
+    {
+     "slot": 57,
+     "name": "NC4KET13",
+     "composition": {
+      "O": 3,
+      "C": 4,
+      "H": 8
+     }
+    }
+   ],
+   "tables_used": true,
+   "zeroes_omegadot": false,
+   "jacobian": null,
+   "source": "parsed from sandiego20161214.f90 (generated format of FLINT utils/YTF.py)"
+  },
+  "FFCMy-12": {
+   "routine": "FFCMy_12",
+   "file": "FFCMy_12.f90",
+   "kind": "generated",
+   "ns": 13,
+   "nrc": {
+    "arrhenius": 34,
+    "troe": 3,
+    "lindemann": 1
+   },
+   "species": [
+    {
+     "slot": 1,
+     "name": "H2",
+     "composition": {
+      "H": 2
+     }
+    },
+    {
+     "slot": 2,
+     "name": "H",
+     "composition": {
+      "H": 1
+     }
+    },
+    {
+     "slot": 3,
+     "name": "O2",
+     "composition": {
+      "O": 2
+     }
+    },
+    {
+     "slot": 4,
+     "name": "O",
+     "composition": {
+      "O": 1
+     }
+    },
+    {
+     "slot": 5,
+     "name": "OH",
+     "composition": {
+      "H": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 6,
+     "name": "HO2",
+     "composition": {
+      "H": 1,
+      "O": 2
+     }
+    },
+    {
+     "slot": 7,
+     "name": "H2O",
+     "composition": {
+      "H": 2,
+      "O": 1
+     }
+    },
+    {
+     "slot": 8,
+     "name": "CH3",
+     "composition": {
+      "H": 3,
+      "C": 1
+     }
+    },
+    {
+     "slot": 9,
+     "name": "CH4",
+     "composition": {
+      "H": 4,
+      "C": 1
+     }
+    },
+    {
+     "slot": 10,
+     "name": "CO",
+     "composition": {
+      "C": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 11,
+     "name": "CO2",
+     "composition": {
+      "C": 1,
+      "O": 2
+     }
+    },
+    {
+     "slot": 12,
+     "name": "CH2O",
+     "composition": {
+      "H": 2,
+      "C": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 13,
+     "name": "N2",
+     "composition": {
+      "N": 2
+     }
+    }
+   ],
+   "tables_used": true,
+   "zeroes_omegadot": false,
+   "jacobian": null,
+   "source": "parsed from FFCMy_12.f90 (generated format of FLINT utils/YTF.py)"
+  },
+  "Gerlinger-9": {
+   "routine": "Gerlinger9",
+   "file": "Gerlinger-9.f90",
+   "kind": "generated",
+   "ns": 9,
+   "nrc": {
+    "arrhenius": 19,
+    "troe": 0,
+    "lindemann": 0
+   },
+   "species": [
+    {
+     "slot": 1,
+     "name": "N2",
+     "composition": {
+      "N": 2
+     }
+    },
+    {
+     "slot": 2,
+     "name": "O2",
+     "composition": {
+      "O": 2
+     }
+    },
+    {
+     "slot": 3,
+     "name": "H2",
+     "composition": {
+      "H": 2
+     }
+    },
+    {
+     "slot": 4,
+     "name": "H2O",
+     "composition": {
+      "H": 2,
+      "O": 1
+     }
+    },
+    {
+     "slot": 5,
+     "name": "OH",
+     "composition": {
+      "H": 1,
+      "O": 1
+     }
+    },
+    {
+     "slot": 6,
+     "name": "O",
+     "composition": {
+      "O": 1
+     }
+    },
+    {
+     "slot": 7,
+     "name": "H",
+     "composition": {
+      "H": 1
+     }
+    },
+    {
+     "slot": 8,
+     "name": "HO2",
+     "composition": {
+      "H": 1,
+      "O": 2
+     }
+    },
+    {
+     "slot": 9,
+     "name": "H2O2",
+     "composition": {
+      "H": 2,
+      "O": 2
+     }
+    }
+   ],
+   "tables_used": true,
+   "zeroes_omegadot": false,
+   "jacobian": null,
+   "source": "parsed from Gerlinger-9.f90 (generated format of FLINT utils/YTF.py)"
+  }
+ }
+}

@@ -31,3 +31,29 @@ Benchmark environment:
   <figcaption>Normalized execution times</figcaption>
 </figure>
 
+
+## Mechanism contract check
+
+A mechanism name hooked in `Assign_Mechanism` selects a compiled routine whose species slots and
+reaction tables are fixed in the source. `Assign_Mechanism`
+compares the data loaded by `read_idealgas_thermo` / `read_chemistry` with the expectation record
+of the routine (`src/lib/Lib_ChemMech/mechanism_contract.json`, turned into
+`src/lib/Lib_Chemistry_contract.f90` by `utils/mechanism_contract.py`):
+
+- the routine species must be the **first** `ns_r` loaded species, in the routine order
+  (prefix semantics); species loaded after them are accepted and stay inert (the RHS and the
+  Jacobian zero the source term before calling the routine);
+- a slot matches by **elemental composition** (from `composition.txt`), and by **name** too for a
+  generated routine or where two slots of the routine share a composition; a hand-written routine
+  accepts a calibrated species under another name with the same composition (e.g. `H2ONassini`
+  for `H2O`); without `composition.txt` (INPUT folders written before the table writer produced
+  it) the molecular weight of `phase.txt` stands in for the composition (tolerance 0.05 kg/kmol)
+  **and** the loaded name must begin with the slot name, case-insensitive (`H2ONassini` for `H2O`):
+  the weight alone cannot tell CO from N2 or C2H4 (28.010, 28.014, 28.054 kg/kmol);
+- the number of reactions per table type (Arrhenius, falloff-Troe, falloff-Lindemann) must match.
+
+On a mismatch both lists are printed and the run stops (`error stop`): with the previous versions
+the routine silently read the wrong species. The tables must therefore be loaded **before**
+`Assign_Mechanism`. A name that is not hooked is not checked (it falls back to the general
+procedure). `test-contract` exercises the rules; to add a hooked mechanism, add its record to the
+JSON and re-run the generator.

@@ -105,6 +105,8 @@ test-contract   the mechanism contract check of Assign_Mechanism: routine order 
                 calibrated species with the same composition accepted, name read whole
 test-falloff    the Troe/Lindemann rates where the tables vanish (Pr = 0, k_inf = 0 give a
                 zero rate, no NaN) and the k_c <= 0 convention for irreversible falloff
+test-rhs-range  rhs_native/jac_native bail out (F = -1, zero Jacobian) outside the RATE tables as
+                they do outside the thermo tables (WD thermo from 1 K, rate tables 100..400 K)
 ```
 
 ## Running the Test Suite

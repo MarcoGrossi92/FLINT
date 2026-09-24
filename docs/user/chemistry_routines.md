@@ -72,6 +72,14 @@ is not hooked and strict mode is on`, exit status 1): set the module flag
 `FLINT_strict_mechanism = .true.` (module `FLINT_Lib_Chemistry_wdot`) before `Assign_Mechanism`,
 or the environment variable `FLINT_STRICT_MECHANISM=1` (also `true`, `yes`, `on`). Default: off.
 
+## Temperature range of the tables
+
+`rhs_native` and `jac_native` return the bail-out value (`F = -1`, zero Jacobian) when the
+temperature is outside the thermo tables **or** outside the rate tables (`chemistry-*.dat`):
+row T of every table is the value at T kelvin, so a rate table that starts above the thermo one
+(e.g. `database/TSR-Rich-31`, 500 K) must not be read below its first row. The tables of `database/WD`
+start at 1 K with a 1 K step and cover the same range as the thermo tables.
+
 ## Analytical Jacobian availability
 
 `chemistry_jacobian` (module `FLINT_Lib_Chemistry_wdot`) is a null pointer by default: only the

@@ -1,6 +1,7 @@
 module FLINT_Lib_Chemistry_rhs
   use OSLo
   use FLINT_Lib_Chemistry_wdot
+  use FLINT_Lib_Chemistry_data, only: T_tab_min, T_tab_max
 # if defined (CANTERA)
   use cantera
 # endif
@@ -34,7 +35,11 @@ contains
     
     T = Z(nz)
 
-    if (T < Tmin .or. T >= Tmax .or. isnan(T)) then
+    ! Outside the thermo tables OR outside the rate tables (row T of both is the
+    ! value at T kelvin): a rate table may start above the thermo one (e.g. the
+    ! 500 K tables of database/TSR-Rich-31 with a 1 K thermo file); reading it
+    ! below its first row was an out-of-bounds read.
+    if (T < Tmin .or. T >= Tmax .or. isnan(T) .or. T < T_tab_min .or. T >= T_tab_max) then
        F(:) = -1.0d0
        return
     end if
@@ -99,7 +104,7 @@ contains
     ! Mirror rhs_native's bail-out: out-of-range T → F is the constant -1 there,
     ! whose Jacobian is zero. Returning zero keeps Newton in a benign state until
     ! the step is rejected and the integrator retries with smaller H.
-    if (T < Tmin .or. T >= Tmax .or. isnan(T)) then
+    if (T < Tmin .or. T >= Tmax .or. isnan(T) .or. T < T_tab_min .or. T >= T_tab_max) then
       DFY(1:nz, 1:nz) = 0.d0
       return
     end if

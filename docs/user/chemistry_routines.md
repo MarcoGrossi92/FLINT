@@ -68,9 +68,13 @@ A mechanism name that is not hooked in `Assign_Mechanism` selects the data-drive
 procedure: FLINT prints `[WARNING] Explicit procedure for <name> not found, defaulting to the
 general procedure` on standard output **and** on the error unit (standard error), so that a
 solver log that captures only one of the two channels still records the fallback. Note that
-`general` raises the concentrations to the integer stoichiometric coefficients (`nint`) unless the
-INPUT folder carries the optional `Reaction orders` block (see *Native input*): without it a
-mechanism with fractional reaction orders is a different model under `general`.
+`general` applies the mass-action law with the real stoichiometric coefficients, as Cantera does
+(`H2 + 0.5 O2 <=> H2O`: forward `[H2] [O2]^0.5`; fractional products enter the reverse rate the same
+way); explicit yaml `orders:` reach it only through the optional `Reaction orders` block of the INPUT
+folder (see *Native input*): without the block a mechanism with explicit orders is a different model
+under `general`. Versions before `test-stoich` rounded the coefficients of the Arrhenius-type reactions
+to the nearest integer (`[O2]^1` for `0.5 O2`): an INPUT folder with fractional coefficients and no
+block gives different rates since then.
 
 Strict mode turns the fallback into a refusal (`[ERROR] FLINT Assign_Mechanism: mechanism <name>
 is not hooked and strict mode is on`, exit status 1): set the module flag

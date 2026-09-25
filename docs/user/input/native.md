@@ -320,8 +320,10 @@ Reaction orders
 With the block, the `general` procedure raises the concentrations of the Arrhenius-type reactions to
 these orders (the explicit ones where given, the stoichiometric reactant coefficient elsewhere, as in
 Cantera's mass-action law); an integer-valued order uses the integer power, a negative order at zero
-concentration gives a zero rate (Cantera's convention). Without the block (every INPUT folder written
-before it existed) the integer-rounded stoichiometric coefficients are used, as before. Orders on
+concentration gives a zero rate (Cantera's convention). Without the block the reactant stoichiometric
+coefficients are the exponents, real as in Cantera (`CH4 + 0.5 O2`: `[CH4] [O2]^0.5`); the product
+coefficients are the exponents of the reverse rate in every case (versions before `test-stoich`
+rounded both to the nearest integer in the Arrhenius-type reactions). Orders on
 falloff reactions are not supported (`read_chemistry` returns `ios = 2`).
 
 **Troe Fall-off Theory:**

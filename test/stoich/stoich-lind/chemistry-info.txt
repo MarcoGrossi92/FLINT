@@ -1,0 +1,27 @@
+stoich-lind
+N.ro species = 7
+N.ro reactions = 2
+
+General loop info. They are not used if the mechanism is exlplicitly defined
+
+Reaction type
+1 Arrhenius
+2 falloff-Lindemann
+
+Reaction definition
+1 H2 0.0 0.0 0.0
+1 O2 1.0 0.0 0.0
+1 H2O 0.0 0.0 0.0
+1 N2 0.0 0.0 0.0
+1 H 1.0 0.0 0.0
+1 O 0.0 1.0 0.0
+1 OH 0.0 1.0 0.0
+1 M 0.0 0.0 0.0
+2 H2 0.0 1.5 1.0
+2 O2 0.0 0.75 1.0
+2 H2O 1.5 0.0 6.0
+2 N2 0.0 0.0 1.0
+2 H 0.0 0.0 1.0
+2 O 0.0 0.0 1.0
+2 OH 0.0 0.0 1.0
+2 M 1.0 1.0 0.0

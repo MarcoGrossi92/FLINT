@@ -2,8 +2,9 @@
 ! reproduces the FORWARD production rates of Cantera for a mechanism with explicit yaml orders (the reverse rate
 ! constants of the table come from the thermo database chosen by the table writer, not from the yaml: the driver
 ! zeroes kb_tab, so the comparison isolates the reaction orders, which act on the forward rate)
-! (JLR-frassoldati, reaction 1: CH4^0.5 O2^1.3), and without the block keeps the integer-rounded
-! stoichiometric law (old INPUT folders unchanged). Fixture test/orders/JLR-frassoldati made by
+! (JLR-frassoldati, reaction 1: CH4^0.5 O2^1.3), and without the block applies the mass-action law of the
+! stoichiometric coefficients (Cantera's forward rates with the yaml orders removed: CH4^1 O2^0.5), not the
+! integer-rounded law (O2^1) of the general procedure before test-stoich. Fixture test/orders/JLR-frassoldati made by
 ! test/orders/make_JLR-frassoldati.py from the tables of a table writer (1200..1800 K) with Cantera references
 ! at three states. Needs no Cantera at run time. Exit code 1 on failure.
 program test
@@ -16,7 +17,7 @@ program test
   character(len=512) :: line
   integer :: err, u, nsr, nstate, k, i
   real(8) :: T, tol
-  real(8), allocatable :: roi(:), w(:), w_orders(:), w_nint(:), roi0(:)
+  real(8), allocatable :: roi(:), w(:), w_orders(:), w_nint(:), w_stoich(:), roi0(:)
   integer :: nfail
   real(8), parameter :: wm_ref(9) = [31.998d0, 16.043d0, 18.015d0, 28.010d0, 44.009d0, 2.016d0, 1.008d0, 15.999d0, 17.007d0]
   character(len=s_str_len), parameter :: names_ref(9) = [character(len=s_str_len) :: 'O2', 'CH4', 'H2O', 'CO', 'CO2', 'H2', 'H', 'O', 'OH']
@@ -26,7 +27,7 @@ program test
   ns = 9
   allocate(wm_tab(ns), Ri_tab(ns), species_names(ns))
   wm_tab = wm_ref; Ri_tab = Runiv/wm_tab; species_names = names_ref
-  allocate(roi(ns), w(ns), w_orders(ns), w_nint(ns), roi0(ns))
+  allocate(roi(ns), w(ns), w_orders(ns), w_nint(ns), w_stoich(ns), roi0(ns))
 
   ! helper
   call verdict('pow_order(0, -0.75) = 0 (Cantera: zero rate at zero concentration)', pow_order(0d0, -0.75d0) == 0d0)
@@ -47,7 +48,7 @@ program test
   read(u,*) nsr, nstate
   if (nsr /= ns) then; write(*,'(A)') '[FAIL] reference species count'; stop 1; endif
   do k = 1, nstate
-    read(u,*) T; read(u,*) roi0; read(u,*) w_orders; read(u,*) w_nint
+    read(u,*) T; read(u,*) roi0; read(u,*) w_orders; read(u,*) w_nint; read(u,*) w_stoich
     roi = roi0; w = 0d0
     call general(roi, T, w)
     write(*,'(A,F7.1,A,ES10.3,A,ES10.3)') ' T = ', T, ' K: max |w - Cantera(orders)| / max|w| = ', &
@@ -58,7 +59,7 @@ program test
   close(u)
   call free_chemistry_data()
 
-  ! 2) without the block (old INPUT): the integer-rounded stoichiometric law, unchanged
+  ! 2) without the block: the mass-action law of the stoichiometric coefficients (Cantera without the yaml orders)
   call execute_command_line('mkdir -p orders/noblock && cp orders/JLR-frassoldati/chemistry-Arrhenius.dat orders/noblock/ && ' // &
     'cp orders/JLR-frassoldati/chemistry-info-noblock.txt orders/noblock/chemistry-info.txt')
   err = read_chemistry(folder='orders/noblock', mech_name=mech_name)
@@ -68,11 +69,14 @@ program test
   open(newunit=u, file='orders/JLR-frassoldati/reference.txt', status='old', action='read')
   read(u,'(A)') line; read(u,*) nsr, nstate
   do k = 1, nstate
-    read(u,*) T; read(u,*) roi0; read(u,*) w_orders; read(u,*) w_nint
+    read(u,*) T; read(u,*) roi0; read(u,*) w_orders; read(u,*) w_nint; read(u,*) w_stoich
     roi = roi0; w = 0d0
     call general(roi, T, w)
-    call verdict('no block: general = integer-rounded stoichiometric law (Cantera forward rate constants)', &
-      maxval(abs(w - w_nint)) <= tol*maxval(abs(w_nint)))
+    write(*,'(A,F7.1,A,ES10.3,A,ES10.3)') ' T = ', T, ' K, no block: max |w - Cantera(no orders)| / max|w| = ', &
+      maxval(abs(w - w_stoich))/maxval(abs(w_stoich)), ', vs nint law = ', maxval(abs(w - w_nint))/maxval(abs(w_stoich))
+    call verdict('no block: general = Cantera forward rates with the stoichiometric coefficients (yaml orders removed)', &
+      maxval(abs(w - w_stoich)) <= tol*maxval(abs(w_stoich)))
+    call verdict('no block: general differs from the integer-rounded law', maxval(abs(w - w_nint)) > 1d-3*maxval(abs(w_stoich)))
   enddo
   close(u)
   call free_chemistry_data()

@@ -233,7 +233,9 @@ contains
         coM = 1.d0
       endif
 
-      ! Compute forward and reverse rate-of-progress
+      ! Compute forward and reverse rate-of-progress: mass-action law with the real stoichiometric
+      ! coefficients (reactants forward, products reverse), as in Cantera; the explicit orders of
+      ! the optional block replace the reactant coefficients of the forward rate
       prod_fwd = 1.0d0
       prod_rev = 1.0d0
       do is = 1, ns
@@ -241,9 +243,9 @@ contains
           ! explicit reaction orders (optional block of chemistry-info.txt, this contract)
           if (ord_arrh_tab(is, ir) /= 0) prod_fwd = prod_fwd * pow_order(coi(is), ord_arrh_tab(is, ir))
         else
-          if (ni1_arrh_tab(is, ir) /= 0) prod_fwd = prod_fwd * ipow(coi(is), nint(ni1_arrh_tab(is, ir)))
+          if (ni1_arrh_tab(is, ir) /= 0) prod_fwd = prod_fwd * pow_order(coi(is), ni1_arrh_tab(is, ir))
         endif
-        if (ni2_arrh_tab(is, ir) /= 0) prod_rev = prod_rev * ipow(coi(is), nint(ni2_arrh_tab(is, ir)))
+        if (ni2_arrh_tab(is, ir) /= 0) prod_rev = prod_rev * pow_order(coi(is), ni2_arrh_tab(is, ir))
       enddo
       rate_fwd = f_kf(ir,Tint,Tdiff) * prod_fwd * coM
       rate_rev = f_kb(ir,Tint,Tdiff) * prod_rev * coM
@@ -332,8 +334,9 @@ contains
   !> libgcc's __powidf2. Orders of 1, 2 and 3 cover every
   !> reaction in the shipped mechanisms and are expanded inline here; anything
   !> else falls back to the intrinsic, so results are unchanged.
-  !> c**o for a reaction order o: an integer-valued order goes through ipow (bit-identical to the
-  !> stoichiometric path), a non-integer one through the real power of max(c, 0); a negative order
+  !> c**o for a reaction order or a stoichiometric coefficient o: an integer-valued o goes through ipow
+  !> (bit-identical to the integer powers used before), a non-integer one through the real power of
+  !> max(c, 0) (Cantera also gives 0 at c <= 0 for a non-integer exponent); a negative order
   !> at zero concentration gives 0, the convention of Cantera (its forward rate of progress is 0
   !> there, verified with Cantera 3.0.1) so that the same mechanism gives the same rates.
   pure function pow_order(c, o) result(y)

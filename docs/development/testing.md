@@ -118,8 +118,16 @@ test-rhs-range  rhs_native/jac_native bail out (F = -1, zero Jacobian) outside t
                 they do outside the thermo tables (test/tables/WD-100K loaded on one grid, the
                 rate range then narrowed in memory: a defence for tables set by another path)
 test-orders     the general procedure with the optional 'Reaction orders' block reproduces Cantera's
-                rates for JLR-frassoldati (yaml orders) and keeps the integer-rounded law without it
+                rates for JLR-frassoldati (yaml orders) and, without it, Cantera's law of the stoichiometric
+                coefficients (the yaml orders removed), not the integer-rounded one of older versions
                 (fixture test/orders/JLR-frassoldati: tables of a table writer, references embedded)
+test-stoich     the general procedure reproduces Cantera's net production rates (to 1e-10 of the gross
+                rates) for fractional stoichiometric coefficients without orders: Arrhenius reactants and
+                products, three-body, Troe and Lindemann, 24-30 states each, and its net rates vanish at
+                Cantera's equilibrium composition; integer control 2 H2 + O2 <=> 2 H2O; general has no
+                analytical Jacobian (fixtures test/stoich/<name> made by test/stoich/make_stoich.py from
+                constructed yaml mechanisms, tables of a table writer from the yaml thermo, references
+                embedded)
 test-andersen   the WD-Andersen routine (step 3 with the Andersen orders [CO2] [H2O]^0.5 [O2]^-0.25)
                 reproduces Cantera's net production rates on the tables of a table writer (fixture
                 test/andersen/WD-Andersen, references embedded), the zero rate at O2 = 0 and the

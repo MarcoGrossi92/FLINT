@@ -1,0 +1,15 @@
+stoich-int
+N.ro species = 4
+N.ro reactions = 1
+
+General loop info. They are not used if the mechanism is exlplicitly defined
+
+Reaction type
+1 Arrhenius
+
+Reaction definition
+1 H2 2.0 0.0 0.0
+1 O2 1.0 0.0 0.0
+1 H2O 0.0 2.0 0.0
+1 N2 0.0 0.0 0.0
+1 M 0.0 0.0 0.0

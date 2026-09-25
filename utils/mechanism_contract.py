@@ -151,13 +151,18 @@ L.append(r'''  !> Elemental composition as a string: element symbols in standard
   !> Compare the expectation record of `name` with the loaded species (FLINT_Lib_Thermodynamic) and
   !> reaction counts (FLINT_Lib_Chemistry_data). ok = .true. for a name that is not hooked (nothing to
   !> check) and for a match; on a mismatch both lists are printed and ok = .false.
-  subroutine check_mechanism_contract(name, ok)
+  !> The check needs the species (read_idealgas_thermo) and the rate tables (read_chemistry). When they
+  !> are not loaded yet: with the argument `loaded` present, loaded = .false. and ok = .true. with
+  !> nothing printed (the caller checks again later: Assign_Mechanism defers the check to the first
+  !> chemistry call); without it, an [ERROR] line and ok = .false.
+  subroutine check_mechanism_contract(name, ok, loaded)
     use FLINT_Lib_Thermodynamic, only: ns, species_names, species_composition, elements_names, wm_tab
-    use FLINT_Lib_Chemistry_data, only: nrc_arrh, nrc_troe, nrc_lindemann
+    use FLINT_Lib_Chemistry_data, only: nrc_arrh, nrc_troe, nrc_lindemann, rxn_type
     use iso_fortran_env, only: error_unit
     implicit none
     character(*), intent(in) :: name
     logical, intent(out) :: ok
+    logical, intent(out), optional :: loaded
     character(len=512) :: line
     logical :: found, generated, have_comp, comp_ok, name_ok, need_name
     character(contract_str_len) :: routine
@@ -167,11 +172,16 @@ L.append(r'''  !> Elemental composition as a string: element symbols in standard
     integer :: ns_r, nrc_r(3), i, nbad, nrc_l(3)
 
     ok = .true.
+    if (present(loaded)) loaded = .true.
     call mechanism_expectation(name, found, routine, generated, ns_r, nrc_r, sp_name, sp_comp, sp_wm)
     if (.not. found) return
-    if (.not. allocated(species_names)) then
+    if (.not. (allocated(species_names) .and. allocated(rxn_type))) then
+      if (present(loaded)) then
+        loaded = .false.
+        return
+      endif
       call say('[ERROR] FLINT mechanism '//trim(name)//' (routine '//trim(routine)// &
-        '): species not loaded: call read_idealgas_thermo and read_chemistry before Assign_Mechanism')
+        '): the species and rate tables are not loaded (read_idealgas_thermo, read_chemistry)')
       ok = .false.
       return
     endif

@@ -57,8 +57,12 @@ of the routine (`src/lib/Lib_ChemMech/mechanism_contract.json`, turned into
 - the number of reactions per table type (Arrhenius, falloff-Troe, falloff-Lindemann) must match.
 
 On a mismatch both lists are printed and the run stops (`error stop`): with the previous versions
-the routine silently read the wrong species. The tables must therefore be loaded **before**
-`Assign_Mechanism`. A name that is not hooked is not checked (it falls back to the general
+the routine silently read the wrong species. The check needs the loaded tables: the usual order is
+`read_idealgas_thermo`, `read_chemistry`, then `Assign_Mechanism` (MOSE and Q2D). If
+`Assign_Mechanism` is called with a hooked name **before** the tables are loaded, it selects the
+routine as before, prints a `[WARNING]` (standard output and error unit) and the check runs at the
+first call of `chemistry_source` or `chemistry_jacobian`, with the same refusal on a mismatch (and
+an `[ERROR]` if the tables are still not loaded then). A name that is not hooked is not checked (it falls back to the general
 procedure). `test-contract` exercises the rules; to add a hooked mechanism, add its record to the
 JSON and re-run the generator (`python3 utils/mechanism_contract.py`). The Fortran text of the
 checker is kept in the generator too: `python3 utils/mechanism_contract.py --check` (run by

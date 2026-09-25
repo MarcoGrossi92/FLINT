@@ -13,6 +13,10 @@
 !      fallback policy (FLINT_STRICT_MECHANISM=1 or Yes stops an unhooked name, =0 falls back to general,
 !      an unrecognised value is reported on the error unit and ignored) and
 !      the contract refusal stop the process, and their messages are on the error unit;
+!  12. in child processes (child-early, child-early-refusal, child-early-unloaded): Assign_Mechanism
+!      called before the tables are loaded prints a WARNING on both units and selects the routine; the
+!      first chemistry call checks the contract (same omegadot as with the usual order), stops with
+!      both lists on a mismatch, and stops with an [ERROR] line when the tables are still not loaded;
 !  13. the committed src/lib/Lib_Chemistry_contract.f90 is the output of its generator
 !      (python3 ../utils/mechanism_contract.py --check; skipped when python3 is not on the PATH).
 ! Needs no Cantera. Exit code 1 on failure.
@@ -31,6 +35,7 @@ program test
   logical :: ok
   character(len=512) :: self, arg
   integer :: err11, i11
+  real(8), allocatable :: r12(:), w12a(:), w12b(:)
 
   nfail = 0
   call get_command_argument(0, self)
@@ -53,6 +58,39 @@ program test
     species_composition(:,2) = comp0(:,5); species_composition(:,5) = comp0(:,2)
     call Assign_Mechanism(mech_name)
     write(*,'(A)') 'child-refusal: the contract did not stop the process'
+    stop
+  else if (arg == 'child-early') then
+    ! the mechanism is selected before the tables are loaded: WARNING, check at the first call
+    call Assign_Mechanism('WD')
+    err = read_idealgas_thermo('../database/WD/')
+    err = read_chemistry(folder='../database/WD/', mech_name=mech_name)
+    if (err /= 0) then; write(*,'(A,I0)') '[FAIL] child-early: read_chemistry ios=', err; stop 2; endif
+    allocate(r12(ns), w12a(ns), w12b(ns))
+    r12 = 0.05d0; w12a = 7.0d0
+    call chemistry_source(r12, 1500.5d0, w12a)      ! first call: the contract is checked here
+    call Assign_Mechanism('WD')                       ! the usual order: tables, then the mechanism
+    r12 = 0.05d0; w12b = 7.0d0
+    call chemistry_source(r12, 1500.5d0, w12b)
+    if (any(w12a /= w12b) .or. all(w12a == 0d0)) then
+      write(*,'(A)') 'child-early: the first call differs from the usual order'; stop 3
+    endif
+    write(*,'(A)') 'child-early: the first call checked the contract and gave the omegadot of the usual order'
+    stop
+  else if (arg == 'child-early-refusal') then
+    call Assign_Mechanism('WD')
+    err = read_idealgas_thermo('../database/WD/')
+    err = read_chemistry(folder='../database/WD/', mech_name=mech_name)
+    if (err /= 0) then; write(*,'(A,I0)') '[FAIL] child-early-refusal: read_chemistry ios=', err; stop 2; endif
+    nrc_arrh = nrc_arrh + 1                           ! a reaction count the WD routine does not have
+    allocate(r12(ns), w12a(ns)); r12 = 0.05d0
+    call chemistry_source(r12, 1500.5d0, w12a)
+    write(*,'(A)') 'child-early-refusal: the first call did not stop the process'
+    stop
+  else if (arg == 'child-early-unloaded') then
+    call Assign_Mechanism('WD')
+    allocate(r12(8), w12a(8)); r12 = 0.05d0
+    call chemistry_source(r12, 1500.5d0, w12a)      ! still no tables at the first call
+    write(*,'(A)') 'child-early-unloaded: the first call did not stop the process'
     stop
   endif
   err = read_idealgas_thermo('../database/WD/')
@@ -232,6 +270,27 @@ program test
   call verdict('10f contract refusal: the two lists are on the error unit too', err == 0)
   call execute_command_line("command grep -q 'expected: 5 species' tables/child-refusal.out", exitstat=err)
   call verdict('10g contract refusal: the two lists are on standard output', err == 0)
+
+  ! 12. Assign_Mechanism before the tables are loaded (child processes)
+  call execute_command_line(trim(self)//' child-early > tables/child-early.out 2> tables/child-early.err', exitstat=err)
+  call verdict('12a hook before the tables: the first call checks the contract and gives the omegadot of the usual order', &
+    err == 0)
+  call execute_command_line("command grep -q 'its contract is checked at the first chemistry call' tables/child-early.err", &
+    exitstat=err)
+  call verdict('12b hook before the tables: the WARNING is on the error unit', err == 0)
+  call execute_command_line("command grep -q 'its contract is checked at the first chemistry call' tables/child-early.out", &
+    exitstat=err)
+  call verdict('12c hook before the tables: the WARNING is on standard output', err == 0)
+  call execute_command_line(trim(self)//' child-early-refusal > tables/child-early-refusal.out 2> tables/child-early-refusal.err', &
+    exitstat=err)
+  call verdict('12d hook before the tables, data that do not match: the first call stops the process', err /= 0)
+  call execute_command_line("command grep -q 'expected: 5 species' tables/child-early-refusal.err", exitstat=err)
+  call verdict('12e hook before the tables, data that do not match: the two lists are on the error unit', err == 0)
+  call execute_command_line(trim(self)//' child-early-unloaded > tables/child-early-unloaded.out 2> tables/child-early-unloaded.err', &
+    exitstat=err)
+  call verdict('12f hook, no tables at the first call: the process stops', err /= 0)
+  call execute_command_line("command grep -q 'species and rate tables are not loaded' tables/child-early-unloaded.err", exitstat=err)
+  call verdict('12g hook, no tables at the first call: the [ERROR] line is on the error unit', err == 0)
 
   ! 13. the committed contract module is the output of utils/mechanism_contract.py
   call execute_command_line('command -v python3 > /dev/null 2>&1', exitstat=err)

@@ -105,7 +105,7 @@ test-tables     rate tables are indexed by temperature whatever their first row:
                 species after the slots
 test-contract   the mechanism contract check of Assign_Mechanism (and, with python3 on the PATH, that
                 src/lib/Lib_Chemistry_contract.f90 is the output of utils/mechanism_contract.py):
-                routine order accepted,
+                routine order accepted, a hook before the tables checked at the first call,
                 swapped slots / wrong reaction count refused, appended inert species accepted,
                 calibrated species with the same composition accepted, name read whole; in child
                 processes: the strict fallback policy (FLINT_STRICT_MECHANISM) and the refusal channels

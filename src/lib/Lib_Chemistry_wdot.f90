@@ -17,6 +17,16 @@ module FLINT_Lib_Chemistry_wdot
   !> must fall back to finite-difference Jacobian in that case).
   procedure(chemjac_if), pointer, public :: chemistry_jacobian => null()
 
+  !> Assign_Mechanism called with a hooked name before the species and rate tables were loaded:
+  !> the routine (and Jacobian) it selected, kept here while chemistry_source (chemistry_jacobian)
+  !> point to a first-call procedure that checks the mechanism contract, points them to the
+  !> routine itself and goes on with the call.
+  character(len=:), allocatable :: deferred_name
+  procedure(chemsource_if), pointer :: deferred_source => null()
+  procedure(chemjac_if), pointer :: deferred_jacobian => null()
+  private :: deferred_name, deferred_source, deferred_jacobian
+  private :: run_deferred_contract, source_first_call, jacobian_first_call
+
   !> Abstract interface relative to the finite-rate reactions source procedure
   abstract interface
   subroutine chemsource_if(roi,temp,omegadot)
@@ -69,11 +79,12 @@ contains
     use FLINT_Lib_Chemistry_contract, only: check_mechanism_contract
     implicit none
     character(*), intent(in) :: mad_world
-    logical :: hooked, ok
+    logical :: hooked, ok, loaded
 
     ! Default: no analytical Jacobian available. Each mechanism that has one
     ! overrides this below.
     chemistry_jacobian => null()
+    deferred_source => null(); deferred_jacobian => null()
     hooked = .true.
 
     select case(mad_world)
@@ -149,15 +160,83 @@ contains
 
     ! Mechanism contract: a hooked name selects a compiled routine whose species
     ! slots and reaction tables are fixed; the loaded data must match them
-    ! (see FLINT_Lib_Chemistry_contract for the rules). The tables must have been
-    ! loaded (read_idealgas_thermo, read_chemistry) before this call.
+    ! (see FLINT_Lib_Chemistry_contract for the rules). The check needs the tables
+    ! (read_idealgas_thermo, read_chemistry): when they are not loaded yet, the
+    ! routine is selected as before (the tables loaded later are the ones it uses),
+    ! a WARNING is printed and the check runs at the first call of chemistry_source
+    ! or chemistry_jacobian, with the same refusal on a mismatch.
     if (hooked) then
-      call check_mechanism_contract(mad_world, ok)
-      if (.not. ok) error stop '[ERROR] FLINT Assign_Mechanism: mechanism contract violated (see the two lists above)'
+      call check_mechanism_contract(mad_world, ok, loaded)
+      if (.not. loaded) then
+        write(*,'(A)') "[WARNING] FLINT Assign_Mechanism: mechanism "//trim(mad_world)// &
+          " selected before its species and rate tables were loaded (read_idealgas_thermo, read_chemistry):"// &
+          " its contract is checked at the first chemistry call"
+        write(error_unit,'(A)') "[WARNING] FLINT Assign_Mechanism: mechanism "//trim(mad_world)// &
+          " selected before its species and rate tables were loaded (read_idealgas_thermo, read_chemistry):"// &
+          " its contract is checked at the first chemistry call"
+        deferred_name = mad_world
+        deferred_source => chemistry_source
+        chemistry_source => source_first_call
+        if (associated(chemistry_jacobian)) then
+          deferred_jacobian => chemistry_jacobian
+          chemistry_jacobian => jacobian_first_call
+        endif
+      else if (.not. ok) then
+        error stop '[ERROR] FLINT Assign_Mechanism: mechanism contract violated (see the two lists above)'
+      endif
     endif
 
   end subroutine Assign_Mechanism
 
+
+  !> Contract check deferred by Assign_Mechanism (tables not loaded when it was called): runs at the
+  !> first call of chemistry_source or chemistry_jacobian, and stops on a mismatch or when the
+  !> tables are still not loaded; then the two pointers are set to the routine selected by
+  !> Assign_Mechanism. Inside an OpenMP region: with FLINT compiled with OpenMP the critical section
+  !> lets one thread check while the others wait; compiled without OpenMP, threads that arrive
+  !> together may each run the check, and all end on the selected routine (assigned from the copies).
+  subroutine run_deferred_contract()
+    use FLINT_Lib_Chemistry_contract, only: check_mechanism_contract
+    implicit none
+    logical :: ok
+    procedure(chemsource_if), pointer :: src   ! no initialisation: it would make the copies SAVEd, shared by the threads
+    procedure(chemjac_if),    pointer :: jac
+    ! local copies: in a library compiled without OpenMP the critical section below is only a comment, and a
+    ! second thread may find deferred_source nulled by the first between the test and the assignment
+    !$omp critical (flint_deferred_contract)
+    src => deferred_source
+    jac => deferred_jacobian
+    if (associated(src)) then
+      call check_mechanism_contract(deferred_name, ok)
+      if (.not. ok) error stop '[ERROR] FLINT: mechanism contract check failed at the first chemistry call (see the [ERROR] lines)'
+      chemistry_source => src
+      if (associated(jac)) chemistry_jacobian => jac
+      deferred_source => null(); deferred_jacobian => null()
+    endif
+    !$omp end critical (flint_deferred_contract)
+  end subroutine run_deferred_contract
+
+  !> chemistry_source after an Assign_Mechanism that preceded the loading of the tables
+  subroutine source_first_call(roi,temp,omegadot)
+    use FLINT_Lib_Thermodynamic
+    implicit none
+    real(8), intent(inout) :: roi(ns)
+    real(8), intent(in) :: temp
+    real(8), intent(out) :: omegadot(ns)
+    call run_deferred_contract()
+    call chemistry_source(roi, temp, omegadot)
+  end subroutine source_first_call
+
+  !> chemistry_jacobian after an Assign_Mechanism that preceded the loading of the tables
+  subroutine jacobian_first_call(roi,temp,dwdr,dwdT)
+    use FLINT_Lib_Thermodynamic
+    implicit none
+    real(8), intent(in)  :: roi(ns), temp
+    real(8), intent(out) :: dwdr(ns,ns)
+    real(8), intent(out) :: dwdT(ns)
+    call run_deferred_contract()
+    call chemistry_jacobian(roi, temp, dwdr, dwdT)
+  end subroutine jacobian_first_call
 
   !> Strict fallback policy: the module flag or the environment variable FLINT_STRICT_MECHANISM,
   !> read case-insensitively: 1/true/yes/on turn strict mode on, 0/false/no/off (or an empty value)

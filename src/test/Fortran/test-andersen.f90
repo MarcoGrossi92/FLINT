@@ -66,7 +66,7 @@ program test
   ns = 9
   allocate(wm_tab(ns), Ri_tab(ns))
   wm_tab = [31.998d0, 54.092d0, 18.015d0, 28.010d0, 44.009d0, 2.016d0, 15.999d0, 1.008d0, 17.007d0]
-  Ri_tab = 8314.46d0/wm_tab
+  Ri_tab = Runiv/wm_tab
   allocate(kf_tab(1:3000, 1:10), kb_tab(1:3000, 1:10)); nrc_arrh = 10; T_tab_min = 1; T_tab_max = 3000
   seed = 20260925_8
   do ir = 1, 10

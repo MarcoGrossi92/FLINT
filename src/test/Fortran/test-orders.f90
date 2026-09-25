@@ -25,7 +25,7 @@ program test
   ! species of phase.txt (no thermo tables are needed: general is called directly)
   ns = 9
   allocate(wm_tab(ns), Ri_tab(ns), species_names(ns))
-  wm_tab = wm_ref; Ri_tab = 8314.46d0/wm_tab; species_names = names_ref
+  wm_tab = wm_ref; Ri_tab = Runiv/wm_tab; species_names = names_ref
   allocate(roi(ns), w(ns), w_orders(ns), w_nint(ns), roi0(ns))
 
   ! helper

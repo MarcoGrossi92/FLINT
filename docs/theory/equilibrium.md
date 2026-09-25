@@ -52,7 +52,7 @@ where:
 - $U$ = total internal energy (specified)
 - $V$ = total volume (specified)
 - $N_s$ = number of species, $N_e$ = number of elements
-- $R_u$ = universal gas constant (8.314 J/(mol·K))
+- $R_u$ = universal gas constant (8.31446261815324 J/(mol·K), exact SI value)
 
 Equivalently, this can be formulated as a **Gibbs free energy minimization** at the unknown equilibrium temperature and pressure [1].
 

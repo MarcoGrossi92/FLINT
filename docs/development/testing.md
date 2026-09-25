@@ -124,6 +124,11 @@ test-andersen   the WD-Andersen routine (step 3 with the Andersen orders [CO2] [
                 reproduces Cantera's net production rates on the tables of a table writer (fixture
                 test/andersen/WD-Andersen, references embedded), the zero rate at O2 = 0 and the
                 zero-concentration convention of Coronetti (H2 = 0: finite, no divide-by-zero)
+test-runiv      the universal gas constant is the exact SI value (8314.46261815324 J/(kmol K), the
+                value of Cantera 3.0.1) in FLINT_Lib_Thermodynamic and in the CEA data, Ri_tab derives
+                from it, the pressure p = rho R_mix T of a Cantera state of database/WD agrees with
+                Cantera to 1e-9, and the compiled Frolov routine reproduces its (p/p_atm)^-1.15 law at
+                the Cantera pressure to 1e-9 (5.7e-6 / 6.6e-6 off with the former 8314.51)
 ```
 
 ## Running the Test Suite

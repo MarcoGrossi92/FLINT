@@ -133,7 +133,7 @@ program test
   allocate(wm_tab(ns), Ri_tab(ns))
   wm_tab = [2.016d0, 31.998d0, 18.015d0, 28.010d0, 44.009d0, 16.043d0, 17.007d0, 1.008d0, 15.999d0, &
             168.3d0, 42.08d0, 28.014d0]
-  Ri_tab = 8314.46d0/wm_tab
+  Ri_tab = Runiv/wm_tab
   allocate(kf_ref(1:Tmax_syn, nrc_syn), kb_ref(1:Tmax_syn, nrc_syn))
   do ir = 1, nrc_syn
     do T = 1, Tmax_syn

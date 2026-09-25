@@ -77,7 +77,7 @@ $$
 R_\text{mix} = \sum_{s=1}^{N_s} Y_s R_s = \sum_{s=1}^{N_s} \frac{\rho_s}{\rho} R_s
 $$
 
-where $Y_s = \rho_s/\rho$ is the mass fraction of species $s$, and $R_s = R_u/M_s$ is the specific gas constant ($R_u = 8314.46$ J/(kmol·K) is the universal gas constant and $M_s$ is the molecular weight).
+where $Y_s = \rho_s/\rho$ is the mass fraction of species $s$, and $R_s = R_u/M_s$ is the specific gas constant ($R_u = 8314.46261815324$ J/(kmol·K) is the universal gas constant (exact SI value, `Runiv` in the code) and $M_s$ is the molecular weight).
 
 **Mixture specific heat capacity at constant pressure:**
 $$

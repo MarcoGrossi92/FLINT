@@ -42,7 +42,11 @@ of the routine (`src/lib/Lib_ChemMech/mechanism_contract.json`, turned into
 
 - the routine species must be the **first** `ns_r` loaded species, in the routine order
   (prefix semantics); species loaded after them are accepted and stay inert (the RHS and the
-  Jacobian zero the source term before calling the routine);
+  Jacobian zero the source term before calling the routine); inert also as third bodies: a compiled
+  routine sums its third-body concentration over its own slots only (e.g. `troyes.f90`, `ONERA-7.f90`),
+  the general procedure over every loaded species with the efficiencies of `chemistry-info.txt`, so an
+  appended collider with a non-zero efficiency counts in `general` only (an appended species with
+  efficiency 0 in every reaction counts in neither, and both agree);
 - a slot matches by **elemental composition** (from `composition.txt`), and by **name** too for a
   generated routine or where two slots of the routine share a composition; a hand-written routine
   accepts a calibrated species under another name with the same composition (e.g. `H2ONassini`
@@ -74,6 +78,19 @@ is not hooked and strict mode is on`, exit status 1): set the module flag
 or the environment variable `FLINT_STRICT_MECHANISM=1` (also `true`, `yes`, `on`, in any
 case; `0`, `false`, `no`, `off` or an empty value leave it off; any other value is reported with a
 `[WARNING]` on standard output and on the error unit and ignored). Default: off.
+
+## Zero-concentration convention for negative reaction orders
+
+One rule for every site of FLINT where a species enters a rate with a negative order: at zero
+concentration the rate of that step is zero, as in Cantera 3.0.1 (its forward rate of progress is 0
+when a species with a non-zero order has zero concentration, verified by execution), and the negative
+power is never evaluated there (`0**(-0.25)` is +Infinity and traps under `-fpe0` / `-ffpe-trap=zero`).
+The sites: `pow_order` of the general procedure (`Reaction orders` block), step 3 of `WD-Andersen`
+([O2]^-0.25), the reverse term of H2 + 1/2 O2 <-> H2O of `Coronetti` ([H2]^-0.75, evaluated only above
+the routine's 1e-10 kmol/m3 threshold, where it is used) and step 4 of the JLR family ([H2]^-0.75, the
+forward-only branch below 1e-10 kmol/m3, unchanged). The thresholds of Coronetti and JLR are the
+historical behaviour of those routines and are kept: for every state above them the results are
+bit-identical to the previous version (`test-andersen` checks the convention, `test-orders` the helper).
 
 ## Temperature range of the tables
 

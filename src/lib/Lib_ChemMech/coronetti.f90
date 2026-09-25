@@ -56,12 +56,16 @@ contains
     kf = f_kf(4,Tint,Tdiff)
     kb = f_kb(4,Tint,Tdiff)
     CP1 = (coi(6)**0.25)*(coi(1)**1.50)
-    CP2 = (coi(3))*(coi(1))*(coi(6)**(-0.75))
     if (( coi(6) < limitH2 ).or.(coi(1)< limitH2)) then
       CP1 = 0.d0 
     end if
+    ! zero-concentration convention (one rule with pow_order of the general procedure and the
+    ! WD-Andersen step 3): the negative power of H2 is evaluated only above the threshold, where the
+    ! reverse term is used; 0**(-0.75) is +Infinity and traps under -fpe0 / -ffpe-trap=zero
     if ((coi(3)<limitH2).or.(coi(1)<limitH2).or.(coi(6)<limitH2)) then
-      CP2 = 0.d0 
+      CP2 = 0.d0
+    else
+      CP2 = (coi(3))*(coi(1))*(coi(6)**(-0.75))
     endif
     prod4 = kf*CP1 - kb*CP2
    

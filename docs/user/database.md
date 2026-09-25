@@ -87,6 +87,25 @@ A simplified global reaction model for methane combustion with minimal species.
 **Reference:**  
 Westbrook, C.K., and Dryer, F.L. "Chemical Kinetic Modeling of Hydrocarbon Combustion." *Progress in Energy and Combustion Science*, 10(1), 1–57, 1984.
 
+#### Westbrook-Dryer with the Andersen closure (`WD-Andersen`)
+
+The Westbrook-Dryer steps 1-2 with the CO2 dissociation step written as the explicit inverse of the
+CO oxidation step: rate = k3(T) [CO2] [H2O]^0.5 [O2]^-0.25 (the former FLINT law was [CO2]^1.25), so
+that the pair 2/3 reaches the equilibrium of CO + 0.5 O2 <-> CO2 (k2/k3 is within 0.5 % of Kc between
+1100 and 2000 K and 2 % at 3000 K on tables written from the mechanism's yaml). A species with a
+negative order at zero
+concentration gives a zero rate of that step: the convention of Cantera, one rule for every FLINT site
+with a negative order (see the chemistry routines page). In Cantera's yaml format the step carries
+`orders: {CO2: 1.0, H2O: 0.5, O2: -0.25}` with `negative-orders: true` and `nonreactant-orders: true`.
+
+**Characteristics:**
+- **Species / Reactions**: 5 / 3 (slots CH4, O2, CO2, H2O, CO)
+- **File**: `WD.f90` (routine `Andersen`, mechanism name `WD-Andersen`)
+- **Test**: `test-andersen` (Cantera references on the tables of `test/andersen/WD-Andersen`)
+
+**Reference:**  
+Andersen, J., Rasmussen, C.L., Giselsson, T., Glarborg, P. *Energy & Fuels*, 23(3), 1379–1389, 2009, DOI 10.1021/ef8003619.
+
 ---
 
 #### JLR (Rocket Engine Global)

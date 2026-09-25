@@ -120,6 +120,10 @@ test-rhs-range  rhs_native/jac_native bail out (F = -1, zero Jacobian) outside t
 test-orders     the general procedure with the optional 'Reaction orders' block reproduces Cantera's
                 rates for JLR-frassoldati (yaml orders) and keeps the integer-rounded law without it
                 (fixture test/orders/JLR-frassoldati: tables of a table writer, references embedded)
+test-andersen   the WD-Andersen routine (step 3 with the Andersen orders [CO2] [H2O]^0.5 [O2]^-0.25)
+                reproduces Cantera's net production rates on the tables of a table writer (fixture
+                test/andersen/WD-Andersen, references embedded), the zero rate at O2 = 0 and the
+                zero-concentration convention of Coronetti (H2 = 0: finite, no divide-by-zero)
 ```
 
 ## Running the Test Suite

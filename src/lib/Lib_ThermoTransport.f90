@@ -40,6 +40,9 @@ module FLINT_Lib_Thermodynamic
   real(kind=8), dimension(:,:), allocatable :: dij_tab
   integer :: ndij = 0
   real(kind=8) :: dij_pref = 101325.d0
+  ! Device copy of the binary diffusion table for co_DS_expr_dev (uploaded by
+  ! flint_acc_upload_thermo when read_idealgas_diffusion has allocated it).
+  !$acc declare create(dij_tab, dij_pref)
 
 contains
 

@@ -118,7 +118,7 @@ contains
   subroutine flint_acc_upload_thermo()
     use FLINT_Lib_Thermodynamic, only: ns, Tmin, Tmax, wm_tab, Ri_tab, &
                                        cp_tab, dcpi_tab, h_tab, mi_tab, k_tab, &
-                                       Mi_Mj_pow_m025, inv_sqrt8_1p
+                                       Mi_Mj_pow_m025, inv_sqrt8_1p, dij_tab, dij_pref
     implicit none
 #   if defined (MOSE_TT_NS)
     ! MOSE_TT_CT: the device thermo/transport helpers (Lib_ThermoTransport_dev) are
@@ -133,6 +133,11 @@ contains
     ! allocated by read_idealgas_transport before this routine runs).
     if (allocated(mi_tab)) then
       !$acc update device(mi_tab, k_tab, Mi_Mj_pow_m025, inv_sqrt8_1p)
+    end if
+    ! Binary diffusion table for the mixture-averaged diffusion (co_DS_expr_dev;
+    ! allocated by read_idealgas_diffusion, which must run before this routine).
+    if (allocated(dij_tab)) then
+      !$acc update device(dij_tab, dij_pref)
     end if
 #   endif
   end subroutine flint_acc_upload_thermo

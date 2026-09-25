@@ -8,7 +8,7 @@
 ! device-allowed mechanisms (mech_dev guard: ONERA-7 ns=7, Frolov ns=4 -> ns
 ! <= NSMAX). The CPU functions are left 100% untouched (bit-identical).
 !
-! Mirrors exactly: co_k_mi_lam_Wilke_expr, co_fiij, f_cp_expr. The leaf helpers
+! Mirrors exactly: co_k_mi_lam_Wilke_expr, co_fiij, f_cp_expr, co_DS_expr. The leaf helpers
 ! f_Rtot / f_molecularWeight / f_tabT_expr carry `acc routine seq` and are
 ! reused from the originals (no general-ns automatic to convert).
 !------------------------------------------------------------------------------
@@ -19,6 +19,7 @@ module FLINT_Lib_ThermoTransport_dev
   private
   public :: co_rotot_Rtot_dev, co_k_mi_lam_Wilke_dev, co_mi_lam_Wilke_dev, f_cp_dev, f_ss_dev, f_ss_cp_dev, H0_dev
   public :: prim2cons_dev, cons2prim_dev
+  public :: co_DS_expr_dev
 
 ! MOSE_TT_CT (compile-time dims extension; mirrors MOSE_CHEM_CT in Lib_Radau5_dev):
 ! when the build pins the mechanism size (MOSE_TT_NS = MOSE_NSC from CMake), the
@@ -210,6 +211,69 @@ contains
       milam = milam + Xi(s)*milam_i(s)*inv_lam_den
     enddo
   end subroutine co_mi_lam_Wilke_dev
+
+
+  !> Mixture-averaged diffusion coefficients, device version. Mirror of co_DS_expr
+  !> (Lib_ThermoTransport) statement for statement: same clamp of the T bracket, same
+  !> single sweep over the unique pairs of dij_tab (declare create'd), same near-pure
+  !> fallback and dij_pref/pres rescaling. Only the general-ns automatics Xi, Dm_den,
+  !> Dsum are pinned to NSPAD and the whole-array assignments are written as loops.
+  pure subroutine co_DS_expr_dev ( rhoi, rho, Tint, Tdiff, pres, Dm )
+    !$acc routine seq
+    implicit none
+    integer, intent(in)  :: Tint(2)
+    real(8), intent(in)  :: rhoi(NSL), rho, Tdiff, pres
+    real(8), intent(out) :: Dm(NSL)
+    real(8) :: Xi(NSPAD), Dm_den(NSPAD), Dsum(NSPAD)
+    real(8) :: Wmtot, Dval, invD, d0, d1
+    integer :: s, i, j, p, Ti1, Ti2
+
+    if (NSL < 2) then
+      do s = 1, NSL
+        Dm(s) = 0.d0
+      enddo
+      return
+    endif
+
+    Wmtot = TT_F_MOLW(rhoi)
+    do s = 1, NSL
+      Xi(s) = rhoi(s)*Wmtot/(rho*Wm_tab(s))
+    enddo
+
+    Ti1 = max(Tmin, min(Tint(1), Tmax))
+    Ti2 = max(Tmin, min(Tint(2), Tmax))
+
+    do s = 1, NSL
+      Dm_den(s) = 0.d0
+      Dsum(s)   = 0.d0
+    enddo
+    p = 0
+    do i = 1, NSL
+      do j = i+1, NSL
+        p = p + 1
+        d0 = dij_tab(Ti1,p)
+        d1 = dij_tab(Ti2,p)
+        Dval = d0 + (d1-d0)*Tdiff
+        invD = 1.d0 / Dval
+        Dm_den(i) = Dm_den(i) + Xi(j)*invD
+        Dm_den(j) = Dm_den(j) + Xi(i)*invD
+        Dsum(i)   = Dsum(i) + Dval
+        Dsum(j)   = Dsum(j) + Dval
+      enddo
+    enddo
+
+    do s = 1, NSL
+      if (1.d0 - Xi(s) < 1.d-10) then
+        Dm(s) = Dsum(s) / dble(NSL-1)
+      else
+        Dm(s) = (1.d0 - Xi(s)) / Dm_den(s)
+      endif
+    enddo
+
+    do s = 1, NSL
+      Dm(s) = Dm(s) * ( dij_pref / pres )
+    enddo
+  end subroutine co_DS_expr_dev
 
 
   !> Mixture cp. Fixed-size cpi(NSMAX). Bit-faithful to f_cp_expr.

@@ -12,7 +12,9 @@
 !  10. in child processes (this program with the argument child-strict / child-refusal): the strict
 !      fallback policy (FLINT_STRICT_MECHANISM=1 or Yes stops an unhooked name, =0 falls back to general,
 !      an unrecognised value is reported on the error unit and ignored) and
-!      the contract refusal stop the process, and their messages are on the error unit.
+!      the contract refusal stop the process, and their messages are on the error unit;
+!  13. the committed src/lib/Lib_Chemistry_contract.f90 is the output of its generator
+!      (python3 ../utils/mechanism_contract.py --check; skipped when python3 is not on the PATH).
 ! Needs no Cantera. Exit code 1 on failure.
 program test
   use FLINT_Lib_Thermodynamic
@@ -230,6 +232,17 @@ program test
   call verdict('10f contract refusal: the two lists are on the error unit too', err == 0)
   call execute_command_line("command grep -q 'expected: 5 species' tables/child-refusal.out", exitstat=err)
   call verdict('10g contract refusal: the two lists are on standard output', err == 0)
+
+  ! 13. the committed contract module is the output of utils/mechanism_contract.py
+  call execute_command_line('command -v python3 > /dev/null 2>&1', exitstat=err)
+  if (err == 0) then
+    call execute_command_line('python3 ../utils/mechanism_contract.py --check > tables/contract-generator.out 2>&1', &
+      exitstat=err)
+    call verdict('13 Lib_Chemistry_contract.f90 is the output of utils/mechanism_contract.py '// &
+      '(diff in tables/contract-generator.out)', err == 0)
+  else
+    write(*,'(A)') ' [skip] 13 python3 not found: generator equality not checked'
+  endif
   if (nfail > 0) then
     write(*,'(A,I0,A)') ' Verdict -> fail (', nfail, ' checks)'
     stop 1

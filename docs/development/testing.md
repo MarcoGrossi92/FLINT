@@ -103,7 +103,9 @@ test-tables     rate tables are indexed by temperature whatever their first row:
                 the public comp_ch_tabT equals f_kf/f_kb on the 1 K, the 100..400 K and the
                 synthetic 100 K tables; the analytical Jacobians define their whole block with
                 species after the slots
-test-contract   the mechanism contract check of Assign_Mechanism: routine order accepted,
+test-contract   the mechanism contract check of Assign_Mechanism (and, with python3 on the PATH, that
+                src/lib/Lib_Chemistry_contract.f90 is the output of utils/mechanism_contract.py):
+                routine order accepted,
                 swapped slots / wrong reaction count refused, appended inert species accepted,
                 calibrated species with the same composition accepted, name read whole; in child
                 processes: the strict fallback policy (FLINT_STRICT_MECHANISM) and the refusal channels

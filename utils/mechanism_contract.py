@@ -7,11 +7,13 @@ the species slots (name + elemental composition) and the number of reactions per
 (mechanism_expectation) and compares it with the data loaded by read_idealgas_thermo /
 read_chemistry (check_mechanism_contract); Assign_Mechanism refuses a hooked name whose loaded
 data does not match. Run from the repository root:
-    python3 utils/mechanism_contract.py
+    python3 utils/mechanism_contract.py            # writes src/lib/Lib_Chemistry_contract.f90
+    python3 utils/mechanism_contract.py --check    # exit 1 (and a diff) if the committed module
+                                                   # is not the output of this generator
 The Fortran text after the case records (canonical_composition, element_symbol,
 check_mechanism_contract) is kept here verbatim: change it here and regenerate.
 """
-import json, os, collections
+import json, os, sys, difflib, collections
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 src = os.path.join(root, 'src', 'lib', 'Lib_ChemMech', 'mechanism_contract.json')
 dst = os.path.join(root, 'src', 'lib', 'Lib_Chemistry_contract.f90')
@@ -265,5 +267,16 @@ L.append(r'''  !> Elemental composition as a string: element symbols in standard
   end subroutine check_mechanism_contract
 
 end module FLINT_Lib_Chemistry_contract''')
-open(dst, 'w').write('\n'.join(L) + '\n')
+text = '\n'.join(L) + '\n'
+if '--check' in sys.argv[1:]:
+    # equality test: the committed module must be the output of this generator
+    cur = open(dst).read()
+    if cur != text:
+        sys.stdout.writelines(difflib.unified_diff(cur.splitlines(True), text.splitlines(True),
+                                                   'committed ' + os.path.relpath(dst, root), 'generated'))
+        print('MISMATCH: %s is not the output of utils/mechanism_contract.py' % os.path.relpath(dst, root))
+        sys.exit(1)
+    print('OK: %s is the output of utils/mechanism_contract.py (%d cases)' % (os.path.relpath(dst, root), len(C['cases'])))
+    sys.exit(0)
+open(dst, 'w').write(text)
 print('written', dst, 'cases', len(C['cases']))

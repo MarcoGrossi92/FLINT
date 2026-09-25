@@ -60,7 +60,10 @@ On a mismatch both lists are printed and the run stops (`error stop`): with the 
 the routine silently read the wrong species. The tables must therefore be loaded **before**
 `Assign_Mechanism`. A name that is not hooked is not checked (it falls back to the general
 procedure). `test-contract` exercises the rules; to add a hooked mechanism, add its record to the
-JSON and re-run the generator.
+JSON and re-run the generator (`python3 utils/mechanism_contract.py`). The Fortran text of the
+checker is kept in the generator too: `python3 utils/mechanism_contract.py --check` (run by
+`test-contract`) exits with 1 and prints the difference when the committed module is not the
+output of the generator.
 
 ## Fallback to the general procedure and strict mode
 

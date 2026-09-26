@@ -120,3 +120,65 @@ another path. The tables of `database/WD` start at 1 K with a 1 K step; every ta
 every other mechanism `set_analytical_jacobian(.true.)` prints `[JAC] analytical Jacobian
 requested but the active mechanism has none; falling back to finite differences` and the
 integrator builds the Jacobian by finite differences.
+
+## Rate laws coded in the routines
+
+A compiled routine fixes its species slots, its stoichiometry and the exponents of the concentrations in
+its source; the INPUT folder supplies the species data and the rate constants (column i of the rate
+tables is reaction i of the routine). A mechanism file with the same reactions but other orders, or
+without explicit orders, is a different model: under the general procedure (or Cantera) its rates follow
+the mass-action law of the file, not the exponents below. The generated routines raise the concentrations
+to the stoichiometric coefficients of the file they were generated from (`utils/YTF.py` implements no
+custom orders); their reaction structure is published in the contract file (see *The contract file*
+below). Concentrations in kmol/m3, `kf`/`kb` = the forward/backward columns of the table of the reaction.
+
+- **`CoronettiC4H6` selects `Coronetti`** (`coronetti.f90`); slots O2, C4H6, H2O, CO, CO2, H2, O, H, OH;
+  negative partial densities of the argument `roi` are set to zero:
+    1. C4H6 + 2 O2 → 4 CO + 3 H2: kf1 [C4H6]^0.5 [O2]^1.25, zero when [C4H6] or [O2] < 1e-10;
+    2. C4H6 + 4 H2O → 4 CO + 7 H2: kf2 [C4H6] [H2O] (the mass-action law of this equation gives
+       [C4H6] [H2O]^4);
+    3. CO + H2O ⇌ CO2 + H2: kf3 [CO] [H2O] − kb3 [CO2] [H2];
+    4. H2 + ½ O2 ⇌ H2O: kf4 [H2]^0.25 [O2]^1.5 − kb4 [H2O] [O2] [H2]^-0.75 (the mass-action law gives
+       [H2] [O2]^0.5 and [H2O]; forward minus reverse orders equal the stoichiometric coefficients, so
+       kf4/kb4 is the equilibrium constant of the step); the forward term is zero when [H2] or [O2] <
+       1e-10, the reverse term when [H2O], [O2] or [H2] < 1e-10;
+    5. O2 ⇌ 2 O: kf5 [O2] − kb5 [O]^2;
+    6. H2O ⇌ OH + H: kf6 [H2O] − kb6 [OH] [H].
+- **`JLR-Nasuti` selects `JLR`** (`JLR.f90`); slots O2, CH4, H2O, CO, CO2, H2, H, O, OH; concentrations
+  below 1e-10 are taken as zero:
+    1. CH4 + ½ O2 → CO + 2 H2: kf1 [CH4]^0.5 [O2]^1.25;
+    2. CH4 + H2O → CO + 3 H2: kf2 [CH4] [H2O];
+    3. CO + H2O ⇌ CO2 + H2, 5. O2 ⇌ 2 O, 6. H2O ⇌ H + OH, 7. OH + H2 ⇌ H + H2O: mass-action law;
+    4. H2 + ½ O2 ⇌ H2O: kf4 [H2]^0.25 [O2]^1.5 − kb4 [H2O] [O2] [H2]^-0.75, forward term only when
+       [H2] < 1e-10.
+- **`Frassoldati` selects `Frassoldati`** (`JLR.f90`); the slots and steps 1-6 of `JLR`, with kf1
+  [CH4]^0.5 [O2]^1.3 and kf4 [H2]^0.3 [O2]^1.55 − kb4 [H2O] [O2] [H2]^-0.75: the forward minus reverse
+  orders of step 4 are 1.05 (H2) and 0.55 (O2) instead of the stoichiometric 1 and 0.5, so kf4/kb4 is not
+  the equilibrium constant of the step. Only the name `Frassoldati` selects this routine: a mechanism named
+  otherwise (e.g. `JLR-Frassoldati` of `test-orders`) runs on the general procedure, with the orders of its
+  `Reaction orders` block.
+- **`Frolov` selects `Frolov`** (`global-H2.f90`); slots O2, H2O, H2 (+ inert species): the routine is the
+  model. The progress rate of 2 H2 + O2 → 2 H2O is coded as q = 0.5 × 8e11 × (p/101325)^-1.15 × [H2]^2
+  [O2] × exp(−10000/T), with p = Σ roi Ri T from the state and concentrations below 1e-12 taken as zero;
+  the rate tables are not read (the INPUT folder supplies the species, their molecular weights and
+  thermodynamics), so a pressure dependence written in the mechanism file (e.g. as a PLOG rate) plays no
+  part. The H2O slot accepts a calibrated water species under another name with the composition of H2O.
+- **`Frolov_nopressure` selects `Frolov_nopressure`** (`global-H2.f90`); slots O2, H2O, H2, N2 (the N2
+  row is zero): 2 H2 + O2 ⇌ 2 H2O with kf [H2]^2 [O2] − kb [H2O]^2 from reaction 1 of the tables, no
+  pressure factor; analytical Jacobian `Frolov_nopressure_jac`.
+- **`Nassini` selects `Nassini_4`** (`global-H2.f90`); slots O2, H2O, H2 (+ inert species),
+  concentrations below 1e-12 taken as zero; two irreversible reactions: 1. H2 + ½ O2 → H2O: kf1 [H2] [O2];
+  2. H2O → H2 + ½ O2: kf2 [H2O], the backward step (the kb columns are not read). These exponents hold
+  whatever orders the mechanism file gives.
+- **`ONERA-7` selects `ONERA_7`** (`ONERA-7.f90`, generated); slots O2, H2O, H2, H, O, OH, N2: 14
+  Arrhenius-type reactions, each of the 7 steps written as two irreversible reactions (1. H2 + O2 ⇒ 2 OH,
+  2. 2 OH ⇒ H2 + O2, ...; third body in 11-14); analytical Jacobian `ONERA_7_jac`. An INPUT folder with the
+  7 steps as reversible reactions has 7 Arrhenius-type reactions: the contract check refuses it under the
+  name `ONERA-7` (reaction count), and it runs on the general procedure under a name that is not hooked.
+- **`FFCMy-12` selects `FFCMy_12`** and **`SanDiego` selects `sandiego20161214`** (generated): 13 slots
+  (12 reacting species and N2, which enters as a third body only) and 38 reactions (34 Arrhenius-type including three-body ones, 3
+  falloff-Troe, 1 falloff-Lindemann); 57 slots and 268 reactions (245 Arrhenius-type, 23 falloff-Troe).
+
+The rate tables carry Arrhenius-type, falloff-Troe and falloff-Lindemann reactions only: a reaction type
+without tables of its own (e.g. falloff-SRI) is counted with the Arrhenius-type ones and `read_chemistry`
+refuses the folder (`ios = 4`: fewer zones in `chemistry-Arrhenius.dat` than Arrhenius-type reactions).

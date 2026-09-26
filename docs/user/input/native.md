@@ -306,6 +306,8 @@ I=15000, F=POINT
 | `F_cent` | Centering factor. A value `<= 0` (published Troe parameter sets with `a < 0` or `a > 1`, e.g. C2H4 + H (+M) of AramcoMech 2.0/3.0 and FFCM-1 above 4871 K) is taken as `1e-300` inside `log10`, as Cantera does; NaN/Inf are refused (`ios = 5`) | Troe fall-off correction factor |
 
 The same `k_c` convention holds for the `k_c` column of `chemistry-Lindemann.dat` (`Temperature`, `k_inf`, `k_0`, `k_c`).
+FLINT versions up to 2223136 compute the reverse rate of every falloff reaction as `k_f / k_c`: there a
+table with `k_c = 0` gives an infinite reverse rate.
 
 **Reaction orders (the block that ends `chemistry-info.txt`).** After the last `Reaction definition`
 row and a blank line, a table writer ends the file with the explicit forward orders of the mechanism
@@ -329,6 +331,8 @@ falloff reactions are not supported (`read_chemistry` returns `ios = 2`). A file
 (written by an older table writer) is read with the reactant coefficients as orders, the exponents of
 `<n>` = 0; when the general procedure is selected, FLINT prints a `[WARNING]` once per load (standard
 output and error unit) asking to regenerate the tables. The compiled routines do not read the block.
+FLINT versions up to 2223136 stop reading `chemistry-info.txt` after the `Reaction definition` rows and
+ignore the block.
 
 **Troe Fall-off Theory:**
 

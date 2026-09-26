@@ -10,8 +10,9 @@ data does not match. Run from the repository root:
     python3 utils/mechanism_contract.py            # writes src/lib/Lib_Chemistry_contract.f90
     python3 utils/mechanism_contract.py --check    # exit 1 (and a diff) if the committed module
                                                    # is not the output of this generator, or if the
-                                                   # fingerprints, n_reactions or zeroes_omegadot of
-                                                   # the JSON are not the ones of the sources
+                                                   # fingerprints, n_reactions, zeroes_omegadot or
+                                                   # tables_used of the JSON are not the ones of
+                                                   # the sources
     python3 utils/mechanism_contract.py --fingerprints   # (re)write those fields into the JSON
 The Fortran text after the case records (canonical_composition, element_symbol,
 check_mechanism_contract) is kept here verbatim: change it here and regenerate.
@@ -390,6 +391,9 @@ def parse_generated(body):
     return R, om
 
 zeroes = OrderedDict()   # case name -> the routine zeroes omegadot (computed by fingerprints())
+reads = OrderedDict()    # case name -> the routine reads the rate tables (computed by fingerprints())
+# a rate table is read through f_kf, f_kb, f_k_troe, f_k_lindemann or directly (the arrays of Lib_Chemistry_data)
+RATE_TABLES = re.compile(r"\bf_k(?:f|b|_troe|_lindemann)\s*\(|\b(?:kf|kb|kinf_troe|k0_troe|kc_troe|fcent|kinf_lind|k0_lind|kc_lind)_tab\b", re.I)
 
 def fingerprints():
     """{case name: fingerprint} of the generated cases of the JSON, computed from src/lib; errors (list)"""
@@ -400,7 +404,9 @@ def fingerprints():
     for name, c in C['cases'].items():
         rb = routines.get(c['routine'].lower())
         if rb is not None:   # every case: does the routine zero omegadot before its assignments (trailing species stay 0)?
-            zeroes[name] = bool(re.search(r"omegadot\s*=\s*0", '\n'.join(t.split('!')[0] for t in rb[2])))
+            code = '\n'.join(t.split('!')[0] for t in rb[2])
+            zeroes[name] = bool(re.search(r"omegadot\s*=\s*0", code))
+            reads[name] = bool(RATE_TABLES.search(code))   # and does it read the rate tables?
         if c.get('kind') != 'generated':
             continue
         d = dispatch.get(name)
@@ -447,6 +453,8 @@ if '--fingerprints' in sys.argv[1:]:
         print('\n'.join('ERROR: ' + e for e in errs)); sys.exit(1)
     for name, z in zeroes.items():
         C['cases'][name]['zeroes_omegadot'] = z
+    for name, r in reads.items():
+        C['cases'][name]['tables_used'] = r
     for name, f in fp.items():
         C['cases'][name]['n_reactions'] = len(f['reactions'])
         C['cases'][name]['fingerprint'] = f
@@ -465,6 +473,9 @@ if '--check' in sys.argv[1:]:
     for name, z in zeroes.items():
         if C['cases'][name].get('zeroes_omegadot') != z:
             errs.append('case %s: zeroes_omegadot is %s in the JSON, the routine %s omegadot (run --fingerprints)' % (name, C['cases'][name].get('zeroes_omegadot'), 'zeroes' if z else 'does not zero'))
+    for name, r in reads.items():
+        if C['cases'][name].get('tables_used') != r:
+            errs.append('case %s: tables_used is %s in the JSON, the routine %s the rate tables (run --fingerprints)' % (name, C['cases'][name].get('tables_used'), 'reads' if r else 'does not read'))
     if errs:
         print('\n'.join('MISMATCH: ' + e for e in errs)); sys.exit(1)
     print('OK: the fingerprints of the %d generated cases are the ones of their routines' % len(fp))

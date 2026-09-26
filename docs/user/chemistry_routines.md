@@ -80,11 +80,12 @@ output of the generator.
 `src/lib/Lib_ChemMech/mechanism_contract.json` is FLINT's published description of its hooked routines:
 a table writer can compare the species and reactions of the folder it writes for a hooked name with what
 the routine expects, without reading FLINT's sources. It is maintained with FLINT:
-`python3 utils/mechanism_contract.py --fingerprints` writes `n_reactions`, `fingerprint` and
-`zeroes_omegadot` from the routine sources; `python3 utils/mechanism_contract.py` writes the checker
-module from the records; `--check` (run by `test-contract`) fails when a fingerprint or
-`zeroes_omegadot` differs from the sources, when the table counts of a generated routine differ from
-its `nrc`, or when the module is not the output of the records.
+`python3 utils/mechanism_contract.py --fingerprints` writes `tables_used`, `zeroes_omegadot` and, for
+the generated routines, `n_reactions` and `fingerprint` from the routine sources;
+`python3 utils/mechanism_contract.py` writes the checker module from the records; `--check` (run by
+`test-contract`) fails when `tables_used`, `zeroes_omegadot`, `n_reactions` or a fingerprint differs
+from the sources, when the table counts of a generated routine differ from its `nrc`, or when the
+module is not the output of the records.
 
 Top level: `schema` (one-line summary of the format), `origin` (how the records are made), `cases` (one
 record per hooked name; the key is the mechanism name of line 1 of `chemistry-info.txt`). A record:
@@ -96,7 +97,7 @@ record per hooked name; the key is the mechanism name of line 1 of `chemistry-in
 | `ns` | number of species slots |
 | `nrc` | reactions per table type: `arrhenius` (every type whose name contains neither Troe nor Lindemann), `troe`, `lindemann` |
 | `species` | the slots in routine order: `slot` (from 1), `name`, `composition` (element: count) |
-| `tables_used` | the routine reads the rate tables |
+| `tables_used` | the routine reads the rate tables: its body calls `f_kf`, `f_kb`, `f_k_troe` or `f_k_lindemann`, or reads a rate table directly |
 | `zeroes_omegadot` | the routine sets the whole `omegadot` to zero first, so species after its slots get a zero source |
 | `jacobian` | the analytical Jacobian routine, or `null` |
 | `source` | where the record comes from |

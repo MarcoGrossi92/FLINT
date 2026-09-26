@@ -62,12 +62,64 @@ the routine silently read the wrong species. The check needs the loaded tables: 
 `Assign_Mechanism` is called with a hooked name **before** the tables are loaded, it selects the
 routine as before, prints a `[WARNING]` (standard output and error unit) and the check runs at the
 first call of `chemistry_source` or `chemistry_jacobian`, with the same refusal on a mismatch (and
-an `[ERROR]` if the tables are still not loaded then). A name that is not hooked is not checked (it falls back to the general
-procedure). `test-contract` exercises the rules; to add a hooked mechanism, add its record to the
+an `[ERROR]` if the tables are still not loaded then). That first call may come from several threads
+of a parallel region of the host program. With FLINT compiled with the OpenMP flags of the host, the
+check runs in a critical section: one thread checks while the others wait, then all call the routine.
+With FLINT compiled without OpenMP the critical section is only a comment: threads that make the first
+call together may each run the check (a refusal is then printed once per thread before the run stops),
+and every thread still ends on the selected routine, because the procedure pointers are assigned only
+from local copies of it. (The CMake option `USE_OPENMP` of FLINT adds no OpenMP compile flag.) A name
+that is not hooked is not checked (it falls back to the general procedure). `test-contract` exercises the rules; to add a hooked mechanism, add its record to the
 JSON and re-run the generator (`python3 utils/mechanism_contract.py`). The Fortran text of the
 checker is kept in the generator too: `python3 utils/mechanism_contract.py --check` (run by
 `test-contract`) exits with 1 and prints the difference when the committed module is not the
 output of the generator.
+
+### The contract file
+
+`src/lib/Lib_ChemMech/mechanism_contract.json` is FLINT's published description of its hooked routines:
+a table writer can compare the species and reactions of the folder it writes for a hooked name with what
+the routine expects, without reading FLINT's sources. It is maintained with FLINT:
+`python3 utils/mechanism_contract.py --fingerprints` writes `n_reactions`, `fingerprint` and
+`zeroes_omegadot` from the routine sources; `python3 utils/mechanism_contract.py` writes the checker
+module from the records; `--check` (run by `test-contract`) fails when a fingerprint or
+`zeroes_omegadot` differs from the sources, when the table counts of a generated routine differ from
+its `nrc`, or when the module is not the output of the records.
+
+Top level: `schema` (one-line summary of the format), `origin` (how the records are made), `cases` (one
+record per hooked name; the key is the mechanism name of line 1 of `chemistry-info.txt`). A record:
+
+| field | content |
+|-------|---------|
+| `routine`, `file` | the subroutine selected by `Assign_Mechanism` and its source file in `src/lib/Lib_ChemMech` |
+| `kind` | `generated` (written by `utils/YTF.py`, one `! reac n. <n>: <equation>` comment per reaction) or `hand-written` |
+| `ns` | number of species slots |
+| `nrc` | reactions per table type: `arrhenius` (every type whose name contains neither Troe nor Lindemann), `troe`, `lindemann` |
+| `species` | the slots in routine order: `slot` (from 1), `name`, `composition` (element: count) |
+| `tables_used` | the routine reads the rate tables |
+| `zeroes_omegadot` | the routine sets the whole `omegadot` to zero first, so species after its slots get a zero source |
+| `jacobian` | the analytical Jacobian routine, or `null` |
+| `source` | where the record comes from |
+| `n_reactions` | generated routines only: the number of reactions |
+| `fingerprint` | generated routines only: the structure of every reaction (below) |
+
+The fingerprint is `{"M": [...], "reactions": {...}, "omegadot": {...}}`:
+
+- `M`: the distinct third-body efficiency sets of the routine, in order of first use; a set is a list of
+  `[efficiency, [slots]]` pairs; a slot with efficiency 0 is not listed (`M=sum(coi(1:12))` gives
+  `[[1.0, [1, 2, ..., 12]]]`).
+- `reactions`: the key is the reaction number n of the `! reac n.` comment (a string); the value is
+  `{"eq": <equation of the comment>, "f": <forward rate>, "b": <reverse rate>}`, and a rate is
+  `{"tab": [<type>, <index>], "fac": {"<slot>": <count>}, "usesM": <bool>, "Mi": <index>}`: `tab` is the
+  table the rate reads (`["arrhenius", i]`: column i of the Arrhenius-type tables through `f_kf`/`f_kb`;
+  `["troe", j]` or `["lindemann", j]`: falloff table j through `k(1)`/`k(2)`); `fac` counts the factors
+  `coi(slot)` of the rate (the generated routines write integer powers as repeated factors); `usesM` says
+  whether the rate is multiplied by the third-body concentration `M`; `Mi` (from 0) points to the set of
+  `M` given by the `M=` line of the reaction (the third body of `usesM`, or the bath gas of a falloff rate),
+  and is absent when the reaction has no `M=` line.
+- `omegadot`: the key is the slot s (a string); the value `{"<n>": <nu'' - nu'>}` gives the net
+  stoichiometric coefficient of slot s in reaction n as written in `omegadot(s)`; reactions with a zero
+  net coefficient are not listed.
 
 ## Fallback to the general procedure and strict mode
 
@@ -77,9 +129,13 @@ general procedure` on standard output **and** on the error unit (standard error)
 solver log that captures only one of the two channels still records the fallback. Note that
 `general` applies the mass-action law with the real stoichiometric coefficients, as Cantera does
 (`H2 + 0.5 O2 <=> H2O`: forward `[H2] [O2]^0.5`; fractional products enter the reverse rate the same
-way); explicit yaml `orders:` reach it only through the optional `Reaction orders` block of the INPUT
-folder (see *Native input*): without the block a mechanism with explicit orders is a different model
-under `general`. Versions before `test-stoich` rounded the coefficients of the Arrhenius-type reactions
+way); explicit yaml `orders:` reach it only through the `Reaction orders` block that ends
+`chemistry-info.txt` (see *Native input*). A file without the block comes from an older table writer:
+`general` then takes the reactant coefficients as orders (the exponents of a block with no rows) and,
+once per load, prints on standard output and on the error unit `[WARNING] FLINT: chemistry-info.txt has
+no 'Reaction orders' block (the file comes from an older table writer): ... regenerate the chemistry
+tables ...`; for a mechanism with explicit orders it is then a different model. A hooked name does not
+warn: the compiled routines do not read the block. Versions before `test-stoich` rounded the coefficients of the Arrhenius-type reactions
 to the nearest integer (`[O2]^1` for `0.5 O2`): an INPUT folder with fractional coefficients and no
 block gives different rates since then.
 

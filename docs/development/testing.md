@@ -119,9 +119,10 @@ test-inert      species appended after the slots of a compiled routine are inert
 test-rhs-range  rhs_native/jac_native bail out (F = -1, zero Jacobian) outside the RATE tables as
                 they do outside the thermo tables (test/tables/WD-100K loaded on one grid, the
                 rate range then narrowed in memory: a defence for tables set by another path)
-test-orders     the general procedure with the optional 'Reaction orders' block reproduces Cantera's
+test-orders     the general procedure with the 'Reaction orders' block reproduces Cantera's
                 rates for JLR-frassoldati (yaml orders) and, without it, Cantera's law of the stoichiometric
-                coefficients (the yaml orders removed), not the integer-rounded one of older versions
+                coefficients (the yaml orders removed), not the integer-rounded one of older versions;
+                the general procedure warns about a file without the block, not about a file with it
                 (fixture test/orders/JLR-frassoldati: tables of a table writer, references embedded)
 test-orders-warn the WARNING of the general procedure for a chemistry-info.txt without the 'Reaction
                 orders' block: none for a block with zero rows (same omegadot, bit for bit, as without the

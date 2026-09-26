@@ -88,7 +88,7 @@ CH3O2  47.033000
 
 **Purpose:** Provide resume of the chemical mechanism: species/reaction counts, reaction types, and stoichiometry.
 
-**Format:** ASCII text with three sections.
+**Format:** ASCII text with three sections, followed by the `Reaction orders` block (see below).
 
 ```
 <mechanism_name>
@@ -307,9 +307,10 @@ I=15000, F=POINT
 
 The same `k_c` convention holds for the `k_c` column of `chemistry-Lindemann.dat` (`Temperature`, `k_inf`, `k_0`, `k_c`).
 
-**Reaction orders (optional block at the end of `chemistry-info.txt`).** A mechanism whose yaml gives
-explicit `orders:` (e.g. `CH4 + 0.5 O2 => CO + 2 H2` with `orders: {CH4: 0.5, O2: 1.3}`) carries, after
-the last `Reaction definition` row and a blank line:
+**Reaction orders (the block that ends `chemistry-info.txt`).** After the last `Reaction definition`
+row and a blank line, a table writer ends the file with the explicit forward orders of the mechanism
+(e.g. `CH4 + 0.5 O2 => CO + 2 H2` with `orders: {CH4: 0.5, O2: 1.3}`), with `<n>` = 0 and no rows when
+the mechanism has none:
 
 ```
 Reaction orders
@@ -324,7 +325,10 @@ concentration gives a zero rate (Cantera's convention). Without the block the re
 coefficients are the exponents, real as in Cantera (`CH4 + 0.5 O2`: `[CH4] [O2]^0.5`); the product
 coefficients are the exponents of the reverse rate in every case (versions before `test-stoich`
 rounded both to the nearest integer in the Arrhenius-type reactions). Orders on
-falloff reactions are not supported (`read_chemistry` returns `ios = 2`).
+falloff reactions are not supported (`read_chemistry` returns `ios = 2`). A file without the block
+(written by an older table writer) is read with the reactant coefficients as orders, the exponents of
+`<n>` = 0; when the general procedure is selected, FLINT prints a `[WARNING]` once per load (standard
+output and error unit) asking to regenerate the tables. The compiled routines do not read the block.
 
 **Troe Fall-off Theory:**
 

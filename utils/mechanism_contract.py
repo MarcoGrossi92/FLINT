@@ -9,7 +9,10 @@ read_chemistry (check_mechanism_contract); Assign_Mechanism refuses a hooked nam
 data does not match. Run from the repository root:
     python3 utils/mechanism_contract.py            # writes src/lib/Lib_Chemistry_contract.f90
     python3 utils/mechanism_contract.py --check    # exit 1 (and a diff) if the committed module
-                                                   # is not the output of this generator
+                                                   # is not the output of this generator, or if the
+                                                   # fingerprints, n_reactions or zeroes_omegadot of
+                                                   # the JSON are not the ones of the sources
+    python3 utils/mechanism_contract.py --fingerprints   # (re)write those fields into the JSON
 The Fortran text after the case records (canonical_composition, element_symbol,
 check_mechanism_contract) is kept here verbatim: change it here and regenerate.
 """
@@ -278,7 +281,193 @@ L.append(r'''  !> Elemental composition as a string: element symbols in standard
 
 end module FLINT_Lib_Chemistry_contract''')
 text = '\n'.join(L) + '\n'
+# ------------------------------------------------------------------------------------------------
+# Reaction structure of the generated routines (format of utils/YTF.py: one '! reac n. <i>: <equation>'
+# comment per reaction), read from the sources of src/lib: per reaction the rate table (class and index),
+# the concentration factors per slot of the forward and backward products, the use of the third body and
+# its efficiencies, and the stoichiometric rows of omegadot. It is recorded in the JSON as 'fingerprint'
+# of every generated case, so that a table writer can check a mechanism file against a compiled routine
+# reaction by reaction without reading the Fortran:
+#     python3 utils/mechanism_contract.py --fingerprints   # (re)write the fingerprints into the JSON
+#     python3 utils/mechanism_contract.py --check          # also fails when a recorded fingerprint differs
+#                                                          # from the one computed from the sources
+# ------------------------------------------------------------------------------------------------
+import re, glob
+from collections import Counter, OrderedDict
+
+def statements(text):
+    out, buf = [], ''
+    for l in text.splitlines():
+        s = l.rstrip()
+        if buf:
+            t = s.lstrip()
+            if t.startswith('&'): t = t[1:]
+            buf += t
+        else: buf = s
+        if buf.endswith('&'): buf = buf[:-1]; continue
+        out.append(buf); buf = ''
+    return out
+
+def parse_dispatch(path):
+    """case name -> (routine, jacobian or None), in file order"""
+    cases, cur = OrderedDict(), None
+    for line in open(path):
+        s = line.strip()
+        m = re.match(r"case\s*\((.*)\)\s*$", s, re.I)
+        if m and 'default' not in s.lower():
+            cur = re.findall(r"'([^']*)'", m.group(1)); continue
+        if re.match(r"case\s+default", s, re.I): cur = None; continue
+        m = re.match(r"chemistry_source\s*=>\s*(\w+)", s, re.I)
+        if m and cur:
+            for n in cur: cases[n] = {'routine': m.group(1), 'jacobian': None}
+            continue
+        m = re.match(r"chemistry_jacobian\s*=>\s*(\w+)", s, re.I)
+        if m and cur and m.group(1).lower() != 'null()':
+            for n in cur: cases[n]['jacobian'] = m.group(1)
+    return cases
+
+def load_routines(fdir):
+    """name.lower() -> (name, file, body); sigs: name.lower() -> normalised dummy-argument list"""
+    routines, sigs = {}, {}
+    for f in sorted(glob.glob(os.path.join(fdir, '**', '*.f90'), recursive=True)):
+        st = statements(open(f, errors='replace').read()); name = None; body = []
+        for s in st:
+            m = re.match(r"\s*subroutine\s+(\w+)\s*\((.*?)\)", s, re.I)
+            if m: name = m.group(1); sigs[name.lower()] = re.sub(r"\s+", "", m.group(2)).lower(); body = []; continue
+            if name and re.match(r"\s*end\s+subroutine", s, re.I):
+                routines[name.lower()] = (name, os.path.basename(f), body); name = None; continue
+            if name: body.append(s)
+    return routines, sigs
+
+def parse_M(expr):
+    eff = {}
+    ms = re.fullmatch(r"\s*sum\(coi\((\d+):(\d+)\)\)\s*", expr)
+    if ms: return {i: 1.0 for i in range(int(ms.group(1)), int(ms.group(2)) + 1)}
+    for term in expr.split('+'):
+        term = term.strip()
+        m = re.fullmatch(r"coi\((\d+)\)(?:\s*\*\s*([0-9.]+(?:[eEdD][+-]?\d+)?))?", term)
+        m2 = re.fullmatch(r"([0-9.]+(?:[eEdD][+-]?\d+)?)\s*\*\s*coi\((\d+)\)", term)
+        if m: eff[int(m.group(1))] = float((m.group(2) or '1').replace('d', 'e').replace('D', 'e'))
+        elif m2: eff[int(m2.group(2))] = float(m2.group(1).replace('d', 'e').replace('D', 'e'))
+        else: raise ValueError('unparsed third-body term: %r' % term)
+    return eff
+
+def group_eff(M):
+    """{slot: eff} -> {"eff": [[value, [slots]]...]} (slots absent from M have efficiency 0)"""
+    g = OrderedDict()
+    for k, v in sorted(M.items()):
+        if v != 0: g.setdefault(repr(v), []).append(k)   # a slot written with efficiency 0 (coi(k)*0.0) is absent: efficiency 0 and no entry are the same
+    return [[float(v), s] for v, s in g.items()]
+
+def parse_generated(body):
+    R, om, curM, curk = OrderedDict(), OrderedDict(), None, None
+    for s in body:
+        t = s.strip()
+        m = re.match(r"!\s*reac n\.\s*(\d+):\s*(.*)", t)
+        if m: R.setdefault(int(m.group(1)), {})['eq'] = m.group(2).strip(); curM = None; curk = None; continue
+        m = re.match(r"M\s*=\s*(.*)", t)
+        if m: curM = parse_M(m.group(1)); continue
+        m = re.match(r"k\s*=\s*f_k_(troe|lindemann)\s*\(\s*(\d+)\s*,", t, re.I)
+        if m: curk = ['troe' if m.group(1).lower() == 'troe' else 'lindemann', int(m.group(2))]; continue
+        m = re.match(r"prod([fb])\((\d+)\)\s*=\s*(.*)", t)
+        if m:
+            side, n, e = m.group(1), int(m.group(2)), m.group(3)
+            mk = re.search(r"f_k([fb])\s*\(\s*(\d+)\s*,", e)
+            if mk: tab = ['arrhenius', int(mk.group(2))]
+            elif re.search(r"\bk\(\s*[12]\s*\)", e): tab = curk
+            else: raise ValueError('reaction %d: unknown rate table in %r' % (n, e))
+            fac = Counter(int(x) for x in re.findall(r"coi\((\d+)\)", e))
+            r = R.setdefault(n, {})
+            r[side] = OrderedDict([('tab', tab), ('fac', OrderedDict((str(k), v) for k, v in sorted(fac.items()))),
+                                   ('usesM', bool(re.search(r"\*\s*M\b", e))), ('Meff', group_eff(curM) if curM is not None else None)])
+            continue
+        m = re.match(r"omegadot\((\d+)\)\s*=\s*(.*)", t)
+        if m:
+            i = int(m.group(1)); e = m.group(2); row = OrderedDict()
+            for sg, a, b, n in re.findall(r"([+-]?)\(\s*([0-9.]+)\s*-\s*([0-9.]+)\s*\)\s*\*\s*\(\s*prodf\((\d+)\)", e):
+                v = (float(a) - float(b)) * (-1 if sg == '-' else 1); row[str(n)] = row.get(str(n), 0) + v
+            om[str(i)] = OrderedDict((k, v) for k, v in row.items() if abs(v) > 0)
+    return R, om
+
+zeroes = OrderedDict()   # case name -> the routine zeroes omegadot (computed by fingerprints())
+
+def fingerprints():
+    """{case name: fingerprint} of the generated cases of the JSON, computed from src/lib; errors (list)"""
+    lib = os.path.join(root, 'src', 'lib')
+    dispatch = parse_dispatch(os.path.join(lib, 'Lib_Chemistry_wdot.f90'))
+    routines, _ = load_routines(lib)
+    out, errors = OrderedDict(), []
+    for name, c in C['cases'].items():
+        rb = routines.get(c['routine'].lower())
+        if rb is not None:   # every case: does the routine zero omegadot before its assignments (trailing species stay 0)?
+            zeroes[name] = bool(re.search(r"omegadot\s*=\s*0", '\n'.join(t.split('!')[0] for t in rb[2])))
+        if c.get('kind') != 'generated':
+            continue
+        d = dispatch.get(name)
+        if d is None or d['routine'].lower() != c['routine'].lower():
+            errors.append('case %s: Assign_Mechanism selects %s, the JSON records %s' % (name, d and d['routine'], c['routine'])); continue
+        rname, rfile, body = routines.get(c['routine'].lower(), (None, None, None))
+        if body is None:
+            errors.append('case %s: routine %s not found in src/lib' % (name, c['routine'])); continue
+        try:
+            R, om = parse_generated(body)
+        except ValueError as e:
+            errors.append('case %s: %s' % (name, e)); continue
+        narr = len(set(r['f']['tab'][1] for r in R.values() if r['f']['tab'][0] == 'arrhenius'))
+        ntroe = len(set(tuple(r['f']['tab']) for r in R.values() if r['f']['tab'][0] == 'troe'))
+        nlind = len(set(tuple(r['f']['tab']) for r in R.values() if r['f']['tab'][0] == 'lindemann'))
+        if [narr, ntroe, nlind] != [c['nrc']['arrhenius'], c['nrc']['troe'], c['nrc']['lindemann']]:
+            errors.append('case %s: the routine reads %d/%d/%d Arrhenius/Troe/Lindemann tables, the JSON records %s' % (name, narr, ntroe, nlind, dict(c['nrc'])))
+        Mtab = []   # distinct third-body efficiency sets of the routine; the reactions refer to them by index
+        for n in sorted(R):
+            for side in ('f', 'b'):
+                if side in R[n]:
+                    me = R[n][side].pop('Meff')
+                    if me is not None:
+                        key = json.dumps(me)
+                        if key not in [json.dumps(x) for x in Mtab]: Mtab.append(me)
+                        R[n][side]['Mi'] = [json.dumps(x) for x in Mtab].index(key)
+        out[name] = OrderedDict([('M', Mtab), ('reactions', OrderedDict((str(n), R[n]) for n in sorted(R))), ('omegadot', om)])
+    return out, errors
+
+def dump_contract(c):
+    """the JSON text: indent 1, each fingerprint on one line (data for a checker, not for the eye)"""
+    fps, cc = {}, json.loads(json.dumps(c), object_pairs_hook=collections.OrderedDict)
+    for name, e in cc['cases'].items():
+        if e.get('fingerprint') is not None:
+            fps[name] = json.dumps(e['fingerprint'], separators=(',', ':')); e['fingerprint'] = '@@FP:%s@@' % name
+    t = json.dumps(cc, indent=1)
+    for name, f in fps.items():
+        t = t.replace('"@@FP:%s@@"' % name, f)
+    return t + '\n'
+
+if '--fingerprints' in sys.argv[1:]:
+    fp, errs = fingerprints()
+    if errs:
+        print('\n'.join('ERROR: ' + e for e in errs)); sys.exit(1)
+    for name, z in zeroes.items():
+        C['cases'][name]['zeroes_omegadot'] = z
+    for name, f in fp.items():
+        C['cases'][name]['n_reactions'] = len(f['reactions'])
+        C['cases'][name]['fingerprint'] = f
+    open(src, 'w').write(dump_contract(C))
+    print('fingerprints written for %d generated cases into %s' % (len(fp), os.path.relpath(src, root)))
+    sys.exit(0)
+
 if '--check' in sys.argv[1:]:
+    # the recorded fingerprints must be the ones computed from the sources
+    fp, errs = fingerprints()
+    for name, f in fp.items():
+        if json.loads(json.dumps(C['cases'][name].get('fingerprint'))) != json.loads(json.dumps(f)):
+            errs.append('case %s: the fingerprint in the JSON is not the one of the routine (run --fingerprints)' % name)
+        if C['cases'][name].get('n_reactions') != len(f['reactions']):
+            errs.append('case %s: n_reactions is %s in the JSON, the routine has %d reactions (run --fingerprints)' % (name, C['cases'][name].get('n_reactions'), len(f['reactions'])))
+    for name, z in zeroes.items():
+        if C['cases'][name].get('zeroes_omegadot') != z:
+            errs.append('case %s: zeroes_omegadot is %s in the JSON, the routine %s omegadot (run --fingerprints)' % (name, C['cases'][name].get('zeroes_omegadot'), 'zeroes' if z else 'does not zero'))
+    if errs:
+        print('\n'.join('MISMATCH: ' + e for e in errs)); sys.exit(1)
+    print('OK: the fingerprints of the %d generated cases are the ones of their routines' % len(fp))
     # equality test: the committed module must be the output of this generator
     cur = open(dst).read()
     if cur != text:

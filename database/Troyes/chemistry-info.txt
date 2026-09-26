@@ -245,3 +245,6 @@ Reaction definition
 17 HCL 0.0 1.0 1.0
 17 N2 0.0 0.0 1.0
 17 M 1.0 1.0 0.0
+
+Reaction orders
+0

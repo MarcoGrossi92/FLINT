@@ -13,3 +13,6 @@ Reaction definition
 1 H2O 0.0 1.0 6.0
 1 N2 0.0 0.0 0.8
 1 M 1.0 1.0 0.0
+
+Reaction orders
+0

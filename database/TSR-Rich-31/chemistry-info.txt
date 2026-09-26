@@ -6508,3 +6508,6 @@ Reaction definition
 197 CH2 0.0 0.0 0.0
 197 CO2 0.0 0.0 0.0
 197 M 0.0 0.0 0.0
+
+Reaction orders
+0

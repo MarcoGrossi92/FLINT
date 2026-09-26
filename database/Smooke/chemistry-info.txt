@@ -637,3 +637,6 @@ Reaction definition
 35 CO2 0.0 0.0 1.5
 35 N2 0.0 0.0 0.4
 35 M 1.0 1.0 0.0
+
+Reaction orders
+0

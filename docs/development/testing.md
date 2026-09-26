@@ -123,6 +123,14 @@ test-orders     the general procedure with the optional 'Reaction orders' block 
                 rates for JLR-frassoldati (yaml orders) and, without it, Cantera's law of the stoichiometric
                 coefficients (the yaml orders removed), not the integer-rounded one of older versions
                 (fixture test/orders/JLR-frassoldati: tables of a table writer, references embedded)
+test-orders-warn the WARNING of the general procedure for a chemistry-info.txt without the 'Reaction
+                orders' block: none for a block with zero rows (same omegadot, bit for bit, as without the
+                block), one when the general procedure is selected before or after the tables are loaded,
+                none for a hooked name; once per load, on standard output and on the error unit (child
+                process). The files without the block are copies made at run time (orders/noblock from
+                test/orders/JLR-frassoldati/chemistry-info-noblock.txt, orders/wd-noblock from database/WD):
+                every chemistry-info.txt of database/ and of the fixtures ends with the block (0 rows when
+                the mechanism has no orders), as a table writer writes it
 test-stoich     the general procedure reproduces Cantera's net production rates (to 1e-10 of the gross
                 rates) for fractional stoichiometric coefficients without orders: Arrhenius reactants and
                 products, three-body, Troe and Lindemann, 24-30 states each, and its net rates vanish at

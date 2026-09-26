@@ -57,6 +57,7 @@ module FLINT_Lib_Chemistry_wdot
 contains
 
   subroutine Assign_Mechanism(mad_world)
+    use FLINT_Lib_Chemistry_data, only: general_selected, have_orders, ni1_arrh_tab, warn_no_orders_block
     use WD_mod
     use globH2_mod
     use JLRs_mod
@@ -86,6 +87,7 @@ contains
     chemistry_jacobian => null()
     deferred_source => null(); deferred_jacobian => null()
     hooked = .true.
+    general_selected = .false.
 
     select case(mad_world)
     case('WD')
@@ -156,6 +158,8 @@ contains
         error stop 1
       endif
       chemistry_source => general
+      general_selected = .true.
+      if (allocated(ni1_arrh_tab) .and. .not. have_orders) call warn_no_orders_block()   ! tables already loaded
     end select
 
     ! Mechanism contract: a hooked name selects a compiled routine whose species

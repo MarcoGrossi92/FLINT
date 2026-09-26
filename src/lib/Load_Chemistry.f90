@@ -169,6 +169,7 @@ contains
     enddo
     ios = 0
     close(unitfile)
+    if (.not. have_orders .and. general_selected) call warn_no_orders_block()
 
     !! Rate Arrhenius
     if (present(folder)) then

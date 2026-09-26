@@ -27,10 +27,14 @@ module FLINT_Lib_Chemistry_data
   ! Arrhenius (for the general loop only)
   !> Forward reaction orders of the Arrhenius reactions from the optional 'Reaction orders' block
   !> of chemistry-info.txt: ord_arrh_tab(is, ir) = order of species is in the
-  !> Arrhenius reaction ir (the explicit yaml order where given, the stoichiometric reactant
+  !> Arrhenius reaction ir (the explicit order where given, the stoichiometric reactant
   !> coefficient elsewhere). have_orders = .false. (no block): the general loop raises the
-  !> concentrations to the integer-rounded stoichiometric coefficients, as before.
+  !> concentrations to the real stoichiometric reactant coefficients, the same exponents as a block with
+  !> no rows. A file without the block comes from an older table writer: when the general procedure is
+  !> selected (general_selected, set by Assign_Mechanism) a WARNING says so once (orders_block_warned).
   logical                              :: have_orders = .false.
+  logical                              :: general_selected = .false.
+  logical                              :: orders_block_warned = .false.
   real(8), dimension(:,:), allocatable :: ord_arrh_tab
   real(8), dimension(:,:), allocatable :: ni1_arrh_tab
   real(8), dimension(:,:), allocatable :: ni2_arrh_tab
@@ -207,6 +211,7 @@ contains
     if (allocated(kc_troe_tab)) deallocate(kc_troe_tab)
     if (allocated(Fcent_tab)) deallocate(Fcent_tab)
     have_orders = .false.
+    orders_block_warned = .false.
     if (allocated(ord_arrh_tab)) deallocate(ord_arrh_tab)
     if (allocated(ni1_arrh_tab)) deallocate(ni1_arrh_tab)
     if (allocated(ni2_arrh_tab)) deallocate(ni2_arrh_tab)
@@ -218,5 +223,18 @@ contains
     if (allocated(ni2_troe_tab)) deallocate(ni2_troe_tab)
     if (allocated(epsch_troe_tab)) deallocate(epsch_troe_tab)
   end subroutine free_chemistry_data
+
+  !> WARNING (once) of the general procedure for a chemistry-info.txt without the 'Reaction orders' block
+  subroutine warn_no_orders_block()
+    use, intrinsic :: iso_fortran_env, only: error_unit
+    implicit none
+    character(len=*), parameter :: msg = "[WARNING] FLINT: chemistry-info.txt has no 'Reaction orders' block"// &
+      " (the file comes from an older table writer): the general procedure takes the stoichiometric reactant"// &
+      " coefficients as orders; regenerate the chemistry tables so that they carry the orders of the mechanism"
+    if (orders_block_warned) return
+    orders_block_warned = .true.
+    write(*,'(A)') msg
+    write(error_unit,'(A)') msg
+  end subroutine warn_no_orders_block
 
 end module FLINT_Lib_Chemistry_data

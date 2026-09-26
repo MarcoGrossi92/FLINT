@@ -1384,3 +1384,6 @@ Reaction definition
 51 C2H6 0.0 0.0 0.0
 51 CH3O2 0.0 0.0 0.0
 51 M 1.0 1.0 0.0
+
+Reaction orders
+0

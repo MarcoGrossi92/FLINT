@@ -25,3 +25,6 @@ Reaction definition
 2 O 0.0 0.0 1.0
 2 OH 0.0 0.0 1.0
 2 M 1.0 1.0 0.0
+
+Reaction orders
+0

@@ -19,3 +19,6 @@ Reaction definition
 2 H2O 1.5 0.0 0.0
 2 N2 0.0 0.0 0.0
 2 M 0.0 0.0 0.0
+
+Reaction orders
+0

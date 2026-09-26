@@ -2788,3 +2788,6 @@ Reaction definition
 103 HO2 1.0 0.0 0.0
 103 HCO 0.0 1.0 0.0
 103 M 0.0 0.0 0.0
+
+Reaction orders
+0

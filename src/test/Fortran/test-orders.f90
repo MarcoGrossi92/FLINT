@@ -42,6 +42,7 @@ program test
   call verdict('block read: orders of reaction 1 = CH4 0.5, O2 1.3, others stoichiometric', &
     ord_arrh_tab(2,1) == 0.5d0 .and. ord_arrh_tab(1,1) == 1.3d0 .and. ord_arrh_tab(1,2) == ni1_arrh_tab(1,2))
   call Assign_Mechanism(mech_name)   ! JLR-Frassoldati is not hooked: general (WARNING expected)
+  call verdict('block read: no WARNING about the orders block', .not. orders_block_warned)
   kb_tab = 0d0   ! forward part only: the table's kb comes from the writer's thermo database, not from the yaml
   open(newunit=u, file='orders/JLR-frassoldati/reference.txt', status='old', action='read')
   read(u,'(A)') line
@@ -65,6 +66,7 @@ program test
   err = read_chemistry(folder='orders/noblock', mech_name=mech_name)
   if (err /= 0) then; write(*,'(A,I0)') '[FAIL] read_chemistry orders/noblock: ios=', err; stop 1; endif
   call verdict('no block: have_orders is false', .not. have_orders)
+  call verdict('no block with the general procedure selected: WARNING printed (older table writer)', orders_block_warned)
   kb_tab = 0d0
   open(newunit=u, file='orders/JLR-frassoldati/reference.txt', status='old', action='read')
   read(u,'(A)') line; read(u,*) nsr, nstate

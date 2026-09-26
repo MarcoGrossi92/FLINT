@@ -112,8 +112,10 @@ test-contract   the mechanism contract check of Assign_Mechanism (and, with pyth
 test-falloff    the Troe/Lindemann rates where the tables vanish (Pr = 0, k_inf = 0 give a
                 zero rate, no NaN) and the k_c <= 0 convention for irreversible falloff
 test-ranges     the temperature-grid contract of the tables: falloff tables on the Arrhenius grid, transport
-                tables on the thermo grid, rate tables that do not cover the thermo grid (refusals), a
-                rate table wider than the thermo grid (accepted, same rows as on the thermo grid)
+                and diffusion tables on the thermo grid or starting below it (accepted, same values as on
+                the thermo grid) and starting above it (refused), rate tables that do not cover the thermo
+                grid (refusals), a rate table wider than the thermo grid (accepted, same rows as on the
+                thermo grid)
 test-inert      species appended after the slots of a compiled routine are inert on every path (direct
                 call, rhs_native, analytical Jacobian, jac_native) with sentinel-filled outputs
 test-rhs-range  rhs_native/jac_native bail out (F = -1, zero Jacobian) outside the RATE tables as

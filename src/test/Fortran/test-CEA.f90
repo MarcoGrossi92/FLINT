@@ -36,7 +36,7 @@ program test_eq
   do i = 1, N
     of = 0.01d0 * (100d0/0.01d0)**(real(i-1, kind=8)/real(N-1, kind=8))
     rhoi = 1d-20
-    rhoi(5) = of/(of+1d0)
+    rhoi(2) = of/(of+1d0)   ! O2: database/WD is in the order of WD.f90 (CH4, O2, CO2, H2O, CO)
     rhoi(1) = 1d0/(of+1d0)
     rhoi = rhoi * rho_
     call CEA_solve(T_, rhoi, teq, y_eq)
@@ -50,20 +50,20 @@ program test_eq
   blessed_y = 3.26511387e-01
 
   rhoi = 1d-20
-  rhoi(5) = 0.8d0
+  rhoi(2) = 0.8d0   ! O2
   rhoi(1) = 0.2d0
 
   call CEA_solve(T_, rhoi, teq, y_eq)
 
   write(*,*)'FLINT equilibrium temperature   = ', teq
   write(*,*)'Cantera equilibrium temperature = ', blessed_Teq
-  write(*,*)'FLINT yCO   = ', y_eq(2)
+  write(*,*)'FLINT yCO   = ', y_eq(5)
   write(*,*)'Cantera yCO = ', blessed_y
 
   verdict = 'success'
   if (isnan(teq)) verdict = 'fail'
   if (abs(teq-blessed_Teq)/blessed_Teq*100d0>1d0) verdict = 'fail'
-  if (abs(y_eq(2)-blessed_y)/blessed_Teq*100d0>1d0) verdict = 'fail'
+  if (abs(y_eq(5)-blessed_y)/blessed_Teq*100d0>1d0) verdict = 'fail'
 
   write(*,'(2A20)') 'Verdict -> ', verdict
 

@@ -5,6 +5,7 @@ program test
   use FLINT_Load_chemistry
   use FLINT_Lib_Chemistry_data
   use FLINT_Lib_Chemistry_wdot
+  use FLINT_Lib_Chemistry_data, only: T_tab_min, T_tab_max
 # if defined (CANTERA)
   use FLINT_Lib_Chemistry_rhs, only: gas
   use cantera
@@ -46,7 +47,8 @@ program test
   do j = 1, 1
     do i = Tstart, Tend
       T = dble(i)
-      call Chemistry_Source ( rhoi, T, droic )
+      droic = 0.d0   ! rows outside the rate tables stay zero (TSR-Rich-31's tables start at 500 K)
+      if (i >= T_tab_min .and. i < T_tab_max) call Chemistry_Source ( rhoi, T, droic )
       wdot_explicit(:,i) = droic
     enddo
   enddo
@@ -120,7 +122,8 @@ program test
   do j = 1, 1
     do i = Tstart, Tend
       T = dble(i)
-      call Chemistry_Source ( rhoi, T, droic )
+      droic = 0.d0   ! rows outside the rate tables stay zero (TSR-Rich-31's tables start at 500 K)
+      if (i >= T_tab_min .and. i < T_tab_max) call Chemistry_Source ( rhoi, T, droic )
       wdot_explicit(:,i) = droic
     enddo
   enddo
@@ -201,7 +204,8 @@ program test
   do j = 1, 1
     do i = Tstart, Tend
       T = dble(i)
-      call Chemistry_Source ( rhoi, T, droic )
+      droic = 0.d0   ! rows outside the rate tables stay zero (TSR-Rich-31's tables start at 500 K)
+      if (i >= T_tab_min .and. i < T_tab_max) call Chemistry_Source ( rhoi, T, droic )
       wdot_explicit(:,i) = droic
     enddo
   enddo
@@ -277,7 +281,8 @@ program test
   do j = 1, 1
     do i = Tstart, Tend
       T = dble(i)
-      call Chemistry_Source ( rhoi, T, droic )
+      droic = 0.d0   ! rows outside the rate tables stay zero (TSR-Rich-31's tables start at 500 K)
+      if (i >= T_tab_min .and. i < T_tab_max) call Chemistry_Source ( rhoi, T, droic )
       wdot_explicit(:,i) = droic
     enddo
   enddo
@@ -353,7 +358,8 @@ program test
   do j = 1, 1
     do i = Tstart, Tend
       T = dble(i)
-      call Chemistry_Source ( rhoi, T, droic )
+      droic = 0.d0   ! rows outside the rate tables stay zero (TSR-Rich-31's tables start at 500 K)
+      if (i >= T_tab_min .and. i < T_tab_max) call Chemistry_Source ( rhoi, T, droic )
       wdot_explicit(:,i) = droic
     enddo
   enddo
@@ -429,7 +435,8 @@ program test
   do j = 1, 1
     do i = Tstart, Tend
       T = dble(i)
-      call Chemistry_Source ( rhoi, T, droic )
+      droic = 0.d0   ! rows outside the rate tables stay zero (TSR-Rich-31's tables start at 500 K)
+      if (i >= T_tab_min .and. i < T_tab_max) call Chemistry_Source ( rhoi, T, droic )
       wdot_explicit(:,i) = droic
     enddo
   enddo
@@ -505,7 +512,8 @@ program test
   do j = 1, 1
     do i = Tstart, Tend
       T = dble(i)
-      call Chemistry_Source ( rhoi, T, droic )
+      droic = 0.d0   ! rows outside the rate tables stay zero (TSR-Rich-31's tables start at 500 K)
+      if (i >= T_tab_min .and. i < T_tab_max) call Chemistry_Source ( rhoi, T, droic )
       wdot_explicit(:,i) = droic
     enddo
   enddo
@@ -581,7 +589,8 @@ program test
   do j = 1, 1
     do i = Tstart, Tend
       T = dble(i)
-      call Chemistry_Source ( rhoi, T, droic )
+      droic = 0.d0   ! rows outside the rate tables stay zero (TSR-Rich-31's tables start at 500 K)
+      if (i >= T_tab_min .and. i < T_tab_max) call Chemistry_Source ( rhoi, T, droic )
       wdot_explicit(:,i) = droic
     enddo
   enddo
@@ -657,7 +666,8 @@ program test
   do j = 1, 1
     do i = Tstart, Tend
       T = dble(i)
-      call Chemistry_Source ( rhoi, T, droic )
+      droic = 0.d0   ! rows outside the rate tables stay zero (TSR-Rich-31's tables start at 500 K)
+      if (i >= T_tab_min .and. i < T_tab_max) call Chemistry_Source ( rhoi, T, droic )
       wdot_explicit(:,i) = droic
     enddo
   enddo
@@ -733,7 +743,8 @@ program test
   do j = 1, 1
     do i = Tstart, Tend
       T = dble(i)
-      call Chemistry_Source ( rhoi, T, droic )
+      droic = 0.d0   ! rows outside the rate tables stay zero (TSR-Rich-31's tables start at 500 K)
+      if (i >= T_tab_min .and. i < T_tab_max) call Chemistry_Source ( rhoi, T, droic )
       wdot_explicit(:,i) = droic
     enddo
   enddo

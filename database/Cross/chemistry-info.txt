@@ -700,3 +700,6 @@ Reaction definition
 33 O 0.0 0.0 0.0
 33 OH 0.0 0.0 0.0
 33 M 0.0 0.0 0.0
+
+Reaction orders
+0

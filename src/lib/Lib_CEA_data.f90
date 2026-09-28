@@ -30,7 +30,7 @@ MODULE FLINT_CEA_data
   LOGICAL :: Hp, Ions, Massf, Pderiv, Short, Tp, Vol
 
   REAL(8) :: R, Size, Trace
-  REAL(8), PARAMETER :: Rr=8314.51D0,Pi=3.14159265D0
+  REAL(8), PARAMETER :: Rr=8314.46261815324D0,Pi=3.14159265D0  ! Rr = Runiv of FLINT_Lib_Thermodynamic (exact SI value; test-runiv checks the identity)
   REAL(8) :: Atwt(MAXEL), X(MAXMAT)
   REAL(8) :: A(MAXEL, MAXNGC)
 

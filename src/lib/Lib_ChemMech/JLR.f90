@@ -28,32 +28,32 @@ contains
     Tint(2) = T_i + 1
 
     ! 0.5 CH4 + 1.25 O2 --> CO + 2 H2 - 0.5 CH4 + 0.75 O2
-    prod1 = comp_ch_tabT(1,kf_tab,Tint,Tdiff)*(coi(2)**0.50)*(coi(1)**1.25)
+    prod1 = f_kf(1,Tint,Tdiff)*(coi(2)**0.50)*(coi(1)**1.25)
 
     ! CH4 + H2O --> CO + 3 H2
-    prod2 = comp_ch_tabT(2,kf_tab,Tint,Tdiff)*(coi(2)*coi(3))
+    prod2 = f_kf(2,Tint,Tdiff)*(coi(2)*coi(3))
 
     ! CO + H2O <--> CO2 + H2
-    prod3 = comp_ch_tabT(3,kf_tab,Tint,Tdiff)*coi(4)*coi(3)- &
-            comp_ch_tabT(3,kb_tab,Tint,Tdiff)*coi(5)*coi(6)
+    prod3 = f_kf(3,Tint,Tdiff)*coi(4)*coi(3)- &
+            f_kb(3,Tint,Tdiff)*coi(5)*coi(6)
 
     ! 1/4 H2 + 3/2 O2 <--> H2O + O2 - 3/4 H2
     if (coi(6) < 1.d-10) then
-      prod4 = (comp_ch_tabT(4,kf_tab,Tint,Tdiff)*(coi(6)**0.25)*(coi(1)**1.50))
+      prod4 = (f_kf(4,Tint,Tdiff)*(coi(6)**0.25)*(coi(1)**1.50))
     else
-      prod4 = comp_ch_tabT(4,kf_tab,Tint,Tdiff)*(coi(6)**0.25)*(coi(1)**1.50) - & 
-              comp_ch_tabT(4,kb_tab,Tint,Tdiff)*(coi(3))*(coi(1))*(coi(6)**(-0.75))
+      prod4 = f_kf(4,Tint,Tdiff)*(coi(6)**0.25)*(coi(1)**1.50) - & 
+              f_kb(4,Tint,Tdiff)*(coi(3))*(coi(1))*(coi(6)**(-0.75))
     endif
 
     ! O2 <--> 2O
-    prod5 = comp_ch_tabT(5,kf_tab,Tint,Tdiff)*coi(1)-comp_ch_tabT(5,kb_tab,Tint,Tdiff)*coi(8)**2
+    prod5 = f_kf(5,Tint,Tdiff)*coi(1)-f_kb(5,Tint,Tdiff)*coi(8)**2
 
     ! H2O <--> H + OH
-    prod6 = comp_ch_tabT(6,kf_tab,Tint,Tdiff)*coi(3)-comp_ch_tabT(6,kb_tab,Tint,Tdiff)*coi(7)*coi(9)
+    prod6 = f_kf(6,Tint,Tdiff)*coi(3)-f_kb(6,Tint,Tdiff)*coi(7)*coi(9)
 
     ! OH + H2 <--> H + H2O
-    prod7 = comp_ch_tabT(7,kf_tab,Tint,Tdiff)*coi(9)*coi(6)- &
-            comp_ch_tabT(7,kb_tab,Tint,Tdiff)*coi(7)*coi(3)
+    prod7 = f_kf(7,Tint,Tdiff)*coi(9)*coi(6)- &
+            f_kb(7,Tint,Tdiff)*coi(7)*coi(3)
      
     ! Chemical Source Terms
     omegadot = 0d0
@@ -96,28 +96,28 @@ contains
     Tint(2) = T_i + 1
 
     ! 0.5 CH4 + 1.25 O2 --> CO + 2 H2 - 0.5 CH4 + 0.75 O2
-    prod1 = comp_ch_tabT(1,kf_tab,Tint,Tdiff)*(coi(2)**0.50)*(coi(1)**1.30)
+    prod1 = f_kf(1,Tint,Tdiff)*(coi(2)**0.50)*(coi(1)**1.30)
 
     ! CH4 + H2O --> CO + 3 H2
-    prod2 = comp_ch_tabT(2,kf_tab,Tint,Tdiff)*(coi(2)*coi(3))
+    prod2 = f_kf(2,Tint,Tdiff)*(coi(2)*coi(3))
 
     ! CO + H2O <--> CO2 + H2
-    prod3 = comp_ch_tabT(3,kf_tab,Tint,Tdiff)*coi(4)*coi(3)- &
-            comp_ch_tabT(3,kb_tab,Tint,Tdiff)*coi(5)*coi(6)
+    prod3 = f_kf(3,Tint,Tdiff)*coi(4)*coi(3)- &
+            f_kb(3,Tint,Tdiff)*coi(5)*coi(6)
 
     ! 1/4 H2 + 3/2 O2 <--> H2O + O2 - 3/4 H2
     if (coi(6) < 1.d-10) then
-      prod4 = (comp_ch_tabT(4,kf_tab,Tint,Tdiff)*(coi(6)**0.3)*(coi(1)**1.55))
+      prod4 = (f_kf(4,Tint,Tdiff)*(coi(6)**0.3)*(coi(1)**1.55))
     else
-      prod4 = comp_ch_tabT(4,kf_tab,Tint,Tdiff)*(coi(6)**0.3)*(coi(1)**1.55) - & 
-              comp_ch_tabT(4,kb_tab,Tint,Tdiff)*(coi(3))*(coi(1))*(coi(6)**(-0.75))
+      prod4 = f_kf(4,Tint,Tdiff)*(coi(6)**0.3)*(coi(1)**1.55) - & 
+              f_kb(4,Tint,Tdiff)*(coi(3))*(coi(1))*(coi(6)**(-0.75))
     endif
 
     ! O2 <--> 2O
-    prod5 = comp_ch_tabT(5,kf_tab,Tint,Tdiff)*coi(1)-comp_ch_tabT(5,kb_tab,Tint,Tdiff)*coi(8)**2
+    prod5 = f_kf(5,Tint,Tdiff)*coi(1)-f_kb(5,Tint,Tdiff)*coi(8)**2
 
     ! H2O <--> H + OH
-    prod6 = comp_ch_tabT(6,kf_tab,Tint,Tdiff)*coi(3)-comp_ch_tabT(6,kb_tab,Tint,Tdiff)*coi(7)*coi(9)
+    prod6 = f_kf(6,Tint,Tdiff)*coi(3)-f_kb(6,Tint,Tdiff)*coi(7)*coi(9)
      
     ! Chemical Source Terms
     omegadot = 0d0
@@ -162,35 +162,35 @@ contains
     Tint(2) = T_i + 1
 
     !> 0.5 C2H4 + 1.25 O2 --> 2 CO + 2 H2 - 0.5 C2H4 + 0.25 O2
-    prod1 = comp_ch_tabT(1,kf_tab,Tint,Tdiff)*(coi(2)**0.50)*(coi(1)**1.25)
+    prod1 = f_kf(1,Tint,Tdiff)*(coi(2)**0.50)*(coi(1)**1.25)
 
     !> C2H4 + H2O --> 2 CO + 4 H2 - H2O
-    prod2 = comp_ch_tabT(2,kf_tab,Tint,Tdiff)*coi(2)*coi(3)
+    prod2 = f_kf(2,Tint,Tdiff)*coi(2)*coi(3)
 
     !> CO + H2O <--> CO2 + H2
-    prod3 = comp_ch_tabT(3,kf_tab,Tint,Tdiff)*coi(4)*coi(3)-&
-            comp_ch_tabT(3,kb_tab,Tint,Tdiff)*coi(5)*coi(6)
+    prod3 = f_kf(3,Tint,Tdiff)*coi(4)*coi(3)-&
+            f_kb(3,Tint,Tdiff)*coi(5)*coi(6)
 
     !> 1/4 H2 + 3/2 O2 <--> H2O + O2 - 3/4 H2
     if (coi(6) < 1.d-10) then
-      prod4 = comp_ch_tabT(4,kf_tab,Tint,Tdiff)*(coi(6)**0.25)*(coi(1)**1.50)
+      prod4 = f_kf(4,Tint,Tdiff)*(coi(6)**0.25)*(coi(1)**1.50)
     else
-      prod4 = comp_ch_tabT(4,kf_tab,Tint,Tdiff)*(coi(6)**0.25)*(coi(1)**1.50) - &
-              comp_ch_tabT(4,kb_tab,Tint,Tdiff)*coi(3)*coi(1)*(coi(6)**(-0.75))
+      prod4 = f_kf(4,Tint,Tdiff)*(coi(6)**0.25)*(coi(1)**1.50) - &
+              f_kb(4,Tint,Tdiff)*coi(3)*coi(1)*(coi(6)**(-0.75))
     endif
 
     !> O2 <--> 2O
-    prod5 = comp_ch_tabT(5,kf_tab,Tint,Tdiff)*coi(1)-comp_ch_tabT(5,kb_tab,Tint,Tdiff)*coi(8)**2
+    prod5 = f_kf(5,Tint,Tdiff)*coi(1)-f_kb(5,Tint,Tdiff)*coi(8)**2
 
     !> H2O <--> H + OH
-    prod6 = comp_ch_tabT(6,kf_tab,Tint,Tdiff)*coi(3)-comp_ch_tabT(6,kb_tab,Tint,Tdiff)*coi(7)*coi(9)
+    prod6 = f_kf(6,Tint,Tdiff)*coi(3)-f_kb(6,Tint,Tdiff)*coi(7)*coi(9)
 
     !> OH + H2 <--> H + H2O
-    prod7 = comp_ch_tabT(7,kf_tab,Tint,Tdiff)*coi(9)*coi(6)- &
-            comp_ch_tabT(7,kb_tab,Tint,Tdiff)*coi(7)*coi(3)
+    prod7 = f_kf(7,Tint,Tdiff)*coi(9)*coi(6)- &
+            f_kb(7,Tint,Tdiff)*coi(7)*coi(3)
 
     !> C12H24 --> 6C2H4 
-    prod8 = comp_ch_tabT(8,kf_tab,Tint,Tdiff)*coi(10)
+    prod8 = f_kf(8,Tint,Tdiff)*coi(10)
 
     !> Chemical Source Terms
     omegadot = 0d0

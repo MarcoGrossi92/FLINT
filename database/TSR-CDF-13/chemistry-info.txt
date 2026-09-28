@@ -697,3 +697,6 @@ Reaction definition
 46 HCO 0.0 0.0 0.0
 46 O 0.0 0.0 0.0
 46 M 0.0 0.0 0.0
+
+Reaction orders
+0

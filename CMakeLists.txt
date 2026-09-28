@@ -1,15 +1,11 @@
 cmake_minimum_required(VERSION 3.23)
 
-# -------- Compiler overrides (for macOS) --------
-# if (UNIX AND APPLE)
-#     set(CMAKE_CXX_COMPILER "/opt/homebrew/bin/g++-15")
-#     set(CMAKE_C_COMPILER   "/opt/homebrew/bin/gcc-15")
-# endif ()
-
 # -------- Say my name! --------
 set(lib "FLINT")
 
 project (FLINT LANGUAGES C CXX Fortran)
+
+OPTION(USE_CANTERA "Use Cantera" OFF)
 
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
   set(CMAKE_VERBOSE_MAKEFILE FALSE)
@@ -64,6 +60,7 @@ endmacro()
 
 # -------- Git submodules --------
 
+# Preliminary check to ensure dependency.
 if (USE_CANTERA)
   set ( USE_SUNDIALS ON )
 endif()
@@ -81,8 +78,6 @@ if (NOT TARGET ORION)
 endif()
 
 # Cantera
-# Cantera is optional and only used by FLINT
-OPTION(USE_CANTERA "Use Cantera" ON)
 if (USE_CANTERA)
   # Find SUNDIALS (created by OSLO subdirectory)
   set(SUNDIALS_INSTALL_DIR "${OSLO_PATH}/sundials-install")

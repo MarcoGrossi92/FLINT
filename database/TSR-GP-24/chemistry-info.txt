@@ -2867,3 +2867,6 @@ Reaction definition
 110 HCO2 0.0 1.0 1.0
 110 CO2 0.0 0.0 1.0
 110 M 1.0 1.0 0.0
+
+Reaction orders
+0

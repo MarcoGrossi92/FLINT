@@ -30,7 +30,10 @@ $$
 f(T) = f(T_i) + \big(f(T_{i+1}) - f(T_i)\big)\cdot(T - T_i) 
 $$
 
-where the integer spacing $T_{i+1} - T_i = 1$ K has been assumed.
+where the integer spacing $T_{i+1} - T_i = 1$ K has been assumed. Outside the table the temperature is
+clamped (`f_tabT` in `src/lib/Lib_ThermoTransport.f90`): below the first row $T_\text{min}$ a property takes
+its value at $T_\text{min}$, from $T_\text{max} - 1$ up its value at $T_\text{max} - 1$ (the last row of the table
+never gets a weight), so $c_p$, $h$ and the other properties are constant there, not extrapolated.
 
 ### Real Fluid — 2D Bilinear Interpolation
 
@@ -77,7 +80,7 @@ $$
 R_\text{mix} = \sum_{s=1}^{N_s} Y_s R_s = \sum_{s=1}^{N_s} \frac{\rho_s}{\rho} R_s
 $$
 
-where $Y_s = \rho_s/\rho$ is the mass fraction of species $s$, and $R_s = R_u/M_s$ is the specific gas constant ($R_u = 8314.46$ J/(kmol·K) is the universal gas constant and $M_s$ is the molecular weight).
+where $Y_s = \rho_s/\rho$ is the mass fraction of species $s$, and $R_s = R_u/M_s$ is the specific gas constant ($R_u = 8314.46261815324$ J/(kmol·K) is the universal gas constant (exact SI value, `Runiv` in the code) and $M_s$ is the molecular weight).
 
 **Mixture specific heat capacity at constant pressure:**
 $$

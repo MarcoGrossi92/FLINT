@@ -90,6 +90,71 @@ test-CEA
 
 ---
 
+### 5. Contract and Table Unit Tests
+
+Three drivers that need no Cantera and no fixture beyond `database/WD` and `test/tables/WD-100K`
+(made by `test/tables/make_WD-100K.py`); each prints ` Verdict -> pass|fail` and exits 1 on failure:
+
+```
+test-tables     rate tables are indexed by temperature whatever their first row:
+                f_kf/f_kb return row T on database/WD and on the 100..400 K copy, and every
+                hand-written routine gives bit-identical omegadot with tables starting at 50, 100,
+                300 and 799 K (positive control: the assumed-shape accessor of FLINT <= 2223136);
+                the public comp_ch_tabT equals f_kf/f_kb on the 1 K, the 100..400 K and the
+                synthetic 100 K tables; the analytical Jacobians define their whole block with
+                species after the slots
+test-contract   the mechanism contract check of Assign_Mechanism (and, with python3 on the PATH, that
+                src/lib/Lib_Chemistry_contract.f90 is the output of utils/mechanism_contract.py):
+                routine order accepted, a hook before the tables checked at the first call,
+                swapped slots / wrong reaction count refused, appended inert species accepted,
+                calibrated species with the same composition accepted, name read whole; in child
+                processes: the strict fallback policy (FLINT_STRICT_MECHANISM) and the refusal channels
+test-falloff    the Troe/Lindemann rates where the tables vanish (Pr = 0, k_inf = 0 give a
+                zero rate, no NaN) and the k_c <= 0 convention for irreversible falloff
+test-ranges     the temperature-grid contract of the tables: falloff tables on the Arrhenius grid, transport
+                and diffusion tables on the thermo grid or starting below it (accepted, same values as on
+                the thermo grid) and starting above it (refused), rate tables that do not cover the thermo
+                grid (refusals), a rate table wider than the thermo grid (accepted, same rows as on the
+                thermo grid), rate tables with a later zone on another grid or an interior row missing
+                (refusals), a falloff-Troe table with a NaN F_cent (refused, also under -ffast-math),
+                thermo, transport and diffusion tables with an interior row missing (refusals)
+test-inert      species appended after the slots of a compiled routine are inert on every path (direct
+                call, rhs_native, analytical Jacobian, jac_native) with sentinel-filled outputs
+test-rhs-range  rhs_native/jac_native bail out (F = -1, zero Jacobian) outside the RATE tables as
+                they do outside the thermo tables (test/tables/WD-100K loaded on one grid, the
+                rate range then narrowed in memory: a defence for tables set by another path)
+test-orders     the general procedure with the 'Reaction orders' block reproduces Cantera's
+                rates for JLR-frassoldati (yaml orders) and, without it, Cantera's law of the stoichiometric
+                coefficients (the yaml orders removed), not the integer-rounded one of older versions;
+                the general procedure warns about a file without the block, not about a file with it;
+                a block with a negative row count is refused
+                (fixture test/orders/JLR-frassoldati: tables of a table writer, references embedded)
+test-orders-warn the WARNING of the general procedure for a chemistry-info.txt without the 'Reaction
+                orders' block: none for a block with zero rows (same omegadot, bit for bit, as without the
+                block), one when the general procedure is selected before or after the tables are loaded,
+                none for a hooked name; once per load, on standard output and on the error unit (child
+                process). The files without the block are copies made at run time (orders/noblock from
+                test/orders/JLR-frassoldati/chemistry-info-noblock.txt, orders/wd-noblock from database/WD):
+                every chemistry-info.txt of database/ and of the fixtures ends with the block (0 rows when
+                the mechanism has no orders), as a table writer writes it
+test-stoich     the general procedure reproduces Cantera's net production rates (to 1e-10 of the gross
+                rates) for fractional stoichiometric coefficients without orders: Arrhenius reactants and
+                products, three-body, Troe and Lindemann, 24-30 states each, and its net rates vanish at
+                Cantera's equilibrium composition; integer control 2 H2 + O2 <=> 2 H2O; general has no
+                analytical Jacobian (fixtures test/stoich/<name> made by test/stoich/make_stoich.py from
+                constructed yaml mechanisms, tables of a table writer from the yaml thermo, references
+                embedded)
+test-andersen   the WD-Andersen routine (step 3 with the Andersen orders [CO2] [H2O]^0.5 [O2]^-0.25)
+                reproduces Cantera's net production rates on the tables of a table writer (fixture
+                test/andersen/WD-Andersen, references embedded), the zero rate at O2 = 0 and the
+                zero-concentration convention of Coronetti (H2 = 0: finite, no divide-by-zero)
+test-runiv      the universal gas constant is the exact SI value (8314.46261815324 J/(kmol K), the
+                value of Cantera 3.0.1) in FLINT_Lib_Thermodynamic and in the CEA data, Ri_tab derives
+                from it, the pressure p = rho R_mix T of a Cantera state of database/WD agrees with
+                Cantera to 1e-9, and the compiled Frolov routine reproduces its (p/p_atm)^-1.15 law at
+                the Cantera pressure to 1e-9 (5.7e-6 / 6.6e-6 off with the former 8314.51)
+```
+
 ## Running the Test Suite
 
 From the `test` directory:

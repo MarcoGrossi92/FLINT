@@ -46,7 +46,7 @@ $$
 - $A_r$ = pre-exponential factor (units depend on reaction order)
 - $b_r$ = temperature exponent (dimensionless)
 - $E_{a,r}$ = activation energy (J/mol or cal/mol)
-- $R_u$ = universal gas constant (8.314 J/(mol·K))
+- $R_u$ = universal gas constant (8.31446261815324 J/(mol·K), exact SI value)
 - $T$ = temperature (K)
 
 The backward rate coefficient $k_{b,r}(T)$ is computed from thermodynamic equilibrium:

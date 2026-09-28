@@ -7,7 +7,7 @@ module FLINT_Lib_Thermodynamic
 
   character(len=128)      :: FLINT_phase_prefix=''
   integer, parameter      :: s_str_len = 20
-  real(kind=8), parameter :: Runiv = 8314.51d0  ! Universal gas constant [J/(kmol*K)]
+  real(kind=8), parameter :: Runiv = 8314.46261815324d0  ! Universal gas constant [J/(kmol*K)]: exact SI value N_A*k_B (CODATA 2018)
 
   integer                 :: ns                 ! Number of species
   integer                 :: ne                 ! Number of atomic elements

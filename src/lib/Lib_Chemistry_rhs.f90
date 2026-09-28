@@ -1,6 +1,7 @@
 module FLINT_Lib_Chemistry_rhs
   use OSLo
   use FLINT_Lib_Chemistry_wdot
+  use FLINT_Lib_Chemistry_data, only: T_tab_min, T_tab_max, nan_bits
 # if defined (CANTERA)
   use cantera
 # endif
@@ -34,7 +35,19 @@ contains
     
     T = Z(nz)
 
-    if (T < Tmin .or. T >= Tmax .or. isnan(T)) then
+    ! Outside the thermo tables OR outside the rate tables (row T of both is the
+    ! value at T kelvin). read_chemistry refuses rate tables on another grid than
+    ! the thermo one, so the second guard is a defence for tables set by another
+    ! path (a driver's in-memory tables): reading a rate table below its first
+    ! row was an out-of-bounds read.
+    ! NaN first and on its own: under -ffast-math (FLINT's RELEASE flags) isnan(T) is folded to
+    ! .false. and every comparison below is false for a NaN, so int(T) indexed the tables at
+    ! -huge (segmentation fault); under -ffpe-trap=invalid the ordered comparisons trap.
+    if (nan_bits(T)) then
+       F(:) = -1.0d0
+       return
+    end if
+    if (T < Tmin .or. T >= Tmax .or. isnan(T) .or. T < T_tab_min .or. T >= T_tab_max) then
        F(:) = -1.0d0
        return
     end if
@@ -99,7 +112,11 @@ contains
     ! Mirror rhs_native's bail-out: out-of-range T → F is the constant -1 there,
     ! whose Jacobian is zero. Returning zero keeps Newton in a benign state until
     ! the step is rejected and the integrator retries with smaller H.
-    if (T < Tmin .or. T >= Tmax .or. isnan(T)) then
+    if (nan_bits(T)) then
+      DFY(1:nz, 1:nz) = 0.d0
+      return
+    end if
+    if (T < Tmin .or. T >= Tmax .or. isnan(T) .or. T < T_tab_min .or. T >= T_tab_max) then
       DFY(1:nz, 1:nz) = 0.d0
       return
     end if
@@ -109,6 +126,13 @@ contains
     roi(1:ns) = max(Z(1:ns), 0.d0)
 
     ! 1) Species block: ∂omegadot/∂(roi,T) from the mechanism.
+    !    Zeroed first, as rhs_native does for droic: a mechanism routine assigns
+    !    only the slots of its own species, so species appended after them
+    !    (allowed by the mechanism contract check) stay inert here too, instead
+    !    of reading whatever the stack held (droic(ns_r+1:ns) was undefined).
+    droic = 0.d0
+    dwdr  = 0.d0
+    dwdT  = 0.d0
     call chemistry_source   ( roi, T, droic )
     call chemistry_jacobian ( roi, T, dwdr, dwdT )
 

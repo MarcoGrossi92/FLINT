@@ -1,0 +1,24 @@
+stoich-frac
+N.ro species = 4
+N.ro reactions = 2
+
+General loop info. They are not used if the mechanism is exlplicitly defined
+
+Reaction type
+1 Arrhenius
+2 Arrhenius
+
+Reaction definition
+1 H2 1.0 0.0 0.0
+1 O2 0.5 0.0 0.0
+1 H2O 0.0 1.0 0.0
+1 N2 0.0 0.0 0.0
+1 M 0.0 0.0 0.0
+2 H2 0.5 0.0 0.0
+2 O2 0.25 0.0 0.0
+2 H2O 0.0 0.5 0.0
+2 N2 0.0 0.0 0.0
+2 M 0.0 0.0 0.0
+
+Reaction orders
+0

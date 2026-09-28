@@ -88,7 +88,7 @@ CH3O2  47.033000
 
 **Purpose:** Provide resume of the chemical mechanism: species/reaction counts, reaction types, and stoichiometry.
 
-**Format:** ASCII text with three sections.
+**Format:** ASCII text with three sections, followed by the `Reaction orders` block (see below).
 
 ```
 <mechanism_name>
@@ -302,8 +302,38 @@ I=15000, F=POINT
 | `Temperature` | Temperature (K) | 1.0 to 15000.0 |
 | `k_inf` | High-pressure limit rate | Computed from Arrhenius A, b, Ea |
 | `k_0` | Low-pressure limit rate | Third-order rate coefficient |
-| `k_c` | Blending coefficient | Intermediate value for fall-off |
-| `F_cent` | Centering factor | Troe fall-off correction factor |
+| `k_c` | Equilibrium constant in concentration units: the reverse rate is `k_b = k_f / k_c`. **A value `<= 0` marks an irreversible reaction (no reverse step).** Tables written before this contract carry `k_c` also for irreversible fall-off reactions and get a spurious reverse rate. | `k_f / k_b` from the thermodynamics |
+| `F_cent` | Centering factor. A value `<= 0` (published Troe parameter sets with `a < 0` or `a > 1`, e.g. C2H4 + H (+M) of AramcoMech 2.0/3.0 and FFCM-1 above 4871 K) is taken as `1e-300` inside `log10`, as Cantera does; NaN/Inf are refused (`ios = 5`) | Troe fall-off correction factor |
+
+The same `k_c` convention holds for the `k_c` column of `chemistry-Lindemann.dat` (`Temperature`, `k_inf`, `k_0`, `k_c`).
+FLINT versions up to 2223136 compute the reverse rate of every falloff reaction as `k_f / k_c`: there a
+table with `k_c = 0` gives an infinite reverse rate.
+
+**Reaction orders (the block that ends `chemistry-info.txt`).** After the last `Reaction definition`
+row and a blank line, a table writer ends the file with the explicit forward orders of the mechanism
+(e.g. `CH4 + 0.5 O2 => CO + 2 H2` with `orders: {CH4: 0.5, O2: 1.3}`), with `<n>` = 0 and no rows when
+the mechanism has none:
+
+```
+Reaction orders
+<n>
+<ir> <species name> <order>      (n rows: ir = index in the 'Reaction type' list, real order)
+```
+
+With the block, the `general` procedure raises the concentrations of the Arrhenius-type reactions to
+these orders (the explicit ones where given, the stoichiometric reactant coefficient elsewhere, as in
+Cantera's mass-action law); an integer-valued order uses the integer power, a negative order at zero
+concentration gives a zero rate (Cantera's convention). Without the block the reactant stoichiometric
+coefficients are the exponents, real as in Cantera (`CH4 + 0.5 O2`: `[CH4] [O2]^0.5`); the product
+coefficients are the exponents of the reverse rate in every case (versions before `test-stoich`
+rounded both to the nearest integer in the Arrhenius-type reactions). Orders on
+falloff reactions are not supported (`read_chemistry` returns `ios = 2`); a block whose `<n>` is not a
+non-negative integer, or with fewer than `<n>` rows, is refused the same way. A file without the block
+(written by an older table writer) is read with the reactant coefficients as orders, the exponents of
+`<n>` = 0; when the general procedure is selected, FLINT prints a `[WARNING]` once per load (standard
+output and error unit) asking to regenerate the tables. The compiled routines do not read the block.
+FLINT versions up to 2223136 stop reading `chemistry-info.txt` after the `Reaction definition` rows and
+ignore the block.
 
 **Troe Fall-off Theory:**
 
@@ -443,7 +473,7 @@ The `TITLE` carries the **reference pressure** `Pref` (in Pa) at which the coeff
 | TITLE | File description (e.g. "Binary Diffusion Coefficients") |
 | VARIABLES | Column headers ("Temperature", "Dij") |
 | ZONE | One zone per **unique unordered species pair** |
-| I=N | Number of temperature points (must match `thermo.dat`) |
+| I=N | Number of temperature points (those of `thermo.dat`, more if the table starts lower) |
 | F=POINT | Data format (always POINT) |
 | Data rows | `Temperature  Dij` (space-separated floats) |
 
@@ -465,7 +495,7 @@ $$
 Only one of $(i,j)$ / $(j,i)$ is stored, since $\mathcal{D}_{ij} = \mathcal{D}_{ji}$.
 
 **Parsing Notes:**
-- The temperature range **must match** `thermo.dat` (mismatch returns error code 3).
+- The temperature range **must cover** `thermo.dat`: the last row equal to its last row, the first row at or below its first row (otherwise error code 3).
 - The number of zones **must equal** $N_s(N_s-1)/2$ (mismatch returns error code 4).
 - Coefficients are tabulated against temperature at the reference pressure `Pref` from the TITLE; FLINT rescales them to the local pressure by $p_\text{ref}/p$ (exact, since $\mathcal{D}\propto 1/p$), so the model is valid at any pressure.
 - Single-species phases have no pairs and require no `diffusion.dat`.
@@ -628,3 +658,29 @@ err = read_realfluid_transport("path/to/INPUT/")  ! optional
 ```
 
 ---
+## Temperature grid of the tables
+
+All the tables of one INPUT folder are written on one temperature grid (1 K rows, same first and
+last row). FLINT checks it when the files are loaded:
+
+- in every table (`thermo.dat`, `transport.dat`, `diffusion.dat`, `chemistry-Arrhenius.dat`,
+  `chemistry-Troe.dat`, `chemistry-Lindemann.dat`) every zone must hold the rows T1, T1+1, .., T2 of
+  the first zone (1 K step, no row missing or repeated); the rows are checked one by one in every
+  zone, and a table that breaks it is refused with an `[ERROR]` line naming the zone
+  (`read_idealgas_thermo` returns `ios = 4`, `read_idealgas_transport`/`read_idealgas_diffusion`
+  `ios = 3`, `read_chemistry` `ios = 6`);
+- `transport.dat` and `diffusion.dat` must end at the last row of `thermo.dat` and start at or
+  below its first row. A table that starts lower is accepted and read at T kelvin (its rows below
+  the range of `thermo.dat` are not used); a table that starts higher or ends at another row is
+  refused (`read_idealgas_transport`/`read_idealgas_diffusion` return `ios = 3` with an `[ERROR]`
+  line on standard output and standard error);
+- `chemistry-Troe.dat` and `chemistry-Lindemann.dat` must have the first and last row of
+  `chemistry-Arrhenius.dat` (`read_chemistry` returns `ios = 6` with an `[ERROR]` line);
+- `chemistry-Arrhenius.dat` must cover the range of `thermo.dat`: its first row at or below the
+  first row of `thermo.dat` and its last row at or above the last one. A wider rate table (e.g. the
+  1..15000 K tables of a database folder with a `thermo.dat` regenerated on a narrower range) is
+  accepted and read at T kelvin; a rate table that starts above or ends below `thermo.dat` is
+  refused (`read_chemistry` returns `ios = 6` with an `[ERROR]` line on standard output and
+  standard error).
+
+Row T of every table is the value at T kelvin whatever the first row of the file.

@@ -80,6 +80,13 @@ f.write('real(8) :: prodf(1:'+str(nr)+'), prodb(1:'+str(nr)+')\n')
 f.write('real(8) :: k(2) !< Falloff rate coefficients\n')
 f.write('\n')
 f.write('\n')
+# Define the whole INTENT(OUT) block first: species after the routine's own slots
+# (accepted by the mechanism contract) get a zero source instead of an undefined one
+f.write("! Define the whole INTENT(OUT) block first: an INTENT(OUT) dummy is undefined on\n")
+f.write("! entry, so species after this routine's own slots (allowed by the mechanism\n")
+f.write("! contract: they are inert) would otherwise receive whatever the caller passed.\n")
+f.write('omegadot = 0d0\n')
+f.write('\n')
 
 # Writing preliminary ops
 f.write('do is = 1, ns \n')

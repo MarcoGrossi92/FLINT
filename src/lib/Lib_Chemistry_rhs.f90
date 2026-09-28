@@ -1,7 +1,7 @@
 module FLINT_Lib_Chemistry_rhs
   use OSLo
   use FLINT_Lib_Chemistry_wdot
-  use FLINT_Lib_Chemistry_data, only: T_tab_min, T_tab_max
+  use FLINT_Lib_Chemistry_data, only: T_tab_min, T_tab_max, nan_bits
 # if defined (CANTERA)
   use cantera
 # endif
@@ -334,12 +334,5 @@ contains
 
   end subroutine rhs_cantera
 # endif
-
-  !> NaN (or infinity) test on the bit pattern (exponent bits all set): unlike isnan(x) or x /= x it
-  !> is not folded away by -ffast-math / -ffinite-math-only and it raises no floating-point exception.
-  pure logical function nan_bits(x)
-    real(8), intent(in) :: x
-    nan_bits = iand(shiftr(transfer(x, 0_8), 52), 2047_8) == 2047_8
-  end function nan_bits
 
 end module FLINT_Lib_Chemistry_rhs

@@ -115,7 +115,9 @@ test-ranges     the temperature-grid contract of the tables: falloff tables on t
                 and diffusion tables on the thermo grid or starting below it (accepted, same values as on
                 the thermo grid) and starting above it (refused), rate tables that do not cover the thermo
                 grid (refusals), a rate table wider than the thermo grid (accepted, same rows as on the
-                thermo grid)
+                thermo grid), rate tables with a later zone on another grid or an interior row missing
+                (refusals), a falloff-Troe table with a NaN F_cent (refused, also under -ffast-math),
+                thermo, transport and diffusion tables with an interior row missing (refusals)
 test-inert      species appended after the slots of a compiled routine are inert on every path (direct
                 call, rhs_native, analytical Jacobian, jac_native) with sentinel-filled outputs
 test-rhs-range  rhs_native/jac_native bail out (F = -1, zero Jacobian) outside the RATE tables as
@@ -124,7 +126,8 @@ test-rhs-range  rhs_native/jac_native bail out (F = -1, zero Jacobian) outside t
 test-orders     the general procedure with the 'Reaction orders' block reproduces Cantera's
                 rates for JLR-frassoldati (yaml orders) and, without it, Cantera's law of the stoichiometric
                 coefficients (the yaml orders removed), not the integer-rounded one of older versions;
-                the general procedure warns about a file without the block, not about a file with it
+                the general procedure warns about a file without the block, not about a file with it;
+                a block with a negative row count is refused
                 (fixture test/orders/JLR-frassoldati: tables of a table writer, references embedded)
 test-orders-warn the WARNING of the general procedure for a chemistry-info.txt without the 'Reaction
                 orders' block: none for a block with zero rows (same omegadot, bit for bit, as without the

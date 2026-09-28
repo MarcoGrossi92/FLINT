@@ -6,7 +6,8 @@
 ! stoichiometric coefficients (Cantera's forward rates with the yaml orders removed: CH4^1 O2^0.5), not the
 ! integer-rounded law (O2^1) of the general procedure before test-stoich. Fixture test/orders/JLR-frassoldati made by
 ! test/orders/make_JLR-frassoldati.py from the tables of a table writer (1200..1800 K) with Cantera references
-! at three states. Needs no Cantera at run time. Exit code 1 on failure.
+! at three states. A block with a negative row count is refused (ios = 2), not read as an empty block.
+! Needs no Cantera at run time. Exit code 1 on failure.
 program test
   use FLINT_Lib_Thermodynamic
   use FLINT_Load_chemistry
@@ -81,6 +82,16 @@ program test
     call verdict('no block: general differs from the integer-rounded law', maxval(abs(w - w_nint)) > 1d-3*maxval(abs(w_stoich)))
   enddo
   close(u)
+  call free_chemistry_data()
+
+  ! 3) a malformed block: a negative row count is refused, not read as an empty block (have_orders
+  !    set, no WARNING, stoichiometric orders)
+  call execute_command_line('mkdir -p orders/negcount && cp orders/JLR-frassoldati/chemistry-Arrhenius.dat orders/negcount/ && ' // &
+    '{ cat orders/JLR-frassoldati/chemistry-info-noblock.txt; printf "\nReaction orders\n-1\n"; } ' // &
+    '> orders/negcount/chemistry-info.txt', exitstat=err)
+  if (err /= 0) then; write(*,'(A)') '[FAIL] could not make orders/negcount'; stop 1; endif
+  err = read_chemistry(folder='orders/negcount', mech_name=mech_name)
+  call verdict('block with a negative row count (-1): refused with ios = 2', err == 2)
   call free_chemistry_data()
   if (nfail > 0) then
     write(*,'(A,I0,A)') ' Verdict -> fail (', nfail, ' checks)'

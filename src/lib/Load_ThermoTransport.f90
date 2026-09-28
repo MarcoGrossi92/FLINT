@@ -54,7 +54,7 @@ contains
     implicit none
     character(len=*), intent(in), optional :: folder
     ! Local
-    integer           :: ios, i, unitfile, start, dummy1, dummy23
+    integer           :: ios, i, unitfile, start, dummy23
     logical           :: exists_dat, exists_szplt
     character(256)    :: wholestring, args(2)
     character(512)    :: wmfile, thermofile(2)
@@ -131,17 +131,13 @@ contains
       ios = 4
       return
     endif
-    dummy1  = lbound(orion%block(1)%mesh, dim=2)
-    dummy23 = lbound(orion%block(1)%mesh, dim=3)
-    Tmin = nint(orion%block(1)%mesh(1,dummy1,dummy23,dummy23))
-    Tmax = Tmin + ubound(orion%block(1)%mesh, dim=2) - dummy1
-    ! 1 K step: row T of every table is the value at T kelvin only if the last row is the first + rows - 1
-    start = nint(orion%block(1)%mesh(1,ubound(orion%block(1)%mesh, dim=2),dummy23,dummy23))
-    if (start /= Tmax) then
-      write(*,'(A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_idealgas_thermo: the thermo table is not on a 1 K step (', &
-        Tmax - Tmin + 1, ' rows from ', Tmin, ' to ', start, ' K): row T must be the value at T kelvin'
-      write(error_unit,'(A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_idealgas_thermo: the thermo table is not on a 1 K step (', &
-        Tmax - Tmin + 1, ' rows from ', Tmin, ' to ', start, ' K): row T must be the value at T kelvin'
+    ! 1 K step in every zone: row T of every table is the value at T kelvin
+    start = grid_1K_zone(orion, ns, Tmin, Tmax)
+    if (start /= 0) then
+      write(*,'(A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_idealgas_thermo: zone ', start, ' of the thermo table is not on the 1 K grid ', &
+        Tmin, '..', Tmax, ' K (first row and row count of zone 1): row T must be the value at T kelvin'
+      write(error_unit,'(A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_idealgas_thermo: zone ', start, ' of the thermo table is not on the 1 K grid ', &
+        Tmin, '..', Tmax, ' K (first row and row count of zone 1): row T must be the value at T kelvin'
       ios = 4
       return
     endif
@@ -227,7 +223,7 @@ contains
     implicit none
     character(len=*), intent(in), optional :: folder
     ! Local
-    integer           :: ios, i, start, dummy1, dummy23
+    integer           :: ios, i, start, dummy23
     integer           :: Tmin_dummy, Tmax_dummy
     logical           :: exists, attempted
     character(512)    :: transfile(2)
@@ -258,17 +254,13 @@ contains
       if (attempted) ios = 2
       return
     endif
-    dummy1  = lbound(orion%block(1)%mesh, dim=2)
-    dummy23 = lbound(orion%block(1)%mesh, dim=3)
-    Tmin_dummy = nint(orion%block(1)%mesh(1,dummy1,dummy23,dummy23))
-    Tmax_dummy = Tmin_dummy + ubound(orion%block(1)%mesh, dim=2) - dummy1
-    ! 1 K step (the last row is the first + rows - 1)
-    start = nint(orion%block(1)%mesh(1,ubound(orion%block(1)%mesh, dim=2),dummy23,dummy23))
-    if (start /= Tmax_dummy) then
-      write(*,'(A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_idealgas_transport: the table is not on a 1 K step (', &
-        Tmax_dummy - Tmin_dummy + 1, ' rows from ', Tmin_dummy, ' to ', start, ' K): row T must be the value at T kelvin'
-      write(error_unit,'(A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_idealgas_transport: the table is not on a 1 K step (', &
-        Tmax_dummy - Tmin_dummy + 1, ' rows from ', Tmin_dummy, ' to ', start, ' K): row T must be the value at T kelvin'
+    ! 1 K step in every zone
+    start = grid_1K_zone(orion, ns, Tmin_dummy, Tmax_dummy)
+    if (start /= 0) then
+      write(*,'(A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_idealgas_transport: zone ', start, ' of the table is not on the 1 K grid ', &
+        Tmin_dummy, '..', Tmax_dummy, ' K (first row and row count of zone 1): row T must be the value at T kelvin'
+      write(error_unit,'(A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_idealgas_transport: zone ', start, ' of the table is not on the 1 K grid ', &
+        Tmin_dummy, '..', Tmax_dummy, ' K (first row and row count of zone 1): row T must be the value at T kelvin'
       ios = 3
       return
     endif
@@ -321,7 +313,7 @@ contains
     implicit none
     character(len=*), intent(in), optional :: folder
     ! Local
-    integer           :: ios, i, start, dummy1, dummy23
+    integer           :: ios, i, start, dummy23
     integer           :: Tmin_dummy, Tmax_dummy
     integer           :: u, ios2, ip
     logical           :: exists, attempted
@@ -374,17 +366,13 @@ contains
       return
     endif
 
-    dummy1  = lbound(orion%block(1)%mesh, dim=2)
-    dummy23 = lbound(orion%block(1)%mesh, dim=3)
-    Tmin_dummy = nint(orion%block(1)%mesh(1,dummy1,dummy23,dummy23))
-    Tmax_dummy = Tmin_dummy + ubound(orion%block(1)%mesh, dim=2) - dummy1
-    ! 1 K step (the last row is the first + rows - 1)
-    start = nint(orion%block(1)%mesh(1,ubound(orion%block(1)%mesh, dim=2),dummy23,dummy23))
-    if (start /= Tmax_dummy) then
-      write(*,'(A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_idealgas_diffusion: the table is not on a 1 K step (', &
-        Tmax_dummy - Tmin_dummy + 1, ' rows from ', Tmin_dummy, ' to ', start, ' K): row T must be the value at T kelvin'
-      write(error_unit,'(A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_idealgas_diffusion: the table is not on a 1 K step (', &
-        Tmax_dummy - Tmin_dummy + 1, ' rows from ', Tmin_dummy, ' to ', start, ' K): row T must be the value at T kelvin'
+    ! 1 K step in every zone
+    start = grid_1K_zone(orion, ndij, Tmin_dummy, Tmax_dummy)
+    if (start /= 0) then
+      write(*,'(A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_idealgas_diffusion: zone ', start, ' of the table is not on the 1 K grid ', &
+        Tmin_dummy, '..', Tmax_dummy, ' K (first row and row count of zone 1): row T must be the value at T kelvin'
+      write(error_unit,'(A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_idealgas_diffusion: zone ', start, ' of the table is not on the 1 K grid ', &
+        Tmin_dummy, '..', Tmax_dummy, ' K (first row and row count of zone 1): row T must be the value at T kelvin'
       ios = 3
       return
     endif
@@ -646,5 +634,29 @@ contains
 
     ios = 0
   endfunction ph2pT
+
+  !> 1 K grid of a table read by ORION: zones 1..nz (the zones the loader copies) must all hold the rows
+  !> T1, T1+1, .., T2, with T1 the first row and T2 - T1 + 1 the row count of zone 1, so that row T is
+  !> the value at T kelvin in every zone. Comparing the first and the last row of zone 1 only let a
+  !> missing or duplicated interior row, or a later zone on another grid, through: its rows were stored
+  !> under other temperatures. Returns the first zone that breaks the grid (0: none).
+  function grid_1K_zone(orion, nz, T1, T2) result(iz)
+    use Lib_ORION_data
+    type(ORION_data), intent(in) :: orion
+    integer, intent(in)  :: nz
+    integer, intent(out) :: T1, T2
+    integer :: iz, r, l2, l3
+    l2 = lbound(orion%block(1)%mesh, dim=2); l3 = lbound(orion%block(1)%mesh, dim=3)
+    T1 = nint(orion%block(1)%mesh(1,l2,l3,l3))
+    T2 = T1 + ubound(orion%block(1)%mesh, dim=2) - l2
+    do iz = 1, min(nz, size(orion%block))
+      l2 = lbound(orion%block(iz)%mesh, dim=2); l3 = lbound(orion%block(iz)%mesh, dim=3)
+      if (ubound(orion%block(iz)%mesh, dim=2) - l2 /= T2 - T1) return
+      do r = l2, ubound(orion%block(iz)%mesh, dim=2)
+        if (nint(orion%block(iz)%mesh(1,r,l3,l3)) /= T1 + r - l2) return
+      enddo
+    enddo
+    iz = 0
+  end function grid_1K_zone
 
 end module FLINT_Load_ThermoTransport

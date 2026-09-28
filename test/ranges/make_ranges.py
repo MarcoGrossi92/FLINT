@@ -21,6 +21,12 @@ database/WD, database/CORIA (one falloff-Troe zone) and database/Gerlinger (tran
   thermo-step2         thermo.dat on a 2 K step (1400..1800 K)          -> refused (ios = 4)
   rates-troe-negk      Troe table with k_inf < 0 at 1500 K              -> refused (ios = 5)
   rates-lind-negk      Lindemann table with k_0 < 0 at 1500 K           -> refused (ios = 5)
+  rates-zone2-shift    zone 1 on 1400..1600 K, zones 2.. on 1401..1601 K -> refused (ios = 6)
+  rates-gap            zone 1 without row 1500 K and row 1499 K twice   -> refused (ios = 6)
+  thermo-gap           the same gap in zone 1 of thermo.dat             -> refused (ios = 4)
+  rates-troe-nan       Troe table with F_cent = NaN at 1500 K           -> refused (ios = 5)
+  transport-gap        transport.dat 1400..1600 K, last zone without row 1500 K and row 1499 K twice -> refused (ios = 3)
+  diffusion-gap        diffusion.dat 1400..1600 K, the same gap in the last pair -> refused (ios = 3)
 The species of the transport zones are renamed to the WD species: only the grid is under test.
 Run from the repository root:  python3 test/ranges/make_ranges.py
 """
@@ -106,4 +112,38 @@ w('rates-troe-negk', 'chemistry-Troe.dat', fhead + negate(cut(fz[0], 1400, 1600,
 w('rates-lind-negk', 'chemistry-info.txt', info.replace('3 Arrhenius', '3 Lindemann'))
 w('rates-lind-negk', 'chemistry-Arrhenius.dat', ahead + ''.join(cut(z, 1400, 1600) for z in az))
 w('rates-lind-negk', 'chemistry-Lindemann.dat', lhead + negate(cut(lz[0], 1400, 1600, 'Reaction 1'), 1500.0, 2))
+# every zone and every row of the 1 K grid, not only the first and the last row of zone 1: a later
+# zone on another grid, and an interior row missing with another one twice (the first row, the last
+# row and the row count of zone 1 are those of the 1 K grid)
+w('rates-zone2-shift', 'chemistry-info.txt', info)
+w('rates-zone2-shift', 'chemistry-Arrhenius.dat', ahead + cut(az[0], 1400, 1600) + ''.join(cut(z, 1401, 1601) for z in az[1:]))
+def gap(z, T):   # row T replaced by a copy of row T - 1
+    L = z.split('\n')
+    i = next(k for k in range(2, len(L)) if L[k].split() and float(L[k].split()[0]) == T)
+    L[i] = L[i-1]
+    return '\n'.join(L)
+w('rates-gap', 'chemistry-info.txt', info)
+w('rates-gap', 'chemistry-Arrhenius.dat', ahead + gap(cut(az[0], 1400, 1600), 1500.0) + ''.join(cut(z, 1400, 1600) for z in az[1:]))
+w('thermo-gap', 'thermo.dat', thead + gap(cut(tz[0], 1400, 1600), 1500.0) + ''.join(cut(z, 1400, 1600) for z in tz[1:]))
+for f in ('phase.txt', 'composition.txt'):
+    w('thermo-gap', f, open(os.path.join(wd, f)).read())
+# a NaN F_cent (column 4) in one row of a falloff-Troe table
+def setcol(z, T, col, val):
+    L = z.split('\n')
+    for i in range(2, len(L)):
+        t = L[i].split()
+        if t and float(t[0]) == T:
+            t[col] = val; L[i] = ' '.join(t)
+    return '\n'.join(L)
+w('rates-troe-nan', 'chemistry-info.txt', info.replace('3 Arrhenius', '3 Troe'))
+w('rates-troe-nan', 'chemistry-Arrhenius.dat', ahead + ''.join(cut(z, 1400, 1600) for z in az))
+w('rates-troe-nan', 'chemistry-Troe.dat', fhead + setcol(cut(fz[0], 1400, 1600, 'Reaction 1'), 1500.0, 4, 'NaN'))
+# the same gap in the LAST zone of a transport and of a binary-diffusion table (every zone, every row)
+w('transport-gap', 'transport.dat', ghead + ''.join(cut(gz[i], 1400, 1600, names[i]) for i in range(len(names) - 1))
+  + gap(cut(gz[len(names) - 1], 1400, 1600, names[-1]), 1500.0))
+txt = 'TITLE = "Binary diffusion coefficients (Pref=101325 Pa)"\nVARIABLES = "Temperature", "Dij"\n'
+for k, (a, b) in enumerate(pairs):
+    Ts = [T if (k < len(pairs) - 1 or T != 1500) else 1499 for T in range(1400, 1601)]
+    txt += 'ZONE T="%s-%s"\nI=%d, F=POINT\n' % (a, b, len(Ts)) + ''.join('%.1f 1.0e-05\n' % T for T in Ts)
+w('diffusion-gap', 'diffusion.dat', txt)
 print('written', dst)

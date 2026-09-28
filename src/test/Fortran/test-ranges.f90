@@ -16,7 +16,13 @@
 !    with the reason for the two tables that start above the thermo grid, and the two tables that
 !    start below it print none;
 !  - a table with fewer zones than reactions of its type (ios = 4) and tables on a 2 K step (ios = 6 / 4);
-!  - a negative k_inf / k_0 in a falloff table (ios = 5).
+!  - a negative k_inf / k_0 in a falloff table (ios = 5), and a NaN F_cent (ios = 5, also under the
+!    -ffast-math of RELEASE, where the former test Fcent /= Fcent was folded to .false.);
+!  - every row of every zone, not only the first and the last row of zone 1: a rate table with zones
+!    2.. on another grid (rates-zone2-shift) and one with an interior row missing and another one twice
+!    (rates-gap) are refused (ios = 6; before, the rows were copied under other temperatures); the same
+!    gap in the last zone of a transport and of a binary-diffusion table (ios = 3) and in zone 1 of the
+!    thermo table (thermo-gap, ios = 4).
 ! Exit code 1 on failure.
 program test
   use FLINT_Lib_Thermodynamic
@@ -72,6 +78,8 @@ program test
 
   err = read_idealgas_transport('ranges/transport-shifted/')
   call verdict('transport table starting at 1420 K with thermo from 1400 K: refused with ios = 3', err == 3)
+  err = read_idealgas_transport('ranges/transport-gap/')
+  call verdict('transport table with row 1500 K missing and row 1499 K twice in its last zone: refused with ios = 3', err == 3)
   err = read_idealgas_transport('ranges/transport-equal/')
   call verdict('transport table on the thermo grid: accepted', err == 0)
   ! a transport table that starts below the thermo grid covers it: accepted, row T is the value at
@@ -107,6 +115,8 @@ program test
   call free_chemistry_data()
   err = read_idealgas_diffusion('ranges/diffusion-shifted/')
   call verdict('diffusion table starting at 1420 K with thermo from 1400 K: refused with ios = 3', err == 3)
+  err = read_idealgas_diffusion('ranges/diffusion-gap/')
+  call verdict('diffusion table with row 1500 K missing and row 1499 K twice in its last pair: refused with ios = 3', err == 3)
   err = read_idealgas_diffusion('ranges/diffusion-equal/')
   call verdict('diffusion table on the thermo grid: accepted', err == 0)
   ! the same for a binary-diffusion table that starts below the thermo grid (other coefficients below 1400 K)
@@ -132,12 +142,23 @@ program test
   err = read_chemistry(folder='ranges/rates-troe-negk', mech_name=mech_name)
   call verdict('falloff-Troe table with k_inf < 0 at 1500 K: refused with ios = 5', err == 5)
   call free_chemistry_data()
+  err = read_chemistry(folder='ranges/rates-troe-nan', mech_name=mech_name)
+  call verdict('falloff-Troe table with F_cent = NaN at 1500 K: refused with ios = 5', err == 5)
+  call free_chemistry_data()
   err = read_chemistry(folder='ranges/rates-lind-negk', mech_name=mech_name)
   call verdict('falloff-Lindemann table with k_0 < 0 at 1500 K: refused with ios = 5', err == 5)
   call free_chemistry_data()
   ! rows on a 2 K step: the first and the computed last row match the thermo grid, the temperatures do not
   err = read_chemistry(folder='ranges/rates-step2', mech_name=mech_name)
   call verdict('rate table on a 2 K step (1400..1800 K, 201 rows): refused with ios = 6', err == 6)
+  call free_chemistry_data()
+  ! every zone and every row: zone 1 alone on the 1 K grid, or its first and last row only, is not enough
+  err = read_chemistry(folder='ranges/rates-zone2-shift', mech_name=mech_name)
+  call verdict('rate table with zone 1 on 1400..1600 K and zones 2.. on 1401..1601 K: refused with ios = 6', err == 6)
+  call free_chemistry_data()
+  err = read_chemistry(folder='ranges/rates-gap', mech_name=mech_name)
+  call verdict('rate table without row 1500 K and with row 1499 K twice (first row, last row and row count ' // &
+    'of the 1 K grid): refused with ios = 6', err == 6)
   call free_chemistry_data()
   call execute_command_line(trim(self)//' child-grid > ranges/child-grid.out 2> ranges/child-grid.err', exitstat=err)
   call execute_command_line('test "$(command grep -c -F ''[ERROR] FLINT read_'' ranges/child-grid.err)" = 5', exitstat=err)
@@ -147,16 +168,14 @@ program test
   call verdict('child process: the transport and diffusion tables that start above the thermo grid are refused ' // &
     'with that reason', err == 0)
 
-  ! thermo tables on a 2 K step (last: the phase arrays are reloaded)
-  if (allocated(species_names)) deallocate(species_names)
-  if (allocated(wm_tab)) deallocate(wm_tab)
-  if (allocated(Ri_tab)) deallocate(Ri_tab)
-  if (allocated(h_tab)) deallocate(h_tab)
-  if (allocated(s_tab)) deallocate(s_tab)
-  if (allocated(cp_tab)) deallocate(cp_tab)
-  if (allocated(dcpi_tab)) deallocate(dcpi_tab)
+  ! thermo tables on a 2 K step and with an interior gap (last: the phase arrays are reloaded)
+  call free_thermo()
   err = read_idealgas_thermo('ranges/thermo-step2/')
   call verdict('thermo table on a 2 K step (1400..1800 K): refused with ios = 4', err == 4)
+  call free_thermo()
+  err = read_idealgas_thermo('ranges/thermo-gap/')
+  call verdict('thermo table without row 1500 K and with row 1499 K twice (first row, last row and row count ' // &
+    'of the 1 K grid): refused with ios = 4', err == 4)
 
   if (nfail > 0) then
     write(*,'(A,I0,A)') ' Verdict -> fail (', nfail, ' checks)'
@@ -174,6 +193,16 @@ contains
       nfail = nfail + 1
     endif
   end subroutine verdict
+  ! the phase arrays and thermo tables, before reloading phase.txt and thermo.dat
+  subroutine free_thermo()
+    if (allocated(species_names)) deallocate(species_names)
+    if (allocated(wm_tab)) deallocate(wm_tab)
+    if (allocated(Ri_tab)) deallocate(Ri_tab)
+    if (allocated(h_tab)) deallocate(h_tab)
+    if (allocated(s_tab)) deallocate(s_tab)
+    if (allocated(cp_tab)) deallocate(cp_tab)
+    if (allocated(dcpi_tab)) deallocate(dcpi_tab)
+  end subroutine free_thermo
   ! mixture viscosity and conductivity (Wilke) at four temperatures of the thermo grid, equal densities
   subroutine transport_values(mil, kl)
     real(8), intent(out) :: mil(4), kl(4)

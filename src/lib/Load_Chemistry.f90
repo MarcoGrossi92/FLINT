@@ -19,6 +19,7 @@ contains
     use Lib_Tecplot
     use FLINT_Lib_Chemistry_data
     use FLINT_Lib_Thermodynamic, only: ns, FLINT_phase_prefix, species_names, Tmin, Tmax, cp_tab
+    use FLINT_Load_ThermoTransport, only: grid_1K_zone
     use iso_fortran_env, only: error_unit
     implicit none
     character(len=*), intent(in), optional :: folder
@@ -26,7 +27,7 @@ contains
     integer :: idum, unitfile
     type(ORION_data)  :: orion
     integer :: i, j, ios, j0, j1, j2
-    integer :: Ti1, Ti2, dummy1, dummy23, Tt1, Tt2, Tf
+    integer :: Ti1, Ti2, dummy23, Tt1, Tt2, Tf, iz
     character(len=32):: chardum
     character(len=256) :: line
     integer :: nord, isp
@@ -48,13 +49,10 @@ contains
     endif
     ! Read mechanism name: the whole first line, leading/trailing blanks removed.
     ! (A list-directed read cut the name at the first blank, comma or slash:
-    ! 'Aramco 2.0' became 'Aramco'. Every name hooked in Assign_Mechanism is a
-    ! single token, so existing INPUT folders select the same routine as before.)
+    ! 'Aramco 2.0' became 'Aramco').
     if (present(mech_name)) then
       read(unitfile,'(A)',iostat=ios) mech_name
       if (ios/=0) then; ios = 2; close(unitfile); return; endif
-      ! TAB and CR were blanks for the list-directed read this replaces (hand-edited or
-      ! CRLF files): turn them into blanks before trimming, so 'WD<TAB>' still hooks WD.
       do i = 1, len_trim(mech_name)
         if (mech_name(i:i) == achar(9) .or. mech_name(i:i) == achar(13)) mech_name(i:i) = ' '
       enddo
@@ -120,8 +118,7 @@ contains
       endif
     enddo 
     ! Trailing block: explicit forward reaction orders; a table writer always ends the file with
-    ! it (n = 0 when the mechanism has none). An older INPUT folder has no block: the general
-    ! procedure then warns once (warn_no_orders_block) and uses the reactant coefficients.
+    ! it (n = 0 when the mechanism has none).
     !   (blank lines)
     !   Reaction orders
     !   <n>
@@ -138,6 +135,12 @@ contains
       if (trim(adjustl(line)) /= 'Reaction orders') exit  ! anything else: not a block
       read(unitfile,*,iostat=ios) nord
       if (ios/=0) then; ios = 2; close(unitfile); return; endif
+      ! a negative count ran the row loop zero times and was taken as an empty, valid block
+      if (nord < 0) then
+        write(*,'(A,I0,A)') '[ERROR] FLINT read_chemistry: Reaction orders: row count ', nord, ' is negative'
+        write(error_unit,'(A,I0,A)') '[ERROR] FLINT read_chemistry: Reaction orders: row count ', nord, ' is negative'
+        ios = 2; close(unitfile); return
+      endif
       do i = 1, nord
         read(unitfile,*,iostat=ios) idum, chardum, order
         if (ios/=0) then; ios = 2; close(unitfile); return; endif
@@ -194,15 +197,11 @@ contains
       ios = 4
       return
     endif
-    dummy1  = lbound(orion%block(1)%mesh, dim=2)
-    dummy23 = lbound(orion%block(1)%mesh, dim=3)
-    Ti1 = nint(orion%block(1)%mesh(1,dummy1,dummy23,dummy23))
-    Ti2 = Ti1 + ubound(orion%block(1)%mesh, dim=2) - dummy1
-    ! 1 K step: row T is the rate at T kelvin only if the last row is the first + rows - 1
-    Tf = nint(orion%block(1)%mesh(1,ubound(orion%block(1)%mesh, dim=2),dummy23,dummy23))
-    if (Tf /= Ti2) then
-      write(line,'(A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_chemistry: chemistry-Arrhenius.dat is not on a 1 K step (', &
-        Ti2 - Ti1 + 1, ' rows from ', Ti1, ' to ', Tf, ' K): row T must be the rate at T kelvin'
+    ! 1 K step in every zone: row T is the rate at T kelvin (all zones are copied on the grid of zone 1)
+    iz = grid_1K_zone(orion, nrc_arrh, Ti1, Ti2)
+    if (iz /= 0) then
+      write(line,'(A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_chemistry: chemistry-Arrhenius.dat zone ', iz, ' is not on the 1 K grid ', &
+        Ti1, '..', Ti2, ' K (first row and row count of zone 1): row T must be the rate at T kelvin'
       write(*,'(A)') trim(line)
       write(error_unit,'(A)') trim(line)
       ios = 6
@@ -259,14 +258,10 @@ contains
         return
       endif
       ! Table range contract: the falloff tables share the grid of the Arrhenius table
-      dummy1  = lbound(orion%block(1)%mesh, dim=2)
-      dummy23 = lbound(orion%block(1)%mesh, dim=3)
-      Tt1 = nint(orion%block(1)%mesh(1,dummy1,dummy23,dummy23))
-      Tt2 = Tt1 + ubound(orion%block(1)%mesh, dim=2) - dummy1
-      Tf = nint(orion%block(1)%mesh(1,ubound(orion%block(1)%mesh, dim=2),dummy23,dummy23))
-      if (Tf /= Tt2) then
-        write(line,'(A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_chemistry: chemistry-Troe.dat is not on a 1 K step (', &
-          Tt2 - Tt1 + 1, ' rows from ', Tt1, ' to ', Tf, ' K): row T must be the rate at T kelvin'
+      iz = grid_1K_zone(orion, nrc_troe, Tt1, Tt2)
+      if (iz /= 0) then
+        write(line,'(A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_chemistry: chemistry-Troe.dat zone ', iz, ' is not on the 1 K grid ', &
+          Tt1, '..', Tt2, ' K (first row and row count of zone 1): row T must be the rate at T kelvin'
         write(*,'(A)') trim(line)
         write(error_unit,'(A)') trim(line)
         ios = 6
@@ -290,11 +285,11 @@ contains
         Fcent_tab(Ti1:Ti2,i) = orion%block(i)%vars(4,:,dummy23,dummy23)
       enddo
       ! Negative limiting rate coefficients and a non-finite F_cent are not admissible;
-      ! F_cent <= 0 is (published parameter sets reach it at high T: see f_F)
+      ! F_cent <= 0 is (published parameter sets reach it at high T: see f_F). NaN/Inf on the bit
+      ! pattern (nan_bits): Fcent /= Fcent is folded to .false. by -ffast-math (RELEASE flags)
       do i = 1, nrc_troe
         do j = Ti1, Ti2
-          if (Fcent_tab(j,i) /= Fcent_tab(j,i) .or. abs(Fcent_tab(j,i)) > huge(1d0) .or. &
-              kinf_troe_tab(j,i) < 0d0 .or. k0_troe_tab(j,i) < 0d0) then
+          if (nan_bits(Fcent_tab(j,i)) .or. kinf_troe_tab(j,i) < 0d0 .or. k0_troe_tab(j,i) < 0d0) then
             write(*,'(A,I0,A,I0,A)') '[ERROR] FLINT read_chemistry: chemistry-Troe.dat falloff-Troe reaction ', i, &
               ' at T = ', j, ' K: k_inf/k_0 < 0 or F_cent not finite: table not admissible'
             write(error_unit,'(A,I0,A,I0,A)') '[ERROR] FLINT read_chemistry: chemistry-Troe.dat falloff-Troe reaction ', i, &
@@ -329,14 +324,10 @@ contains
         return
       endif
       ! Table range contract: the falloff tables share the grid of the Arrhenius table
-      dummy1  = lbound(orion%block(1)%mesh, dim=2)
-      dummy23 = lbound(orion%block(1)%mesh, dim=3)
-      Tt1 = nint(orion%block(1)%mesh(1,dummy1,dummy23,dummy23))
-      Tt2 = Tt1 + ubound(orion%block(1)%mesh, dim=2) - dummy1
-      Tf = nint(orion%block(1)%mesh(1,ubound(orion%block(1)%mesh, dim=2),dummy23,dummy23))
-      if (Tf /= Tt2) then
-        write(line,'(A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_chemistry: chemistry-Lindemann.dat is not on a 1 K step (', &
-          Tt2 - Tt1 + 1, ' rows from ', Tt1, ' to ', Tf, ' K): row T must be the rate at T kelvin'
+      iz = grid_1K_zone(orion, nrc_lindemann, Tt1, Tt2)
+      if (iz /= 0) then
+        write(line,'(A,I0,A,I0,A,I0,A)') '[ERROR] FLINT read_chemistry: chemistry-Lindemann.dat zone ', iz, ' is not on the 1 K grid ', &
+          Tt1, '..', Tt2, ' K (first row and row count of zone 1): row T must be the rate at T kelvin'
         write(*,'(A)') trim(line)
         write(error_unit,'(A)') trim(line)
         ios = 6

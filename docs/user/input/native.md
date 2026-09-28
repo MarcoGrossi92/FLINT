@@ -327,7 +327,8 @@ concentration gives a zero rate (Cantera's convention). Without the block the re
 coefficients are the exponents, real as in Cantera (`CH4 + 0.5 O2`: `[CH4] [O2]^0.5`); the product
 coefficients are the exponents of the reverse rate in every case (versions before `test-stoich`
 rounded both to the nearest integer in the Arrhenius-type reactions). Orders on
-falloff reactions are not supported (`read_chemistry` returns `ios = 2`). A file without the block
+falloff reactions are not supported (`read_chemistry` returns `ios = 2`); a block whose `<n>` is not a
+non-negative integer, or with fewer than `<n>` rows, is refused the same way. A file without the block
 (written by an older table writer) is read with the reactant coefficients as orders, the exponents of
 `<n>` = 0; when the general procedure is selected, FLINT prints a `[WARNING]` once per load (standard
 output and error unit) asking to regenerate the tables. The compiled routines do not read the block.
@@ -662,6 +663,12 @@ err = read_realfluid_transport("path/to/INPUT/")  ! optional
 All the tables of one INPUT folder are written on one temperature grid (1 K rows, same first and
 last row). FLINT checks it when the files are loaded:
 
+- in every table (`thermo.dat`, `transport.dat`, `diffusion.dat`, `chemistry-Arrhenius.dat`,
+  `chemistry-Troe.dat`, `chemistry-Lindemann.dat`) every zone must hold the rows T1, T1+1, .., T2 of
+  the first zone (1 K step, no row missing or repeated); the rows are checked one by one in every
+  zone, and a table that breaks it is refused with an `[ERROR]` line naming the zone
+  (`read_idealgas_thermo` returns `ios = 4`, `read_idealgas_transport`/`read_idealgas_diffusion`
+  `ios = 3`, `read_chemistry` `ios = 6`);
 - `transport.dat` and `diffusion.dat` must end at the last row of `thermo.dat` and start at or
   below its first row. A table that starts lower is accepted and read at T kelvin (its rows below
   the range of `thermo.dat` are not used); a table that starts higher or ends at another row is

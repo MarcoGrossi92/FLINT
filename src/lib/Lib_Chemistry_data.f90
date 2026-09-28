@@ -50,6 +50,13 @@ module FLINT_Lib_Chemistry_data
 
 contains
 
+  !> NaN (or infinity) test on the bit pattern (exponent bits all set): unlike isnan(x) or x /= x it
+  !> is not folded away by -ffast-math / -ffinite-math-only and it raises no floating-point exception.
+  pure logical function nan_bits(x)
+    real(8), intent(in) :: x
+    nan_bits = iand(shiftr(transfer(x, 0_8), 52), 2047_8) == 2047_8
+  end function nan_bits
+
   !> Linear interpolation of the rate of reaction `ireact` in the rate table `tab`
   !> between the rows Tint(1) = int(T) and Tint(2) = int(T)+1. `tab` is one of the
   !> module rate tables (kf_tab, kb_tab, the falloff tables) or any table on the

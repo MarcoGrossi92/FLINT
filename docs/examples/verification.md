@@ -8,17 +8,23 @@ The objective is to assess numerical consistency across thermodynamics, chemical
 
 Constant-volume batch reactor simulations were performed for multiple chemical mechanisms. For each case, temperature evolution obtained with FLINT was compared against Cantera reference solutions.
 
-Three modeling approaches were evaluated:
+Four solutions are compared:
 
-- Cantera interface
-- General chemistry subroutine
-- Dedicated explicit chemistry routines
+- Cantera: Cantera's own reactor (C++ `IdealGasReactor`, rtol 1e-10, atol 1e-15), the reference
+- FLINT Cantera: FLINT's integrator with the source terms of the Cantera interface
+- FLINT Explicit: FLINT's integrator with the dedicated explicit chemistry routine
+- FLINT General: FLINT's integrator with the general chemistry subroutine
 
 **Results**
 
 Verification results for the different chemical mechanisms are presented in the figures below. As shown, the numerical results exhibit perfect agreement across all cases.
 
 <div class="grid">
+
+<figure>
+  {% include "examples/images/WD.svg" %}
+  <figcaption>Westbrook-Dryer (no general procedure: its orders are not in chemistry-info.txt)</figcaption>
+</figure>
 
 <figure>
   {% include "examples/images/Troyes.svg" %}
@@ -70,11 +76,16 @@ Verification results for the different chemical mechanisms are presented in the 
   <figcaption>Zhukov-Kong</figcaption>
 </figure>
 
+<figure>
+  {% include "examples/images/Gerlinger.svg" %}
+  <figcaption>Gerlinger</figcaption>
+</figure>
+
 </div>
 
 ## Chemical Equilibrium
 
-Constant-volume equilibrium simulations were performed for multiple set of species defined by the chemical mechanisms. For each case, the resulting temperature obtained with FLINT was compared against Cantera reference solutions.
+Constant-volume equilibrium (constant internal energy and volume) was computed for the species of several mechanisms: over a sweep of the O2/CH4 mixture ratio at 1000 K and 3.25 kg/m³ (Westbrook-Dryer, Zhukov-Kong, TSR-GP-24), and over a sweep of pressure from 1e-5 to 100 bar at 3000 K (Ecker). The equilibrium temperature of FLINT is compared with Cantera's (`equilibrate("UV")`).
 
 **Results**
 
@@ -90,6 +101,16 @@ Verification results are presented in the figures below. As shown, the numerical
 <figure>
   {% include "examples/images/ZK-eq.svg" %}
   <figcaption>Zhukov-Kong</figcaption>
+</figure>
+
+<figure>
+  {% include "examples/images/TSR-GP-24-eq.svg" %}
+  <figcaption>TSR-GP-24</figcaption>
+</figure>
+
+<figure>
+  {% include "examples/images/Ecker-eq.svg" %}
+  <figcaption>Ecker (pressure sweep, 3000 K)</figcaption>
 </figure>
 
 </div>

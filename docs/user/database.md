@@ -112,7 +112,7 @@ with a negative order (see the chemistry routines page). In Cantera's yaml forma
 **Characteristics:**
 - **Species / Reactions**: 5 / 3 (slots CH4, O2, CO2, H2O, CO)
 - **File**: `WD.f90` (routine `Andersen`, mechanism name `WD-Andersen`)
-- **Test**: `test-andersen` (Cantera references on the tables of `test/andersen/WD-Andersen`)
+- **Test**: `chemistry/andersen` (`test-andersen`: Cantera references on the tables of `test/chemistry/andersen/WD-Andersen`)
 
 **Reference:**  
 Andersen, J., Rasmussen, C.L., Giselsson, T., Glarborg, P. *Energy & Fuels*, 23(3), 1379–1389, 2009, DOI 10.1021/ef8003619.

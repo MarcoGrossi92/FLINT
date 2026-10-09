@@ -1,16 +1,23 @@
-# Mechs folders
-CORIA
-Cross
-Ecker
-Gerlinger
-Pelucchi
-Smooke
-Troyes
-TSR-CDF-13
-TSR-GP-24
-TSR-Rich-31
-WD
-ZK
+# Outputs of the test drivers, written in test/<area>/ at every run
 
-# Output
-comp-batch*
+# batch: <case>/batch-*.dat and comp-batch-*.dat (test-batchF, test-batchCXX); reference/ is committed
+batch/*/
+!batch/reference/
+batch/comp-batch*
+
+# equilibrium: <mechanism>/FLINT-CEA.txt (test-CEA); reference/ is committed
+equilibrium/*/
+!equilibrium/reference/
+
+# chemistry: wdot/<mechanism>/ (test-wdot) and the scratch files of the drivers
+chemistry/wdot/
+chemistry/tables/child-*
+chemistry/tables/contract-generator.out
+chemistry/tables/name-blank/
+chemistry/tables/name-nassini/
+chemistry/orders/child-*
+chemistry/orders/negcount/
+chemistry/orders/noblock/
+chemistry/orders/wd-noblock/
+chemistry/orders/zeroblock/
+chemistry/ranges/child-*

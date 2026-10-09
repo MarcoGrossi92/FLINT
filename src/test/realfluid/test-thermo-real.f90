@@ -2,6 +2,7 @@
 !> \author Marco Grossi and Andrea Giacomi
 !> \date 2026
 program test
+  use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
   use FLINT_Lib_Thermodynamic
   use FLINT_Load_ThermoTransport
   implicit none
@@ -10,6 +11,7 @@ program test
   real(8) :: T_min_global, T_max_global
   real(8) :: err_max, err_curr
   integer :: err, i_test, Np_tab, Nh_tab, i_valid, ii
+  integer :: n_nonfinite, n_uncovered
   real(8), parameter :: err_max_tol = 0.5d0   ! [K], max |T(p, h(p, T)) - T| of the round trip
 
   ! Load data
@@ -59,6 +61,8 @@ program test
   write(*,'(A4,A12,A12,A18,A14,A14)') '  k ', '  T_in [K] ', '  p [bar] ', '  h = pT2h [J/kg]', '  T_back [K]', '  err [K]'
 
   err_max = 0.0d0
+  n_nonfinite = 0   ! a NaN round trip never raises err_max: counted apart
+  n_uncovered = 0   ! no row pair contains T_test: p_test would be below the tables
   do i_test = 0, 10
     T_test = T_min_global + (T_max_global - T_min_global) * dble(i_test) / 10.0d0
 
@@ -71,17 +75,24 @@ program test
         exit
       end if
     end do
+    if (i_valid < 0) n_uncovered = n_uncovered + 1
 
     p_test = pmin + (dble(i_valid) + 0.5d0) * deltap   ! midpoint between p_{i_valid} and p_{i_valid+1}
     h_test = pT2h(p_test, T_test)
     T_back = ph2vars(p_test, h_test, T_tab)
     err_curr = T_back - T_test
+    if (.not. ieee_is_finite(err_curr)) n_nonfinite = n_nonfinite + 1
     if (abs(err_curr) > err_max) err_max = abs(err_curr)
     write(*,'(I4,F12.2,F12.2,ES18.5,F14.4,ES14.3)') i_test, T_test, p_test*1.d-5, h_test, T_back, err_curr
   end do
   write(*,'(A,ES12.3,A)') ' Max round-trip error: ', err_max, ' K'
 
   ! regression guard (CTest): 1.6e-1 K on test/realfluid/INPUT, near 320 K
+  if (n_nonfinite > 0 .or. n_uncovered > 0) then
+    write(*,'(A,I0,A,I0,A)') ' Verdict -> fail (', n_nonfinite, ' non-finite round trips, ', n_uncovered, &
+      ' temperatures outside the rows of the tables)'
+    stop 1
+  endif
   if (.not. (err_max <= err_max_tol)) then
     write(*,'(A,ES9.2,A)') ' Verdict -> fail (round-trip error above ', err_max_tol, ' K)'
     stop 1

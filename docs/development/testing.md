@@ -113,7 +113,6 @@ Each test reports:
 `.github/workflows/tests.yml` builds FLINT on Ubuntu (gfortran, `USE_TECIO=ON`, no Cantera, no SUNDIALS) and runs:
 
 * `ctest -L quick` on every push to `main` and every pull request (changes to the documentation only are skipped)
-* every test once a week (Monday 03:00 UTC)
 * on demand (Actions > Tests > Run workflow) the tests of a label regex: `quick`, `batch`, `.` for every test
 
 TecIO, built by ORION at configure time, is cached for each ORION commit.

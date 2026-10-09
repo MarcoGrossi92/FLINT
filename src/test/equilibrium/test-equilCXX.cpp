@@ -6,7 +6,9 @@
 //                      1000 mixture ratios of from 0.01 to 100 (log spaced)
 //   Ecker              T = 3000 K, Y = H2O 0.5, CL2 0.2, H2 0.2, O2 0.1,
 //                      1000 pressures from 1e-5 to 100 bar (log spaced), rho = p/(R T)
-// Columns: the swept variable (of, or p [Pa]) and the equilibrium temperature [K].
+// Columns: the swept variable (of, or p [Pa]) and the equilibrium temperature [K]. A state without
+// equilibrium stops the program (exit code 1) and leaves the reference of the mechanism as it was: the
+// file is written to reference/<mechanism>.dat.part and renamed when the sweep is complete.
 //   test-equilCXX [mechanism...]   every sweep, or the ones named
 
 #include "cantera/core.h"
@@ -16,6 +18,8 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <sstream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -46,12 +50,12 @@ int main(int argc, char** argv)
             auto sol = newSolution("../../database/" + sw.name + "/" + sw.yaml);
             auto gas = sol->thermo();
             std::string file = "reference/" + sw.name + ".dat";
-            std::ofstream out(file);
+            std::string part = file + ".part";
+            std::ofstream out(part);
             out << "# test-CEA reference: " << sw.name << ", test-equilCXX, Cantera " << CANTERA_VERSION << "\n"
                 << "# database/" << sw.name << "/" << sw.yaml << ", equilibrium at constant U and V (UV)\n"
                 << (sw.pressure ? "# p [Pa]  T_eq [K]\n" : "# of = Y_O2/Y_CH4  T_eq [K]\n")
                 << std::setprecision(17);
-            int failed = 0;
             for (int i = 0; i < N; i++) {
                 double x;
                 if (sw.pressure) {
@@ -67,19 +71,29 @@ int main(int argc, char** argv)
                 }
                 try {
                     gas->equilibrate("UV");
-                    out << x << "\t" << gas->temperature() << "\n";
                 } catch (CanteraError& err) {
-                    failed++;
+                    out.close();
+                    std::filesystem::remove(part);
+                    std::ostringstream what;
+                    what << sw.name << ": no equilibrium at " << (sw.pressure ? "p = " : "of = ") << x
+                         << " (state " << i + 1 << " of " << N << "), " << file << " left as it was\n"
+                         << err.what();
+                    throw std::runtime_error(what.str());
                 }
+                out << x << "\t" << gas->temperature() << "\n";
             }
-            std::cout << sw.name << ": wrote " << file << " (" << N - failed << " states, " << failed
-                      << " without equilibrium)" << std::endl;
+            out.close();
+            if (!out) {
+                throw std::runtime_error("cannot write " + part);
+            }
+            std::filesystem::rename(part, file);
+            std::cout << sw.name << ": wrote " << file << " (" << N << " states)" << std::endl;
         }
         appdelete();
         return 0;
     } catch (std::exception& err) {
-        std::cout << err.what() << std::endl;
+        std::cerr << err.what() << std::endl;
         appdelete();
-        return -1;
+        return EXIT_FAILURE;
     }
 }

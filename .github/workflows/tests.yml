@@ -1,7 +1,8 @@
 name: Tests
 
-# The quick tier of the CTest suite (ctest -L quick, see src/test/CMakeLists.txt) on every push,
-# pull request and on demand (Actions > Tests > Run workflow, labels: .).
+# The quick tier of the CTest suite (ctest -L quick, see src/test/CMakeLists.txt) on every push to main
+# and every pull request (the commits of a branch are tested through its pull request, once), and on
+# demand with any label regex (Actions > Tests > Run workflow, labels: . for every test).
 on:
   push:
     branches: [ main ]
@@ -22,7 +23,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     env:
-      LABELS: ${{ github.event_name == 'schedule' && '.' || inputs.labels || 'quick' }}
+      LABELS: ${{ inputs.labels || 'quick' }}
     steps:
       # without submodules: lib/cantera is not used (USE_CANTERA=OFF)
       - name: Checkout repository

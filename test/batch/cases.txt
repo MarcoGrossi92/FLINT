@@ -1,0 +1,25 @@
+# Constant-volume batch reactor cases, read by test-batchF (FLINT), test-batchCXX (Cantera) and CMake
+# (one CTest test batch/<case> per line). Blank lines and lines starting with '#' are skipped.
+#   case     folder of the mechanism in database/ (inputs) and in test/batch/ (outputs of test-batchF/-batchCXX)
+#   yaml     Cantera input file in database/<case>/
+#   general  yes: run the general procedure as well as the dedicated routine, no: the dedicated routine only
+#            (WD: its yaml orders are not in chemistry-info.txt, the general procedure is not this mechanism)
+#   tend     end time [s]; the run is sampled at 1000 equal steps (test-batchF verification and check)
+#   p, T     initial pressure [Pa] and temperature [K]
+#   Y        initial mass fractions, species:value (the other species start at 1e-20 in FLINT, at 0 in Cantera)
+# The Cantera references of test-batchF check are reference/<case>.dat, written by test-batchCXX --reference:
+# regenerate them after a change to a line of this file.
+#
+# case        yaml               general  tend     p        T       Y
+WD            WD.yaml            no       8.0e-3   1.0e5    1000.0  CH4:0.2 O2:0.8
+Troyes        troyes.yaml        yes      5.0e-3   1.0e5    1000.0  H2:0.00534 CL2:0.18796 N2:0.80670
+Ecker         ecker.yaml         yes      5.0e-3   1.0e5    1000.0  H2:0.00534534 CL2:0.18798856 N2:0.8066661
+Cross         cross.yaml         yes      1.0e-2   1.0e5    1010.0  H2:0.00534534 CL2:0.18798856 N2:0.8066661
+Smooke        smooke.yaml        yes      0.2      1.0e5    1300.0  CH4:0.0552 O2:0.2201 N2:0.7247
+CORIA         coria.yaml         yes      5.0e-3   1.0e5    1300.0  CH4:0.2 O2:0.8
+TSR-CDF-13    TSR-CDF-13.yaml    yes      5.0e-3   5.0e5    1300.0  CH4:0.2 O2:0.8
+Pelucchi      pelucchi.yaml      yes      5.0e-2   1.0e5    1250.0  CO:0.00859 O2:0.00606 H2O:0.00365 HCL:0.00025 N2:0.98044
+ZK            ZK.yaml            yes      2.0e-3   5.0e5    1300.0  CH4:0.2 O2:0.8
+TSR-GP-24     TSR-GP-24.yaml     yes      2.0e-3   5.0e5    1300.0  CH4:0.2 O2:0.8
+TSR-Rich-31   TSR-Rich-31.yaml   yes      5.0e-3   5.0e5    1300.0  CH4:0.2 O2:0.8
+Gerlinger     Gerlinger-9.yaml   yes      2.0e-4   1.0e5    1200.0  N2:0.745124 O2:0.226354 H2:0.028522

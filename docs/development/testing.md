@@ -7,7 +7,7 @@ FLINT includes a suite of standalone Fortran programs used for:
 - Performance benchmarking
 - Regression testing during development
 
-These programs are compiled as part of the standard build process and are located in the `bin/test` directory.
+They are compiled with the library (into `bin/test/`) and registered as CTest tests.
 
 ---
 
@@ -26,74 +26,124 @@ FLINT testing follows three principles:
 
 ---
 
-## Categories of Tests
+## Organization
 
-### 1. Thermodynamic Verification
-
-- Compares specific heat and thermodynamic properties
-- Native implementation vs Cantera
-- Checks relative error and execution time
-- Split into ideal-gas and real-fluid variants
-
-Executables:
-```
-
-test-thermo-ideal
-test-thermo-real
+The tests are grouped in five areas. An area has the same name in the sources, in the data and in the tests:
 
 ```
+src/test/<area>/test-<name>.f90    the driver, built as bin/test/test-<name>
+test/<area>/                       its fixtures and references (committed), its outputs (ignored by git)
+<area>/<name>                      the CTest test, run in test/<area>/
+```
+
+| Area | What it covers | Tests |
+|---|---|---|
+| `thermo` | ideal-gas thermodynamics | `runiv` |
+| `realfluid` | real-fluid (p, h) tables | `thermo-real` |
+| `chemistry` | rate tables, mechanism contract, rate laws against Cantera references | `tables`, `ranges`, `rhs-range`, `contract`, `inert`, `falloff`, `orders`, `orders-warn`, `stoich`, `andersen` |
+| `equilibrium` | the CEA solver against Cantera values | `CEA` |
+| `batch` | constant-volume reactor against Cantera references, one test per case | `WD`, `Troyes`, `Ecker`, `Cross`, `Smooke`, `CORIA`, `TSR-CDF-13`, `Pelucchi`, `ZK`, `TSR-GP-24`, `TSR-Rich-31`, `Gerlinger` |
+
+```
+src/test/
+  CMakeLists.txt            the drivers and the registration of every test with its labels
+  thermo/                   test-runiv, test-thermo-ideal
+  realfluid/                test-thermo-real
+  chemistry/                test-tables, test-ranges, test-rhs-range, test-contract, test-inert, test-falloff,
+                            test-orders, test-orders-warn, test-stoich, test-andersen, test-wdot
+  equilibrium/              test-CEA, test-equilCXX (Cantera C++, USE_CANTERA)
+  batch/                    test-batchF, test-batchCXX (Cantera C++, USE_CANTERA)
+test/
+  realfluid/INPUT/          real-fluid tables
+  chemistry/tables/ ranges/ orders/ stoich/ andersen/ inert/
+                            one fixture folder per topic, each with the make_*.py that wrote it
+  equilibrium/              reference/<mechanism>.dat (the Cantera sweeps), eq-verification.py
+  batch/                    cases.txt, reference/<case>.dat, element-standard-entropies.yaml,
+                            batch-verification.py, batch-performance.py
+```
+
+test-thermo-ideal and test-wdot are Cantera benchmarks without a verdict: they are built, they are not tests.
+
+### Labels
+
+Every test has two labels:
+
+* its **area**: `thermo`, `realfluid`, `chemistry`, `equilibrium`, `batch`
+* its **tier**: `quick` (the subset the GitHub workflow runs, about 30 s) or `long` (the rest)
+
+Every test is `quick` except the batch cases Ecker, Cross, Smooke, CORIA, TSR-CDF-13, ZK and TSR-Rich-31
+(10-20 s each, most of it reading their text tables). The quick batch cases cover a global mechanism with
+orders (WD), tables in TecIO's `.szplt` (Troyes, TSR-GP-24), Troe (TSR-GP-24), Troe and Lindemann (Pelucchi)
+and H2/air (Gerlinger). The tier of a batch case is the `BATCH_QUICK` list of `src/test/CMakeLists.txt`.
 
 ---
 
-### 2. Chemical Source Terms
+## Running the Test Suite
 
-- Validates species production rates
-- Explicit kernel vs Cantera net production rates
+From the build directory, after the build:
 
-Executable:
+```bash
+ctest -j8                     # every test
+ctest -L quick                # what the GitHub workflow runs
+ctest -L chemistry            # one area
+ctest -L batch -LE long       # an area, quick tier only
+ctest -R batch/ZK -V          # one test, with its output
 ```
 
-test-wdot
+Without `USE_TECIO`, the tests that read TecIO `.szplt` tables (batch Troyes, TSR-GP-24, TSR-Rich-31 and
+equilibrium/CEA) are disabled.
 
+A driver can also be run by hand from its area folder, for example:
+
+```bash
+cd test/chemistry && ../../bin/test/test-orders
+cd test/batch && ../../bin/test/test-batchF check ZK
 ```
+
+Each test reports:
+
+* Key computed quantities
+* Reference values (if applicable)
+* Success/failure verdict (exit code 1 on failure)
 
 ---
 
-### 3. Reactor Integration
+## Continuous Integration
 
-- Constant-volume batch reactor
-- Compares temperature evolution across:
-  - General chemistry routines
-  - Dedicated chemistry kernels
-  - Cantera backend (if enabled)
+`.github/workflows/tests.yml` builds FLINT on Ubuntu (gfortran, `USE_TECIO=ON`, no Cantera, no SUNDIALS) and runs:
 
-Executable:
-```
+* `ctest -L quick` on every push to `main` and every pull request (changes to the documentation only are skipped)
+* on demand (Actions > Tests > Run workflow) the tests of a label regex: `quick`, `batch`, `.` for every test
 
-test-batchF
-
-```
+TecIO, built by ORION at configure time, is cached for each ORION commit.
 
 ---
 
-### 4. Chemical Equilibrium
+## Areas
 
-- Validates CEA-based equilibrium solver
-- Compares equilibrium temperature and selected species
-
-Executable:
-```
-
-test-CEA
+### thermo
 
 ```
+test-runiv      the universal gas constant is the exact SI value (8314.46261815324 J/(kmol K), the
+                value of Cantera 3.0.1) in FLINT_Lib_Thermodynamic and in the CEA data, Ri_tab derives
+                from it, the pressure p = rho R_mix T of a Cantera state of database/WD agrees with
+                Cantera to 1e-9, and the compiled Frolov routine reproduces its (p/p_atm)^-1.15 law at
+                the Cantera pressure to 1e-9 (5.7e-6 / 6.6e-6 off with the former 8314.51)
+```
 
----
+`test-thermo-ideal` (Cantera): specific heat of FLINT and of Cantera over 1..2000 K, times and relative difference.
 
-### 5. Contract and Table Unit Tests
+### realfluid
 
-Three drivers that need no Cantera and no fixture beyond `database/WD` and `test/tables/WD-100K`
-(made by `test/tables/make_WD-100K.py`); each prints ` Verdict -> pass|fail` and exits 1 on failure:
+```
+test-thermo-real  the (p, h) tables of test/realfluid/INPUT: interpolation, and the inverse (p, T) -> h
+                  of ph2pT, whose round trip T -> h -> T must stay within 0.5 K (0.16 K now)
+```
+
+### chemistry
+
+The drivers need no Cantera; the fixtures are in `test/chemistry/<topic>/`, each written by the `make_*.py`
+next to it (run from the repository root):
 
 ```
 test-tables     rate tables are indexed by temperature whatever their first row:
@@ -121,84 +171,168 @@ test-ranges     the temperature-grid contract of the tables: falloff tables on t
 test-inert      species appended after the slots of a compiled routine are inert on every path (direct
                 call, rhs_native, analytical Jacobian, jac_native) with sentinel-filled outputs
 test-rhs-range  rhs_native/jac_native bail out (F = -1, zero Jacobian) outside the RATE tables as
-                they do outside the thermo tables (test/tables/WD-100K loaded on one grid, the
+                they do outside the thermo tables (test/chemistry/tables/WD-100K loaded on one grid, the
                 rate range then narrowed in memory: a defence for tables set by another path)
 test-orders     the general procedure with the 'Reaction orders' block reproduces Cantera's
                 rates for JLR-frassoldati (yaml orders) and, without it, Cantera's law of the stoichiometric
                 coefficients (the yaml orders removed), not the integer-rounded one of older versions;
                 the general procedure warns about a file without the block, not about a file with it;
                 a block with a negative row count is refused
-                (fixture test/orders/JLR-frassoldati: tables of a table writer, references embedded)
+                (fixture test/chemistry/orders/JLR-frassoldati: tables of a table writer, references embedded)
 test-orders-warn the WARNING of the general procedure for a chemistry-info.txt without the 'Reaction
                 orders' block: none for a block with zero rows (same omegadot, bit for bit, as without the
                 block), one when the general procedure is selected before or after the tables are loaded,
                 none for a hooked name; once per load, on standard output and on the error unit (child
                 process). The files without the block are copies made at run time (orders/noblock from
-                test/orders/JLR-frassoldati/chemistry-info-noblock.txt, orders/wd-noblock from database/WD):
+                test/chemistry/orders/JLR-frassoldati/chemistry-info-noblock.txt, orders/wd-noblock from database/WD):
                 every chemistry-info.txt of database/ and of the fixtures ends with the block (0 rows when
                 the mechanism has no orders), as a table writer writes it
 test-stoich     the general procedure reproduces Cantera's net production rates (to 1e-10 of the gross
                 rates) for fractional stoichiometric coefficients without orders: Arrhenius reactants and
                 products, three-body, Troe and Lindemann, 24-30 states each, and its net rates vanish at
                 Cantera's equilibrium composition; integer control 2 H2 + O2 <=> 2 H2O; general has no
-                analytical Jacobian (fixtures test/stoich/<name> made by test/stoich/make_stoich.py from
+                analytical Jacobian (fixtures test/chemistry/stoich/<name> made by test/chemistry/stoich/make_stoich.py from
                 constructed yaml mechanisms, tables of a table writer from the yaml thermo, references
                 embedded)
 test-andersen   the WD-Andersen routine (step 3 with the Andersen orders [CO2] [H2O]^0.5 [O2]^-0.25)
                 reproduces Cantera's net production rates on the tables of a table writer (fixture
-                test/andersen/WD-Andersen, references embedded), the zero rate at O2 = 0 and the
+                test/chemistry/andersen/WD-Andersen, references embedded), the zero rate at O2 = 0 and the
                 zero-concentration convention of Coronetti (H2 = 0: finite, no divide-by-zero)
-test-runiv      the universal gas constant is the exact SI value (8314.46261815324 J/(kmol K), the
-                value of Cantera 3.0.1) in FLINT_Lib_Thermodynamic and in the CEA data, Ri_tab derives
-                from it, the pressure p = rho R_mix T of a Cantera state of database/WD agrees with
-                Cantera to 1e-9, and the compiled Frolov routine reproduces its (p/p_atm)^-1.15 law at
-                the Cantera pressure to 1e-9 (5.7e-6 / 6.6e-6 off with the former 8314.51)
 ```
 
-## Running the Test Suite
+`test-wdot` (Cantera): FLINT's and Cantera's net production rates over 100..2000 K for the mechanisms,
+written to `test/chemistry/wdot/<mechanism>/`.
 
-From the `test` directory:
+### equilibrium
+
+```
+test-CEA        equilibrium at constant internal energy and volume of the CEA solver for the species of
+                WD, ZK, TSR-GP-24 (1000 O2/CH4 mixture ratios from 0.01 to 100, 1000 K, 3.25 kg/m3) and
+                Ecker (1000 pressures from 1e-5 to 100 bar, 3000 K): every equilibrium temperature of the
+                sweep within 2e-3 of the Cantera reference test/equilibrium/reference/<mechanism>.dat
+                (8.4e-4 at most now), and at one state per mechanism the temperature and a species mass
+                fraction within 1 % of the Cantera values in the driver
+```
+
+The sweeps are written to `test/equilibrium/<mechanism>/FLINT-CEA.txt` and plotted against the references by
+`eq-verification.py` (run from `test/equilibrium`). The references are written once by `test-equilCXX`
+(Cantera C++, `equilibrate("UV")` from the same states) and committed; regenerate them, after a change to the
+sweeps of test-CEA (also in test-equilCXX.cpp), to a mechanism or to Cantera, with
+`cmake --build . --target equilibrium-reference` in a build configured with `USE_CANTERA`.
+
+### batch
+
+- Constant-volume batch reactor, the cases of `test/batch/cases.txt` (mechanism, Cantera yaml, end time,
+  initial pressure, temperature and mass fractions; one line per case, read by both drivers and by CMake)
+- Compares temperature evolution across:
+  - General chemistry routines
+  - Dedicated chemistry kernels
+  - Cantera backend (if enabled)
+- `test-batchF check <case>` (the CTest test `batch/<case>`) needs no Cantera: it compares the dedicated
+  routine and the general procedure with the Cantera reference `test/batch/reference/<case>.dat`, stored in
+  the repository, and the general procedure with the dedicated routine
+
+Executables, run in `test/batch/`:
+```
+test-batchF      [verification | performance | check <case>]   (no argument: asks for the mode)
+test-batchCXX    [verification | performance | --reference [case...]]   (Cantera C++, USE_CANTERA)
+```
+
+`verification` writes `test/batch/<case>/batch-<backend>.dat` (plotted by `batch-verification.py`),
+`performance` the times in `test/batch/comp-batch-<backend>.dat` (`batch-performance.py`).
+With Cantera, both drivers load the Cantera phase in `test/batch`, where Cantera reads
+`element-standard-entropies.yaml` (the standard entropies of the elements; Cantera searches the working
+directory first, and leaves the entropies unknown without the file).
+
+Acceptance of `test-batchF check` (FLINT at RT = AT = 1e-7, reference at rtol 1e-10, atol 1e-15; the
+tolerances are at the top of `test-batchF.f90`):
+
+| Check | Tolerance |
+|---|---|
+| final temperature, relative | 5e-4 |
+| time of half the temperature rise, relative | 2e-3 |
+| mean \|T - T_ref\| over the run / temperature rise | 1e-3 |
+| max \|T_general - T_explicit\| / temperature rise | 1e-5 |
+
+#### Batch reactor references
+
+The files `test/batch/reference/<case>.dat` are written once with Cantera and committed; CTest runs Fortran only.
+Regenerate them after a change to a line of `test/batch/cases.txt`, to a mechanism of `database/` or to Cantera,
+with a build configured with `USE_CANTERA`:
 
 ```bash
-./../bin/test/<test-name>
+cmake --build . --target batch-reference                            # every case
+cd ../test/batch && ../../bin/test/test-batchCXX --reference ZK Gerlinger   # some cases
 ```
 
-Each test reports:
-
-* Key computed quantities
-* Reference values (if applicable)
-* Success/failure verdict
+The references are integrated at rtol 1e-10, atol 1e-15: with an absolute tolerance of 1e-7 on the mass fractions,
+CVODE does not resolve the radicals that start at 0 (Gerlinger, 1200 K, does not ignite in 2e-4 s).
 
 ---
 
-## Test Data Layout and Management
+## Building with Cantera and regenerating the figures
 
-Test data is split across two directories:
+The figures of the [verification page](../examples/verification.md) need the Cantera branches: Cantera's own
+reactor and equilibrium (C++), and FLINT's integrator with the Cantera source terms (Fortran interface).
+A second build with Cantera (it needs SUNDIALS, built by OSLO) keeps its drivers apart from the default build:
 
-* `database/` — raw mechanism data (Cantera YAML, thermodynamic and chemistry data files) used to build the library and to generate the mechanism-specific explicit routines via `utils/YTF.py`.
-* `test/` — per-mechanism inputs and reference ("blessed") outputs used by the test executables at runtime.
+```bash
+cmake -S . -B build-cantera -DUSE_CANTERA=ON -DUSE_SUNDIALS=ON -DUSE_TECIO=ON -DUSE_MPI=OFF -DUSE_OPENMP=OFF \
+      -DFLINT_TEST_BINDIR=$PWD/bin/test-cantera
+cmake --build build-cantera -j8
 
-Both directories are organized per mechanism, using the same mechanism name as the subfolder (e.g. `WD/`, `ZK/`, `Cross/`):
+cd test/batch                                   # batch reactor: 4 datasets per case
+../../bin/test-cantera/test-batchCXX verification     # Cantera            -> <case>/batch-CXX.dat
+../../bin/test-cantera/test-batchF verification       # FLINT Cantera, FLINT Explicit, FLINT General
+python3 batch-verification.py                   # docs/examples/images/<case>.svg
 
+cd ../equilibrium                               # equilibrium: FLINT against the references
+../../bin/test-cantera/test-CEA
+python3 eq-verification.py                      # docs/examples/images/<mechanism>-eq.svg
 ```
-database/<Mechanism>/   # mechanism definition and raw data
-test/<Mechanism>/       # INPUT/ + reference outputs for that mechanism
-```
 
-### Adding a New Mechanism to the Test Suite
+---
+
+## Adding a New Mechanism to the Test Suite
 
 1. Add the mechanism data under `database/<Mechanism>/` (YAML file plus supporting `.dat`/`.txt` files).
 2. Generate the dedicated explicit routine with `utils/YTF.py <Mechanism>` and place the resulting source in `src/lib/Lib_ChemMech/`.
-3. Create a matching `test/<Mechanism>/` folder with an `INPUT/` subfolder for any runtime input files.
-4. Run the relevant test executables against the new mechanism and save the resulting outputs (e.g. `batch-explicit.dat`, `wdot-explicit.dat`, `eq-ref.txt`) as the reference values for future regression checks.
-5. Keep `test/<Mechanism>/` and `database/<Mechanism>/` in sync — removing or renaming a mechanism should update both locations.
+3. Add a line for the mechanism to `test/batch/cases.txt` (CMake then adds the CTest test `batch/<Mechanism>`,
+   in the `long` tier unless it is added to `BATCH_QUICK` in `src/test/CMakeLists.txt`).
+4. Write its Cantera reference with `test-batchCXX --reference <Mechanism>` (from `test/batch/`) and commit
+   `test/batch/reference/<Mechanism>.dat`; check it with `ctest -R batch/<Mechanism> -V`.
+
+---
+
+## Adding a New Test
+
+1. Write the driver `src/test/<area>/test-<name>.f90` (every driver of an area folder is built). It runs in
+   `test/<area>/`: the database is `../../database/`, its fixtures are in `test/<area>/`.
+2. Define reference values or comparison logic, with clear tolerances; print ` Verdict -> pass|fail` and exit
+   with code 1 on failure (`stop 1`).
+3. Register it in `src/test/CMakeLists.txt` with its area and tier:
+
+   ```cmake
+   flint_add_test(<area> <name> quick test-<name>)
+   ```
+
+4. Commit its fixtures, with the script that writes them; add the files it writes at run time to `test/.gitignore`.
+   Two tests that write the same files need a common `RESOURCE_LOCK`.
+
+Tests should:
+
+* Be deterministic
+* Avoid unnecessary I/O
+* Use clear tolerances
+* Focus on a single capability
 
 ---
 
 ## Regression Strategy
 
-Reference ("blessed") values are embedded in the test drivers.
-A test fails if:
+Reference ("blessed") values are embedded in the test drivers, or stored next to their fixtures
+(`reference.txt` of test/chemistry/orders, stoich, andersen; `test/batch/reference/` of the batch reactor).
+A test fails (exit code 1) if:
 
 * The solution is not finite
 * Relative error exceeds defined tolerance
@@ -211,34 +345,6 @@ This ensures that modifications to:
 * Solver infrastructure
 
 do not silently alter validated behavior.
-
----
-
-## Adding a New Test
-
-To add a new regression test:
-
-1. Create a standalone Fortran driver.
-2. Load the required mechanism and data.
-3. Define reference values or comparison logic.
-4. Add success/failure criteria.
-5. Register the executable in the CMake configuration.
-
-Tests should:
-
-* Be deterministic
-* Avoid unnecessary I/O
-* Use clear tolerances
-* Focus on a single capability
-
----
-
-## Continuous Integration (Optional)
-
-When integrated into CI workflows, test executables can be run automatically after each build to ensure numerical stability across commits.
-
-
-
 
 <!-- # Testing & Verification
 

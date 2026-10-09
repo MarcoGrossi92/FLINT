@@ -1,0 +1,60 @@
+name: Tests
+
+# The quick tier of the CTest suite (ctest -L quick, see src/test/CMakeLists.txt) on every push to main
+# and every pull request (the commits of a branch are tested through its pull request, once), and on
+# demand with any label regex (Actions > Tests > Run workflow, labels: . for every test).
+on:
+  push:
+    branches: [ main ]
+    paths-ignore: [ 'docs/**', 'mkdocs.yml', '**.md' ]
+  pull_request:
+    paths-ignore: [ 'docs/**', 'mkdocs.yml', '**.md' ]
+  workflow_dispatch:
+    inputs:
+      labels:
+        description: 'CTest label regex (quick: the CI subset; batch, chemistry, ...; . : every test)'
+        default: 'quick'
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      LABELS: ${{ inputs.labels || 'quick' }}
+    steps:
+      # without submodules: lib/cantera is not used (USE_CANTERA=OFF)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install compilers and libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gfortran libblas-dev liblapack-dev
+
+      - name: Submodules ORION and OSLO
+        id: submodules
+        run: |
+          git submodule update --init lib/ORION lib/OSLO
+          echo "orion=$(git rev-parse HEAD:lib/ORION)" >> "$GITHUB_OUTPUT"
+
+      # ORION builds TecIO at configure time when its install folder is missing
+      - name: Cache TecIO
+        uses: actions/cache@v4
+        with:
+          path: lib/ORION/lib/TecIO/tecio-install-GNU
+          key: tecio-${{ runner.os }}-${{ steps.submodules.outputs.orion }}
+
+      - name: Configure
+        run: >
+          cmake -B build -DCMAKE_BUILD_TYPE=RELEASE
+          -DCMAKE_Fortran_COMPILER=gfortran -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
+          -DUSE_TECIO=ON -DUSE_CANTERA=OFF -DUSE_SUNDIALS=OFF -DUSE_MPI=OFF -DUSE_OPENMP=OFF
+
+      - name: Build
+        run: cmake --build build -j "$(nproc)"
+
+      - name: Test (labels ${{ env.LABELS }})
+        run: ctest --test-dir build -L "$LABELS" -j "$(nproc)" --output-on-failure

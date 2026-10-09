@@ -6,26 +6,33 @@ The test suite exercises the main FLINT capabilities and provides immediate feed
 
 ---
 
-## Running a Test Binary
+## Running the Tests
 
-After a successful build, test executables are located in the `bin/test`
-directory.
-
-As a first check, run a thermodynamic verification test:
+After a successful build, the test executables are in `bin/test` and registered with CTest. From the
+build directory, run the quick tier of the suite (about 30 s):
 
 ```bash
-cd test
-./../bin/test/test-thermo
+cd build
+ctest -L quick
 ```
 
-This program compares FLINT native thermodynamic routines against reference
-implementations (if enabled) and prints execution times and numerical errors.
+or every test with `ctest -j8`. Each test prints its checks and a verdict, and exits with code 1 on failure; CTest summarizes them.
+
+A single driver can also be run by hand from its area folder in `test/`, for example the universal gas constant
+and the ideal-gas pressure against Cantera values:
+
+```bash
+cd test/thermo
+../../bin/test/test-runiv
+```
 
 A successful run indicates that:
 
 * FLINT is correctly linked
 * Thermodynamic data are loaded properly
 * The numerical kernels are functioning as expected
+
+See [Testing](../development/testing.md) for the areas, the labels and the reference data.
 
 ---
 

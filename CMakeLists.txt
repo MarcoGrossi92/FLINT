@@ -146,9 +146,8 @@ else()
 endif()
 
 # -------- Build FLINT test suite --------
+# ctest in the build directory runs the tests registered in src/test/CMakeLists.txt
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
-  add_subdirectory("src/test/Fortran")
-  if (USE_CANTERA)
-    add_subdirectory("src/test/CXX")
-  endif()
+  enable_testing()
+  add_subdirectory("src/test")
 endif()

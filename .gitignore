@@ -1,5 +1,6 @@
 # Build artifacts and binaries
 build
+build-*
 bin
 CMakePresets.json
 site

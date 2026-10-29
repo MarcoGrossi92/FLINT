@@ -1,27 +1,24 @@
 # FLINT test suite: the drivers of src/test/<area>/ (built in bin/test/) and their CTest tests.
 # A test <area>/<name> runs in test/<area>/, where its fixtures and outputs are, with two labels:
-#   area  thermo, realfluid, chemistry, equilibrium, batch    (ctest -L chemistry)
+#   area  thermo, chemistry, equilibrium, batch               (ctest -L chemistry)
 #   tier  quick: the subset run by the GitHub workflow       (ctest -L quick)
 #         long:  the rest                                    (ctest runs both)
-set(TEST_AREAS thermo realfluid chemistry equilibrium batch)
+set(TEST_AREAS thermo chemistry equilibrium batch)
 set(FLINT_TEST_DIR "${CMAKE_SOURCE_DIR}/test")
 # another build (e.g. with Cantera) keeps its drivers apart with -DFLINT_TEST_BINDIR=<path>
 set(FLINT_TEST_BINDIR "${CMAKE_SOURCE_DIR}/bin/test" CACHE PATH "Folder of the test drivers")
 set(EXECUTABLE_OUTPUT_PATH "${FLINT_TEST_BINDIR}")
 
 # -------- Drivers --------
-# FLINT compiled once for every driver (a driver compiling the sources itself writes the same module
-# files as the others: a parallel build collides on them)
-add_library(flint_test_lib STATIC ${FLINT_SRC})
-target_include_directories(flint_test_lib PUBLIC $<BUILD_INTERFACE:${CMAKE_Fortran_MODULE_DIRECTORY}>)
-link_FLINT_dependencies(flint_test_lib)
-target_link_libraries(flint_test_lib PUBLIC ORION)
+# Every driver links the library FLINT, compiled once (a driver compiling the sources itself would write
+# the same module files as the others: a parallel build collides on them)
+set(DRIVER_LIBS FLINT)
 if (USE_TECIO)
-  target_link_libraries(flint_test_lib PUBLIC ${LINKLIBS})
+  list(APPEND DRIVER_LIBS ${LINKLIBS})
 endif()
 
 foreach(AREA ${TEST_AREAS})
-  # the working directory of the tests of the area (test/thermo has no fixture, git does not keep it)
+  # the working directory of the tests of the area (git keeps it only while it holds fixtures)
   file(MAKE_DIRECTORY "${FLINT_TEST_DIR}/${AREA}")
   file(GLOB DRIVERS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${AREA}/*.f90" "${CMAKE_CURRENT_SOURCE_DIR}/${AREA}/*.F90")
   foreach(DRIVER ${DRIVERS})
@@ -31,7 +28,7 @@ foreach(AREA ${TEST_AREAS})
     # C++ library is in LINKLIBS (with ifx the CXX link dropped the Fortran main: undefined main)
     set_target_properties(${EXE_NAME} PROPERTIES LINKER_LANGUAGE Fortran)
     # FLINT and its dependencies (see cmake/LinkDependencies.cmake): OSLO, ORION, TecIO and Cantera (optional)
-    target_link_libraries(${EXE_NAME} PRIVATE flint_test_lib)
+    target_link_libraries(${EXE_NAME} PRIVATE ${DRIVER_LIBS})
   endforeach()
 endforeach()
 
@@ -40,7 +37,7 @@ if (USE_CANTERA)
   add_executable(test-batchCXX batch/test-batchCXX.cpp)
   set_target_properties(test-batchCXX PROPERTIES CXX_STANDARD 17)
   # one SUNDIALS installation
-  target_include_directories(test-batchCXX PRIVATE "${CMAKE_SOURCE_DIR}/lib/OSLO/sundials-install/include/"
+  target_include_directories(test-batchCXX PRIVATE "${SUNDIALS_INSTALL_DIR}/include/"
                                                    "${canteraD}/include/")
   link_FLINT_dependencies(test-batchCXX)
   target_link_libraries(test-batchCXX PRIVATE ORION)
@@ -56,7 +53,7 @@ if (USE_CANTERA)
   #   cmake --build . --target equilibrium-reference
   add_executable(test-equilCXX equilibrium/test-equilCXX.cpp)
   set_target_properties(test-equilCXX PROPERTIES CXX_STANDARD 17)
-  target_include_directories(test-equilCXX PRIVATE "${CMAKE_SOURCE_DIR}/lib/OSLO/sundials-install/include/"
+  target_include_directories(test-equilCXX PRIVATE "${SUNDIALS_INSTALL_DIR}/include/"
                                                    "${canteraD}/include/")
   link_FLINT_dependencies(test-equilCXX)
   target_link_libraries(test-equilCXX PRIVATE ORION)
@@ -73,11 +70,9 @@ function(flint_add_test AREA NAME TIER)
   set_tests_properties(${AREA}/${NAME} PROPERTIES LABELS "${AREA};${TIER}" TIMEOUT 600)
 endfunction()
 
-# Ideal-gas thermodynamics (test-thermo-ideal: a Cantera benchmark, not a test)
-flint_add_test(thermo      runiv        quick test-runiv)
-
-# Real fluid: the (p, h) tables and the inverse (p, T) -> h
-flint_add_test(realfluid   thermo-real  quick test-thermo-real)
+# Thermodynamics: the real-fluid (p, h) tables and the inverse (p, T) -> h
+# (test-thermo-ideal: a Cantera benchmark, not a test)
+flint_add_test(thermo      thermo-real  quick test-thermo-real)
 
 # Chemistry: tables, mechanism contract, rate laws against Cantera references
 # (test-wdot: Cantera at run time, not a test)

@@ -18,12 +18,12 @@ ctest -L quick
 
 or every test with `ctest -j8`. Each test prints its checks and a verdict, and exits with code 1 on failure; CTest summarizes them.
 
-A single driver can also be run by hand from its area folder in `test/`, for example the universal gas constant
-and the ideal-gas pressure against Cantera values:
+A single driver can also be run by hand from its area folder in `test/`, for example the real-fluid (p, h) tables
+and their inverse (p, T) -> h:
 
 ```bash
 cd test/thermo
-../../bin/test/test-runiv
+../../bin/test/test-thermo-real
 ```
 
 A successful run indicates that:

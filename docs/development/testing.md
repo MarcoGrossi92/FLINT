@@ -28,7 +28,7 @@ FLINT testing follows three principles:
 
 ## Organization
 
-The tests are grouped in five areas. An area has the same name in the sources, in the data and in the tests:
+The drivers are grouped in four areas. An area has the same name in the sources, in the data and in the tests:
 
 ```
 src/test/<area>/test-<name>.f90    the driver, built as bin/test/test-<name>
@@ -38,8 +38,7 @@ test/<area>/                       its fixtures and references (committed), its 
 
 | Area | What it covers | Tests |
 |---|---|---|
-| `thermo` | ideal-gas thermodynamics | `runiv` |
-| `realfluid` | real-fluid (p, h) tables | `thermo-real` |
+| `thermo` | real-fluid (p, h) tables; the ideal-gas Cantera benchmark `test-thermo-ideal` | `thermo-real` |
 | `chemistry` | rate tables, mechanism contract, rate laws against Cantera references | `tables`, `ranges`, `rhs-range`, `contract`, `inert`, `falloff`, `orders`, `orders-warn`, `stoich`, `andersen` |
 | `equilibrium` | the CEA solver against Cantera values | `CEA` |
 | `batch` | constant-volume reactor against Cantera references, one test per case | `WD`, `Troyes`, `Ecker`, `Cross`, `Smooke`, `CORIA`, `TSR-CDF-13`, `Pelucchi`, `ZK`, `TSR-GP-24`, `TSR-Rich-31`, `Gerlinger` |
@@ -47,14 +46,13 @@ test/<area>/                       its fixtures and references (committed), its 
 ```
 src/test/
   CMakeLists.txt            the drivers and the registration of every test with its labels
-  thermo/                   test-runiv, test-thermo-ideal
-  realfluid/                test-thermo-real
+  thermo/                   test-thermo-real, test-thermo-ideal
   chemistry/                test-tables, test-ranges, test-rhs-range, test-contract, test-inert, test-falloff,
                             test-orders, test-orders-warn, test-stoich, test-andersen, test-wdot
   equilibrium/              test-CEA, test-equilCXX (Cantera C++, USE_CANTERA)
   batch/                    test-batchF, test-batchCXX (Cantera C++, USE_CANTERA)
 test/
-  realfluid/INPUT/          real-fluid tables
+  thermo/INPUT/             real-fluid tables
   chemistry/tables/ ranges/ orders/ stoich/ andersen/ inert/
                             one fixture folder per topic, each with the make_*.py that wrote it
   equilibrium/              reference/<mechanism>.dat (the Cantera sweeps), eq-verification.py
@@ -68,7 +66,7 @@ test-thermo-ideal and test-wdot are Cantera benchmarks without a verdict: they a
 
 Every test has two labels:
 
-* its **area**: `thermo`, `realfluid`, `chemistry`, `equilibrium`, `batch`
+* its **area**: `thermo`, `chemistry`, `equilibrium`, `batch`
 * its **tier**: `quick` (the subset the GitHub workflow runs, about 30 s) or `long` (the rest)
 
 Every test is `quick` except the batch cases Ecker, Cross, Smooke, CORIA, TSR-CDF-13, ZK and TSR-Rich-31
@@ -124,21 +122,11 @@ TecIO, built by ORION at configure time, is cached for each ORION commit.
 ### thermo
 
 ```
-test-runiv      the universal gas constant is the exact SI value (8314.46261815324 J/(kmol K), the
-                value of Cantera 3.0.1) in FLINT_Lib_Thermodynamic and in the CEA data, Ri_tab derives
-                from it, the pressure p = rho R_mix T of a Cantera state of database/WD agrees with
-                Cantera to 1e-9, and the compiled Frolov routine reproduces its (p/p_atm)^-1.15 law at
-                the Cantera pressure to 1e-9 (5.7e-6 / 6.6e-6 off with the former 8314.51)
+test-thermo-real  the (p, h) tables of test/thermo/INPUT: interpolation, and the inverse (p, T) -> h
+                  of ph2pT, whose round trip T -> h -> T must stay within 0.5 K (0.16 K now)
 ```
 
 `test-thermo-ideal` (Cantera): specific heat of FLINT and of Cantera over 1..2000 K, times and relative difference.
-
-### realfluid
-
-```
-test-thermo-real  the (p, h) tables of test/realfluid/INPUT: interpolation, and the inverse (p, T) -> h
-                  of ph2pT, whose round trip T -> h -> T must stay within 0.5 K (0.16 K now)
-```
 
 ### chemistry
 

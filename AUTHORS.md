@@ -10,25 +10,13 @@
 
 ## Contributions
 
-The authors and contributors to FLINT are responsible for the
-development, implementation, testing, validation, and documentation
-of the software.
+The authors and contributors to FLINT are responsible for the development, implementation, testing, validation, and documentation of the software.
 
-For the complete contribution history, see the Git history and
-[GitHub contributors](https://github.com/MarcoGrossi92/FLINT/graphs/contributors).
+For the complete contribution history, see the Git history and [GitHub contributors](https://github.com/MarcoGrossi92/FLINT/graphs/contributors).
 
 ## Acknowledgements
 
-FLINT builds on established methods, algorithms, and external
-open-source software used in thermochemistry, chemical kinetics,
-transport-property evaluation, and reactive-flow simulation.
-
-In particular, FLINT incorporates concepts and algorithms from
-[NASA CEA](https://github.com/nasa/cea).
-
-FLINT also provides optional integration with
-[Cantera](https://github.com/Cantera/cantera).
-
-The FLINT repository includes ORION and OSLO as Git submodules.
-Their respective licenses and attribution requirements apply to
-those components.
+FLINT builds on established methods, algorithms, and external open-source software used in thermochemistry, chemical kinetics, transport-property evaluation, and reactive-flow simulation.
+In particular, FLINT incorporates concepts and algorithms from [NASA CEA](https://github.com/nasa/cea).
+FLINT also provides optional integration with [Cantera](https://github.com/Cantera/cantera).
+FLINT uses ORION and OSLO, fetched at build time. Their respective licenses and attribution requirements apply to those components.

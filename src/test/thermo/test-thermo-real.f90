@@ -87,7 +87,7 @@ program test
   end do
   write(*,'(A,ES12.3,A)') ' Max round-trip error: ', err_max, ' K'
 
-  ! regression guard (CTest): 1.6e-1 K on test/realfluid/INPUT, near 320 K
+  ! regression guard (CTest): 1.6e-1 K on test/thermo/INPUT, near 320 K
   if (n_nonfinite > 0 .or. n_uncovered > 0) then
     write(*,'(A,I0,A,I0,A)') ' Verdict -> fail (', n_nonfinite, ' non-finite round trips, ', n_uncovered, &
       ' temperatures outside the rows of the tables)'

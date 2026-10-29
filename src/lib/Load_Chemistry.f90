@@ -176,10 +176,10 @@ contains
 
     !! Rate Arrhenius
     if (present(folder)) then
-      ios = tec_read_points_multivars(orion,2,trim(folder)//'/'//trim(FLINT_phase_prefix)//'chemistry-Arrhenius.dat')
+      ios = tec_read_structured_multiblock(orion=orion, filename=trim(folder)//'/'//trim(FLINT_phase_prefix)//'chemistry-Arrhenius.dat')
       if (ios/=0) ios = tec_read_structured_multiblock(orion=orion, filename=trim(folder)//'/'//trim(FLINT_phase_prefix)//'chemistry-Arrhenius.szplt')
     else
-      ios = tec_read_points_multivars(orion,2,trim('INPUT/')//trim(FLINT_phase_prefix)//'chemistry-Arrhenius.dat')
+      ios = tec_read_structured_multiblock(orion=orion, filename=trim('INPUT/')//trim(FLINT_phase_prefix)//'chemistry-Arrhenius.dat')
       if (ios/=0) ios = tec_read_structured_multiblock(orion=orion, filename=trim('INPUT/')//trim(FLINT_phase_prefix)//'chemistry-Arrhenius.szplt')
     endif
     if (ios/=0) then
@@ -239,10 +239,10 @@ contains
     if (nrc_troe/=0) then
       deallocate(orion%block)
       if (present(folder)) then
-        ios = tec_read_points_multivars(orion,4,trim(folder)//'/'//trim(FLINT_phase_prefix)//'chemistry-Troe.dat')
+        ios = tec_read_structured_multiblock(orion=orion, filename=trim(folder)//'/'//trim(FLINT_phase_prefix)//'chemistry-Troe.dat')
         if (ios/=0) ios = tec_read_structured_multiblock(orion=orion, filename=trim(folder)//'/'//trim(FLINT_phase_prefix)//'chemistry-Troe.szplt')
       else
-        ios = tec_read_points_multivars(orion,4,trim('INPUT/')//trim(FLINT_phase_prefix)//'chemistry-Troe.dat')
+        ios = tec_read_structured_multiblock(orion=orion, filename=trim('INPUT/')//trim(FLINT_phase_prefix)//'chemistry-Troe.dat')
         if (ios/=0) ios = tec_read_structured_multiblock(orion=orion, filename=trim('INPUT/')//trim(FLINT_phase_prefix)//'chemistry-Troe.szplt')
       endif
       if (ios/=0) then
@@ -305,10 +305,10 @@ contains
     if (nrc_lindemann/=0) then
       deallocate(orion%block)
       if (present(folder)) then
-        ios = tec_read_points_multivars(orion,3,trim(folder)//'/'//trim(FLINT_phase_prefix)//'chemistry-Lindemann.dat')
+        ios = tec_read_structured_multiblock(orion=orion, filename=trim(folder)//'/'//trim(FLINT_phase_prefix)//'chemistry-Lindemann.dat')
         if (ios/=0) ios = tec_read_structured_multiblock(orion=orion, filename=trim(folder)//'/'//trim(FLINT_phase_prefix)//'chemistry-Lindemann.szplt')
       else
-        ios = tec_read_points_multivars(orion,3,trim('INPUT/')//trim(FLINT_phase_prefix)//'chemistry-Lindemann.dat')
+        ios = tec_read_structured_multiblock(orion=orion, filename=trim('INPUT/')//trim(FLINT_phase_prefix)//'chemistry-Lindemann.dat')
         if (ios/=0) ios = tec_read_structured_multiblock(orion=orion, filename=trim('INPUT/')//trim(FLINT_phase_prefix)//'chemistry-Lindemann.szplt')
       endif
       if (ios/=0) then

@@ -124,7 +124,7 @@ contains
       return
     endif
     ios = -1
-    if (exists_dat)   ios = tec_read_points_multivars(orion,4,trim(thermofile(1)))
+    if (exists_dat)   ios = tec_read_structured_multiblock(orion=orion, filename=trim(thermofile(1)))
     if (ios/=0 .and. exists_szplt) &
       ios = tec_read_structured_multiblock(orion=orion, filename=trim(thermofile(2)))
     if (ios/=0) then
@@ -243,7 +243,7 @@ contains
     inquire(file=trim(transfile(1)),exist=exists)
     if (exists) then
       attempted = .true.
-      ios = tec_read_points_multivars(orion,2,trim(transfile(1)))
+      ios = tec_read_structured_multiblock(orion=orion, filename=trim(transfile(1)))
     endif
     inquire(file=trim(transfile(2)),exist=exists)
     if (exists) then
@@ -349,7 +349,7 @@ contains
         endif
         close(u)
       endif
-      ios = tec_read_points_multivars(orion,1,trim(difffile(1)))
+      ios = tec_read_structured_multiblock(orion=orion, filename=trim(difffile(1)))
     endif
     inquire(file=trim(difffile(2)),exist=exists)
     if (exists) then

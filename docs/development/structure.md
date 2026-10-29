@@ -33,7 +33,8 @@ cmake/
 | `src/lib/`              | Core library modules                                |
 | `src/lib/Lib_ChemMech/` | Mechanism-specific explicit routines                |
 | `src/test/`             | Test drivers, one folder per area                   |
-| `lib/`                  | External submodules (OSLO, ORION, optional Cantera) |
+| `lib/`                  | External submodule (optional Cantera)               |
+| `cmake/`                | Build modules (flags, dependencies, `SemVerDeps`)   |
 | `database/`             | Raw chemical mechanism data (per-mechanism)          |
 | `test/`                 | Test fixtures, references and outputs, per area     |
 | `bin/`                  | Compiled test executables (`bin/test/`)             |
@@ -147,8 +148,7 @@ Test programs are separated from the core library, one folder per area:
 
 ```
 src/test/CMakeLists.txt     builds the drivers into bin/test/ and registers the CTest tests with their labels
-src/test/thermo/            test-runiv, test-thermo-ideal
-src/test/realfluid/         test-thermo-real
+src/test/thermo/            test-thermo-real, test-thermo-ideal
 src/test/chemistry/         test-tables, test-ranges, test-rhs-range, test-contract, test-inert, test-falloff,
                             test-orders, test-orders-warn, test-stoich, test-andersen, test-wdot
 src/test/equilibrium/       test-CEA, test-equilCXX.cpp (Cantera C++: the equilibrium references)
@@ -186,12 +186,12 @@ Adding support for a new mechanism starts by adding a new subfolder here.
 
 ## Test Cases and Validation Data (`test/`)
 
-The tests are grouped in five areas: `thermo`, `realfluid`, `chemistry`, `equilibrium`, `batch`. The drivers
+The drivers are grouped in four areas: `thermo`, `chemistry`, `equilibrium`, `batch`. The drivers
 are in `src/test/<area>/`, their data in `test/<area>/`, where CTest runs them:
 
 ```
 test/
-  realfluid/INPUT/          real-fluid tables
+  thermo/INPUT/             real-fluid tables
   chemistry/<topic>/        fixtures of the chemistry drivers (tables, ranges, orders, stoich, andersen, inert),
                             each written by the make_*.py next to it
   equilibrium/              reference/ (the Cantera equilibrium sweeps), eq-verification.py
@@ -226,18 +226,12 @@ Mechanism generation is part of the development workflow and is documented in:
 development/chemistry_generation.md
 ```
 
-## External Dependencies (`lib/`)
+## External Dependencies
 
-```
-lib/OSLO
-lib/ORION
-lib/cantera
-```
-
-These are managed as Git submodules.
-
-* **OSLO / ORION**: Numerical infrastructure
-* **Cantera**: Optional reference implementation
+* **OSLO / ORION**: Numerical infrastructure. CMake fetches a release of each at configure time, the newest one that
+  satisfies the requirement in `CMakeLists.txt` (`cmake/SemVerDeps.cmake`; see
+  [Installation](../getting-started/installation.md#orion-and-oslo)).
+* **Cantera**: Optional reference implementation, the Git submodule `lib/cantera`.
 
 ## Architectural Overview
 

@@ -4,3 +4,6 @@ build-*
 bin
 CMakePresets.json
 site
+
+# Releases of ORION and OSLO selected by the configure (cmake/SemVerDeps.cmake): a library does not pin them
+deps.lock

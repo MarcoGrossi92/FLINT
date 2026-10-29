@@ -34,24 +34,25 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gfortran libblas-dev liblapack-dev
 
-      - name: Submodules ORION and OSLO
-        id: submodules
+      # ORION and OSLO: the newest releases that FLINT accepts (CMakeLists.txt), cloned at configure time. A first
+      # configure without TecIO selects them, in deps.lock, without building TecIO
+      - name: Select ORION and OSLO
+        id: deps
         run: |
-          git submodule update --init lib/ORION lib/OSLO
-          echo "orion=$(git rev-parse HEAD:lib/ORION)" >> "$GITHUB_OUTPUT"
+          cmake -B build -DCMAKE_BUILD_TYPE=RELEASE \
+            -DCMAKE_Fortran_COMPILER=gfortran -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ \
+            -DUSE_TECIO=OFF -DUSE_CANTERA=OFF -DUSE_SUNDIALS=OFF -DUSE_MPI=OFF -DUSE_OPENMP=OFF
+          echo "orion=$(awk '$1 == "ORION" {print $2}' deps.lock)" >> "$GITHUB_OUTPUT"
 
-      # ORION builds TecIO at configure time when its install folder is missing
+      # ORION builds TecIO at configure time when ORION_TECIO_DIR has none: one per ORION release
       - name: Cache TecIO
         uses: actions/cache@v4
         with:
-          path: lib/ORION/lib/TecIO/tecio-install-GNU
-          key: tecio-${{ runner.os }}-${{ steps.submodules.outputs.orion }}
+          path: build-deps/tecio/tecio-install-GNU
+          key: tecio-${{ runner.os }}-${{ steps.deps.outputs.orion }}
 
       - name: Configure
-        run: >
-          cmake -B build -DCMAKE_BUILD_TYPE=RELEASE
-          -DCMAKE_Fortran_COMPILER=gfortran -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
-          -DUSE_TECIO=ON -DUSE_CANTERA=OFF -DUSE_SUNDIALS=OFF -DUSE_MPI=OFF -DUSE_OPENMP=OFF
+        run: cmake -B build -DUSE_TECIO=ON -DORION_TECIO_DIR="$PWD/build-deps/tecio"
 
       - name: Build
         run: cmake --build build -j "$(nproc)"

@@ -23,8 +23,9 @@ Global Options:
 Commands:
   build                     Perform a full build
     --compilers=<name>      Set compilers suite (intel,gnu)
-    --include-orion=<path>  Set external ORION path
-    --include-oslo=<path>   Set external OSLO path
+    --include-orion=<path>  Build a local ORION checkout instead of a release
+    --include-oslo=<path>   Build a local OSLO checkout instead of a release
+    --update-deps           Select again the newest releases of ORION and OSLO (deps.lock)
     --use-cantera           Use Cantera (Sundials required)
     --use-sundials          Use Sundials (via OSLO)
     --use-tecio             Use TecIO (via ORION)
@@ -57,6 +58,14 @@ function write_presets() {
   FC=$(grep '^CMAKE_Fortran_COMPILER:FILEPATH=' "$BUILD_DIR/CMakeCache.txt" | cut -d= -f2-)
   CC=$(grep '^CMAKE_C_COMPILER:FILEPATH=' "$BUILD_DIR/CMakeCache.txt" | cut -d= -f2-)
   CXX=$(grep '^CMAKE_CXX_COMPILER:FILEPATH=' "$BUILD_DIR/CMakeCache.txt" | cut -d= -f2-)
+  # the local checkouts, when given
+  local sources=""
+  if [[ -n $ORION_PATH ]]; then
+    sources+="        \"FETCHCONTENT_SOURCE_DIR_ORION\": \"${ORION_PATH}\","$'\n'
+  fi
+  if [[ -n $OSLO_PATH ]]; then
+    sources+="        \"FETCHCONTENT_SOURCE_DIR_OSLO\": \"${OSLO_PATH}\","$'\n'
+  fi
   
   cat <<EOF > CMakePresets.json
 {
@@ -72,8 +81,8 @@ function write_presets() {
       "binaryDir": "\${sourceDir}/build",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "${BUILD_TYPE}",
-        "ORION_PATH": "${ORION_PATH}",
-        "OSLO_PATH": "${OSLO_PATH}",
+${sources}        "ORION_TECIO_DIR": "${DEPS_DIR}/tecio",
+        "OSLO_SUNDIALS_DIR": "${SUNDIALS_DIR}",
         "CMAKE_Fortran_COMPILER": "${FC}",
         "CMAKE_CXX_COMPILER": "${CXX}",
         "CMAKE_C_COMPILER": "${CC}",
@@ -91,8 +100,12 @@ EOF
 # Default global values
 COMMAND=""
 COMPILERS=""
-ORION_PATH=$(pwd)'/lib/ORION/'
-OSLO_PATH=$(pwd)'/lib/OSLO/'
+# ORION and OSLO: the releases of deps.lock, or the newest ones that FLINT accepts (see CMakeLists.txt)
+ORION_PATH=""
+OSLO_PATH=""
+UPDATE_DEPS=false
+# TecIO and SUNDIALS, built by ORION and OSLO, here: the build folder is removed at each build
+DEPS_DIR="$DIR/build-deps"
 BUILD_TYPE=RELEASE
 USE_SUNDIALS=false
 USE_CANTERA=false
@@ -100,7 +113,7 @@ USE_TECIO=false
 
 # Define allowed options for each command using regular arrays
 CMD=("build")
-CMD_OPTIONS_build=("--compilers --include-orion --include-oslo --use-sundials --use-cantera --use-tecio")
+CMD_OPTIONS_build=("--compilers --include-orion --include-oslo --update-deps --use-sundials --use-cantera --use-tecio")
 
 # Parse global options
 while getopts "v-:" opt; do
@@ -141,11 +154,17 @@ while [[ $# -gt 0 ]]; do
             ;;
         --include-orion=*)
             [[ "$COMMAND" == "build" ]] || { error " --include-orion is only valid for 'build' command"; exit 1; }
-            ORION_PATH="${1#*=}"
+            # absolute: CMake takes the folder from the build directory
+            ORION_PATH=$(cd "${1#*=}" && pwd) || { error "No folder ${1#*=}"; exit 1; }
             ;;
         --include-oslo=*)
             [[ "$COMMAND" == "build" ]] || { error " --include-oslo is only valid for 'build' command"; exit 1; }
-            OSLO_PATH="${1#*=}"
+            # absolute: CMake takes the folder from the build directory
+            OSLO_PATH=$(cd "${1#*=}" && pwd) || { error "No folder ${1#*=}"; exit 1; }
+            ;;
+        --update-deps)
+            [[ "$COMMAND" == "build" ]] || { error " --update-deps is only valid for 'build' command"; exit 1; }
+            UPDATE_DEPS=true
             ;;
         --use-cantera)
             [[ "$COMMAND" == "build" ]] || { error " --use-cantera is only valid for 'build' command"; exit 1; }
@@ -175,10 +194,6 @@ case "$COMMAND" in
     build)
         task "Building $project"
 
-        task "Cloning submodules"
-        [[ $ORION_PATH == $(pwd)'/lib/ORION/' ]] && git submodule update --init lib/ORION
-        [[ $OSLO_PATH == $(pwd)'/lib/OSLO/' ]] && git submodule update --init lib/OSLO
-
         if [[ $COMPILERS == "intel" ]]; then 
             export FC="ifx"
             export CXX="icpx"
@@ -190,8 +205,9 @@ case "$COMMAND" in
         fi
         log "Build dir: $BUILD_DIR"
         log "Build type: $BUILD_TYPE"
-        log "ORION path: $ORION_PATH"
-        log "OSLO path: $OSLO_PATH"        
+        log "ORION: ${ORION_PATH:-release}"
+        log "OSLO: ${OSLO_PATH:-release}"
+        log "Update ORION and OSLO: $UPDATE_DEPS"
         log "Use Cantera: $USE_CANTERA"
         log "Use Sundials: $USE_SUNDIALS"
         log "Use TecIO: $USE_TECIO"
@@ -200,8 +216,22 @@ case "$COMMAND" in
         else
           log "Compilers: FC=$FC, CC=$CC", CXX=$CXX
         fi
+        # one SUNDIALS per compilers suite (OSLO rebuilds an installation made with other compilers)
+        SUNDIALS_DIR="$DEPS_DIR/sundials-install-${COMPILERS:-default}"
+        CMAKE_ARGS=(-DUSE_CANTERA=$USE_CANTERA -DUSE_SUNDIALS=$USE_SUNDIALS -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+                    -DUSE_OPENMP=OFF -DUSE_MPI=OFF -DUSE_TECIO=$USE_TECIO
+                    -DORION_TECIO_DIR="$DEPS_DIR/tecio" -DOSLO_SUNDIALS_DIR="$SUNDIALS_DIR")
+        if [[ -n $ORION_PATH ]]; then
+          CMAKE_ARGS+=(-DFETCHCONTENT_SOURCE_DIR_ORION="$ORION_PATH")
+        fi
+        if [[ -n $OSLO_PATH ]]; then
+          CMAKE_ARGS+=(-DFETCHCONTENT_SOURCE_DIR_OSLO="$OSLO_PATH")
+        fi
+        if [[ $UPDATE_DEPS == true ]]; then
+          CMAKE_ARGS+=(-DSEMVER_UPDATE=ALL)
+        fi
         rm -rf $BUILD_DIR
-        cmake -B $BUILD_DIR -DORION_PATH=$ORION_PATH -DOSLO_PATH=$OSLO_PATH -DUSE_CANTERA=$USE_CANTERA -DUSE_SUNDIALS=$USE_SUNDIALS -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DUSE_OPENMP=OFF -DUSE_MPI=OFF -DUSE_TECIO=$USE_TECIO || exit 1
+        cmake -B $BUILD_DIR "${CMAKE_ARGS[@]}" || exit 1
         cmake --build $BUILD_DIR || exit 1
         log "[OK] Compilation successful"
 

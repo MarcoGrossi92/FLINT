@@ -60,22 +60,23 @@ end program taste_of_flint
 ```bash
 git clone https://github.com/MarcoGrossi92/FLINT.git
 cd FLINT
-./install.sh build --compiler=gnu
-````
+./install.sh build --compilers=gnu
+```
 
-Cantera support is **optional** and disabled by default.
-If enabled, it is strongly recommended to install Cantera externally first.
+The first configure fetches ORION and OSLO from GitHub. Cantera support is **optional** and disabled by default:
+`--use-cantera` builds Cantera 3.2.0 from the submodule `lib/cantera`.
 
 ## Requirements
 
 * Fortran compiler (GNU or Intel)
 * CMake ≥ 3.23
+* Git, and network access at the first configure
 * Python ≥ 3.8 (optional, for utilities)
 * C compiler (for SUNDIALS support)
 
 Optional:
 
-* Cantera ≥ 2.5
+* SCons, Boost and a C++ compiler, to build Cantera (`--use-cantera`)
 
 ## Documentation
 
@@ -85,9 +86,19 @@ Optional:
 See the docs for:
 
 * Installation details
-* API reference
+* [API reference](https://marcogrossi92.github.io/FLINT/user/api/)
 * Examples and test cases
 * YAML-to-Fortran workflow
+
+## Getting Help
+
+Ask questions, report bugs and request features on the [issue tracker](https://github.com/MarcoGrossi92/FLINT/issues),
+which has a template for each.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). The changes of each release are in [CHANGELOG.md](CHANGELOG.md); FLINT
+follows [Semantic Versioning](https://marcogrossi92.github.io/FLINT/development/versioning/).
 
 ## License
 

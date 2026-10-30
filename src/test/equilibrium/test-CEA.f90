@@ -8,7 +8,7 @@ program test_eq
   real(kind=8), dimension(:), allocatable :: rhoi, y_eq, y0
   real(kind=8) :: T_, rho_, teq, blessed_Teq, blessed_y
   character(len=16) :: verdict
-  integer :: i, N, nfail = 0
+  integer :: i, N, nfail = 0, status
   real(kind=8) :: of, press
 
   T_ = 1000d0
@@ -66,6 +66,18 @@ program test_eq
   if (abs(teq-blessed_Teq)/blessed_Teq*100d0>1d0) verdict = 'fail'
   if (abs(y_eq(5)-blessed_y)/blessed_y*100d0>1d0) verdict = 'fail'
 
+  write(*,'(2A20)') 'Verdict -> ', verdict
+  if (verdict == 'fail') nfail = nfail + 1
+
+  ! The status of CEA_solve: 0 for the point above. A state whose energy lies beyond the thermo tables (30000 K; the
+  ! WD tables end at 15000 K) does not converge: status 1, the input temperature and the mass fractions of the input
+  ! state (rhoi_out held the partial densities before: rho_ /= 1 tells them apart)
+  write(*,*) 'Testing the status of the equilibrium solver...'
+  verdict = 'success'
+  call CEA_solve(T_, rhoi, teq, y_eq, status)
+  if (status /= 0 .or. abs(sum(y_eq) - 1d0) > 1d-6) verdict = 'fail'
+  call CEA_solve(3d4, rhoi*rho_, teq, y_eq, status)
+  if (status /= 1 .or. teq /= 3d4 .or. maxval(abs(y_eq - rhoi/sum(rhoi))) > 1d-14) verdict = 'fail'
   write(*,'(2A20)') 'Verdict -> ', verdict
   if (verdict == 'fail') nfail = nfail + 1
 

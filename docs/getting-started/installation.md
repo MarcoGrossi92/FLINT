@@ -29,7 +29,7 @@ Choose the installation method that best fits your needs:
     ```bash
     git clone https://github.com/MarcoGrossi92/FLINT.git
     cd FLINT
-    ./install.sh build --compiler=gnu --use-cantera --use-sundials
+    ./install.sh build --compilers=gnu --use-cantera --use-sundials
     ```
 
 === "Manual CMake"
@@ -86,7 +86,7 @@ Perform a complete build from scratch:
 
 | Option | Values | Description |
 |--------|--------|-------------|
-| `--compiler` | `gnu`, `intel` | Select compiler suite (default: `gnu`) |
+| `--compilers` | `gnu`, `intel` | Compiler suite: gfortran, gcc, g++ or ifx, icx, icpx (default: those of `FC`, `CC`, `CXX`, or those CMake finds) |
 | `--use-cantera` | — | Enable Cantera |
 | `--use-sundials` | — | Enable SUNDIALS solvers (via OSLO) |
 | `--use-tecio` | — | Enable TecIO for binary Tecplot formats (via ORION) |
@@ -101,10 +101,10 @@ Perform a complete build from scratch:
 
 ```bash
 # Build with GNU compiler
-./install.sh build --compiler=gnu
+./install.sh build --compilers=gnu
 
 # Build with Intel compiler and all options
-./install.sh build --compiler=intel --use-sundials --use-cantera --use-tecio
+./install.sh build --compilers=intel --use-sundials --use-cantera --use-tecio
 ```
 
 **compile**

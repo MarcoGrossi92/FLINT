@@ -615,17 +615,19 @@ The mesh coordinate order is:
 | 1 | $\rho$ | Density | kg/m³ |
 | 2 | $T$ | Temperature | K |
 | 3 | $(\partial\rho/\partial T)_p$ | Density derivative w.r.t. temperature at const. $p$ | kg/(m³·K) |
-| 4 | $c_p = (\partial h/\partial T)_p$ | Heat capacity at constant pressure | J/(kg·K) |
-| 5 | $s$ | Specific entropy | J/(kg·K) |
-| 6 | $(\partial\rho/\partial p)_h$ | Density derivative w.r.t. pressure at const. $h$ | kg/(m³·Pa) |
-| 7 | $a$ | Speed of sound | m/s |
+| 4 | $(\partial\rho/\partial h)_p$ | Density derivative w.r.t. enthalpy at const. $p$ | kg²/(m³·J) |
+| 5 | $c_p = (\partial h/\partial T)_p$ | Heat capacity at constant pressure | J/(kg·K) |
+| 6 | $s$ | Specific entropy | J/(kg·K) |
+| 7 | $(\partial\rho/\partial p)_h$ | Density derivative w.r.t. pressure at const. $h$ | kg/(m³·Pa) |
+| 8 | $a$ | Speed of sound | m/s |
 
 The grid parameters extracted at load time are:
 
 - $p_\text{min}$, $\Delta p$ — from the I-axis mesh coordinates
 - $h_\text{min}$, $\Delta h$ — from the J-axis mesh coordinates
 
-An optional second table (`h_tab2D`) indexed by $(p, T)$ is also read from the same file when present, enabling `pT2h` lookups.
+The table of the enthalpy on $(p, T)$, `h_tab2D`, which `pT2h` reads, is not in the file: `ph2pT()` builds it
+from the temperature column, after `read_realfluid_thermo`.
 
 ---
 

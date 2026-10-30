@@ -40,6 +40,15 @@ This section provides resources for contributors and developers working on FLINT
 
     [:octicons-arrow-right-24: Contribution guidelines](contributing.md)
 
+-   :material-tag-multiple:{ .lg .middle } __Semantic Versioning__
+
+    ---
+
+    What a major, a minor and a patch release may change,
+    how FLINT requires ORION and OSLO, and how to release.
+
+    [:octicons-arrow-right-24: Versioning rules](versioning.md)
+
 </div>
 
 The Developer Guide is intended for contributors and advanced users who want to:

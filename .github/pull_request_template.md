@@ -1,20 +1,18 @@
 ## Description
-Brief description of changes
+<!-- What the pull request changes, and the issues it fixes (Fixes #123) -->
 
 ## Motivation
-Why is this change needed?
+<!-- Why the change is needed -->
 
 ## Changes Made
-- Added X feature
-- Fixed Y bug
-- Updated Z documentation
+<!-- One line per change: Added X feature; Fixed Y bug; Updated Z documentation -->
 
 ## Testing
-How were these changes tested?
+<!-- How the changes were tested -->
 
 ## Checklist
-- [ ] `ctest -L quick` passes (and `ctest`, for changes to loaders, thermodynamics or kinetics)
+- [ ] `ctest --test-dir build -L quick` passes (and `ctest --test-dir build`, for changes to loaders, thermodynamics or kinetics)
+- [ ] Code follows the coding standards of CONTRIBUTING.md, and compiles with gfortran and with ifx
 - [ ] Documentation updated
 - [ ] CHANGELOG.md entry under [Unreleased]
-- [ ] Code follows style guidelines
 - [ ] Commit messages are clear

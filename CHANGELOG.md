@@ -9,7 +9,10 @@ a major, a minor and a patch release of FLINT may change.
 
 ## [Unreleased]
 
-Changes on `main` since `v1.1.0`. Two of them break the projects that use FLINT (**Breaking**), so the next release is 2.0.0.
+## [2.0.0] - 2026-11-02
+
+Two changes break the projects that use FLINT (**Breaking**): FLINT requires ORION 2, and it requires ORION and OSLO
+by release, no longer as submodules.
 
 ### Added
 
@@ -18,7 +21,13 @@ Changes on `main` since `v1.1.0`. Two of them break the projects that use FLINT 
   per build tree. The first project of the tree that requires a library selects its release; the others check it,
   and the configure stops, naming both, when a requirement is not satisfied. The releases selected are kept in
   `deps.lock`, in the top-level source folder, for the next configures, which then need no network;
-  `-DSEMVER_UPDATE=ALL` (or `=<name>`) selects the newest ones again. FLINT does not commit its `deps.lock`.
+  `-DSEMVER_UPDATE=ALL` (or `=<name>`) selects the newest ones again. FLINT does not commit its `deps.lock`. With
+  `SOURCE_DIR <folder>`, the release is checked out in that folder, out of the build tree, and kept from a build to
+  the next: a checkout at the release is built as it is, local changes included, and one at another release is moved
+  only if it is a detached HEAD without changes, otherwise the configure stops and leaves it alone. As for
+  FetchContent, `FETCHCONTENT_FULLY_DISCONNECTED` and `FETCHCONTENT_UPDATES_DISCONNECTED` restrict the network.
+- `--use-cantera` on a machine without Boost: the configure downloads the headers of Boost 1.86.0 into the build
+  folder, which are all that Cantera needs of Boost (1.70 or newer) to build. It stopped, asking to install Boost.
 - The static library target `FLINT` (alias `FLINT::FLINT`), next to the list of sources `FLINT_SRC`. It is
   compiled once per build tree, with the flags of the top-level project, and only for the targets that link it; it
   carries its dependencies (ORION, OSLO, BLAS/LAPACK, and Cantera and OpenMP when enabled) and its module folder.
@@ -37,9 +46,10 @@ Changes on `main` since `v1.1.0`. Two of them break the projects that use FLINT 
 
 ### Changed
 
-- **Breaking.** ORION and OSLO are no longer submodules of FLINT (`lib/ORION`, `lib/OSLO`), added from the folders
-  `ORION_PATH` and `OSLO_PATH`: FLINT requires OSLO 1.1.0 or a later 1.x and ORION 2.1.0 or a later 2.x, fetched at
-  configure time (see Added). The variables `ORION_PATH` and `OSLO_PATH` are removed;
+- **Breaking.** ORION and OSLO are no longer submodules of FLINT, added from the folders `ORION_PATH` and
+  `OSLO_PATH`: FLINT requires OSLO 1.1.0 or a later 1.x and ORION 2.1.0 or a later 2.x, which the configure checks
+  out in `lib/OSLO` and `lib/ORION`, out of the build folder, so that a new build folder needs no network (see
+  Added). The variables `ORION_PATH` and `OSLO_PATH` are removed;
   `-DFETCHCONTENT_SOURCE_DIR_ORION=<folder>` (and `_OSLO`) builds a local checkout instead, which is what
   `install.sh build --include-orion=<folder>` and `--include-oslo=<folder>` now pass. A project that adds ORION or
   OSLO itself, with `add_subdirectory`, and then FLINT, gets two targets of the same name and stops at configure: it
@@ -75,8 +85,19 @@ Changes on `main` since `v1.1.0`. Two of them break the projects that use FLINT 
 - Cantera is built with its own copies of fmt and yaml-cpp (`system_fmt=n system_yamlcpp=n`). It took the copies it
   found on the machine, also those of an active conda environment, which `libcantera.a` does not hold: every
   executable linked with Cantera failed with undefined `fmt::` and `YAML::` symbols.
-- `cantera_fortran` is linked before `cantera`, which it calls. GNU ld searches a static library only where it is on
-  the command line, so in the former order the Cantera symbols of the Fortran interface were left undefined.
+- `cantera_fortran` is linked before `cantera`, which it calls, and both before the SUNDIALS libraries and the C++
+  runtime that Cantera calls (the interface target `FLINT_Cantera`). GNU ld searches a static library only where it
+  is on the command line, so in the former order the Cantera symbols of the Fortran interface were left undefined.
+- Cantera builds in an active conda environment: scons runs without `CONDA_PREFIX`. With it, Cantera added the
+  paths of the environment and ran its configure checks with the environment's `libstdc++`, older than that of the
+  compiler, and they crashed.
+- Cantera finds the SUNDIALS of OSLO in its `lib` or `lib64` folder. FLINT gave `lib64` on Linux, and on Ubuntu,
+  where SUNDIALS is in `lib`, Cantera could not link it.
+- Cantera is built with its legacy CLib (`clib_legacy=y`), on which its Fortran interface is built: the generated
+  CLib, the default of Cantera 3.2, needs Doxygen.
+- A Cantera build that failed or was interrupted no longer counts as built: the configure looks for the libraries
+  and the Fortran module that FLINT uses (`libcantera.a`, `libcantera_fortran.a`, `cantera.mod`), not for
+  `config.log`, which scons writes when it starts. The next builds skipped Cantera and failed on `cantera.mod`.
 - The targets that use Cantera wait for its build (`cantera_world`), when the configure builds it: a parallel build
   could compile FLINT's sources before Cantera's Fortran modules existed.
 - The README and the installation guide give the option of `install.sh` that selects the compilers as

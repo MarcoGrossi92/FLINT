@@ -21,7 +21,7 @@ Benchmark environment:
 - Single-threaded execution
 
 <figure>
-  {% include "verification/images/barplot.svg" %}
+  --8<-- "docs/verification/images/barplot.svg"
   <figcaption>Normalized execution times</figcaption>
 </figure>
 

@@ -47,7 +47,8 @@ markdown_extensions:
       line_spans: __span
       pygments_lang_class: true
   - pymdownx.inlinehilite
-  - pymdownx.snippets
+  - pymdownx.snippets:
+      check_paths: true        # a missing file (a figure, CONTRIBUTING.md) fails the build
   - pymdownx.superfences
   - pymdownx.tabbed:
       alternate_style: true
@@ -67,7 +68,6 @@ markdown_extensions:
 
 # Plugins
 plugins:
-  - macros
   - search:
       lang: en
 

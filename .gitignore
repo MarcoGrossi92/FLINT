@@ -4,6 +4,7 @@ build-*
 bin
 CMakePresets.json
 site
+.cache
 
 # Releases of ORION and OSLO selected by the configure
 deps.lock

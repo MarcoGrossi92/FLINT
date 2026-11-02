@@ -3,4 +3,3 @@
 #   zensical serve            # preview at http://localhost:8000
 # Zensical is before 1.0: raise its version here, after a build of the site with it
 zensical==0.0.74
-mkdocs-macros-plugin==1.5.0

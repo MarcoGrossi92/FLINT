@@ -22,62 +22,62 @@ Verification results for the different chemical mechanisms are presented in the 
 <div class="grid">
 
 <figure>
-  {% include "verification/images/WD.svg" %}
+  --8<-- "docs/verification/images/WD.svg"
   <figcaption>Westbrook-Dryer (no general procedure: its orders are not in chemistry-info.txt)</figcaption>
 </figure>
 
 <figure>
-  {% include "verification/images/Troyes.svg" %}
+  --8<-- "docs/verification/images/Troyes.svg"
   <figcaption>Troyes</figcaption>
 </figure>
 
 <figure>
-  {% include "verification/images/Ecker.svg" %}
+  --8<-- "docs/verification/images/Ecker.svg"
   <figcaption>Ecker</figcaption>
 </figure>
 
 <figure>
-  {% include "verification/images/Cross.svg" %}
+  --8<-- "docs/verification/images/Cross.svg"
   <figcaption>Cross</figcaption>
 </figure>
 
 <figure>
-  {% include "verification/images/Pelucchi.svg" %}
+  --8<-- "docs/verification/images/Pelucchi.svg"
   <figcaption>Pelucchi</figcaption>
 </figure>
 
 <figure>
-  {% include "verification/images/TSR-CDF-13.svg" %}
+  --8<-- "docs/verification/images/TSR-CDF-13.svg"
   <figcaption>TSR-CDF-13</figcaption>
 </figure>
 
 <figure>
-  {% include "verification/images/TSR-GP-24.svg" %}
+  --8<-- "docs/verification/images/TSR-GP-24.svg"
   <figcaption>TSR-GP-24</figcaption>
 </figure>
 
 <figure>
-  {% include "verification/images/TSR-Rich-31.svg" %}
+  --8<-- "docs/verification/images/TSR-Rich-31.svg"
   <figcaption>TSR-Rich-31</figcaption>
 </figure>
 
 <figure>
-  {% include "verification/images/Smooke.svg" %}
+  --8<-- "docs/verification/images/Smooke.svg"
   <figcaption>Smooke</figcaption>
 </figure>
 
 <figure>
-  {% include "verification/images/CORIA.svg" %}
+  --8<-- "docs/verification/images/CORIA.svg"
   <figcaption>CORIA-CNRS</figcaption>
 </figure>
 
 <figure>
-  {% include "verification/images/ZK.svg" %}
+  --8<-- "docs/verification/images/ZK.svg"
   <figcaption>Zhukov-Kong</figcaption>
 </figure>
 
 <figure>
-  {% include "verification/images/Gerlinger.svg" %}
+  --8<-- "docs/verification/images/Gerlinger.svg"
   <figcaption>Gerlinger</figcaption>
 </figure>
 
@@ -94,22 +94,22 @@ Verification results are presented in the figures below. As shown, the numerical
 <div class="grid">
 
 <figure>
-  {% include "verification/images/WD-eq.svg" %}
+  --8<-- "docs/verification/images/WD-eq.svg"
   <figcaption>Westbrook-Dryer</figcaption>
 </figure>
 
 <figure>
-  {% include "verification/images/ZK-eq.svg" %}
+  --8<-- "docs/verification/images/ZK-eq.svg"
   <figcaption>Zhukov-Kong</figcaption>
 </figure>
 
 <figure>
-  {% include "verification/images/TSR-GP-24-eq.svg" %}
+  --8<-- "docs/verification/images/TSR-GP-24-eq.svg"
   <figcaption>TSR-GP-24</figcaption>
 </figure>
 
 <figure>
-  {% include "verification/images/Ecker-eq.svg" %}
+  --8<-- "docs/verification/images/Ecker-eq.svg"
   <figcaption>Ecker (pressure sweep, 3000 K)</figcaption>
 </figure>
 

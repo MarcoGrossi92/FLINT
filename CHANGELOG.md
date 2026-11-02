@@ -14,7 +14,8 @@ a major, a minor and a patch release of FLINT may change.
 - The documentation site is built with [Zensical](https://zensical.org), the successor of Material for MkDocs
   (in maintenance mode, with end of life on 2027-05-05), from the same `mkdocs.yml`. The GitHub workflow builds it
   in strict mode on every pull request that changes it, with the versions of `requirements-docs.txt`, and
-  publishes it from `main`.
+  publishes it from `main`. The figures are inlined with `pymdownx.snippets` in place of the macros plugin, which
+  Zensical 0.0.59 left as text, and a missing figure fails the build.
 - The documentation is organized anew. A home page, in the navigation, says what FLINT is. Quick Start builds and runs
   a first program that uses FLINT, fetched with CMake; the test suite moves to Installation (Verify the Build). The
   User Guide holds the Examples and Using FLINT in a CMake Project, and its page on the dedicated routines is

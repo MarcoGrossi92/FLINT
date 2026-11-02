@@ -131,10 +131,15 @@ Cantera will not rebuilt unless its folder `lib/cantera` is cleaned.
 
 ## ORION and OSLO
 
-`CMakeLists.txt` requires a range of releases of each, not a commit: OSLO `1.1` (1.1.0 or a later 1.x) and ORION `2.1`
-(2.1.0 or a later 2.x). The configure takes the newest release (a tag `vX.Y.Z`; pre-releases are skipped) that
-satisfies the requirement and clones it in the build folder, under `_deps`. A minor or patch release of ORION or OSLO
-reaches FLINT with no change to FLINT.
+`CMakeLists.txt` requires a range of releases of each, not a commit. The configure takes the newest release (a tag `vX.Y.Z`; pre-releases are skipped) that
+satisfies the requirement and clones it in `lib/OSLO` and `lib/ORION`, out of the build folder: a new build folder
+uses them again, without the network. A minor or patch release of ORION or OSLO reaches FLINT with no change to FLINT.
+
+- **Sources in `lib/`.** A checkout at the selected release is built as it is, local changes included. When another
+  release is selected, the configure moves the checkout to it, but only if it is as the configure left it (a detached
+  HEAD without changes); on a branch or with changes it stops, and the error tells how to go on.
+- **Offline.** As for FetchContent, `-DFETCHCONTENT_FULLY_DISCONNECTED=ON` forbids any clone or fetch, and
+  `-DFETCHCONTENT_UPDATES_DISCONNECTED=ON` any in an existing checkout: the configure stops when one is needed.
 
 - **Lock file.** The first configure writes the releases in `deps.lock`; the next configures, of any build folder of
   this checkout, use them without the network. FLINT does not commit it: in a larger build tree the top-level project

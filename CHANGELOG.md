@@ -9,6 +9,14 @@ a major, a minor and a patch release of FLINT may change.
 
 ## [Unreleased]
 
+### Fixed
+
+- The documentation no longer gives `./install.sh compile`, which `install.sh` refuses, a command-line converter,
+  which FLINT does not have, or an installation by pip. The installation guide and the README give what Cantera
+  needs to build: a C++ compiler, Python 3.10 and SCons 4.0 or newer, and the Boost headers, downloaded when the
+  machine has none. The License page lists the licenses of Cantera, SUNDIALS, Boost, TecIO and BLAS/LAPACK, and the
+  Acknowledgements no longer name projects that FLINT does not use.
+
 ## [2.0.0] - 2026-11-02
 
 Two changes break the projects that use FLINT (**Breaking**): FLINT requires ORION 2, and it requires ORION and OSLO

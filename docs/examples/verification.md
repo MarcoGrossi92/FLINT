@@ -119,6 +119,12 @@ Verification results are presented in the figures below. As shown, the numerical
 
 ## Reproducibility
 
-All cases presented in this section are based on configurations included in the FLINT repository. Test programs and input data can be executed directly after installation.
+All cases presented in this section are included in the FLINT repository: the batch cases are listed in
+`test/batch/cases.txt`, and the equilibrium sweeps are run by `test-CEA`.
+
+- **Check them.** The test suite compares FLINT with stored Cantera references, without Cantera:
+  `ctest --test-dir build -L batch` and `ctest --test-dir build -L equilibrium`.
+- **Regenerate the figures.** They need a build with Cantera; [Testing](../development/testing.md#building-with-cantera-and-regenerating-the-figures)
+  gives the commands.
 
 For details on the testing infrastructure and framework, see the [Developer Guide](../development/testing.md) section.

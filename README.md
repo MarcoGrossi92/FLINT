@@ -76,7 +76,8 @@ The first configure fetches ORION and OSLO from GitHub. Cantera support is **opt
 
 Optional:
 
-* SCons, Boost and a C++ compiler, to build Cantera (`--use-cantera`)
+* Python ≥ 3.10, SCons ≥ 4.0 and a C++ compiler, to build Cantera (`--use-cantera`); the Boost headers it needs are
+  downloaded when the machine has none
 
 ## Documentation
 

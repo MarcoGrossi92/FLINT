@@ -7,10 +7,12 @@ This guide covers the installation of FLINT.
 Before installing FLINT, ensure you have the required dependencies:
 
 - **CMake** ≥ 3.23
+- **Git**, and network access at the first configure
 - **Fortran compiler**: Intel (`ifort`/`ifx`) or GNU (`gfortran`)
 - **C++ compiler**: Required for Cantera and TecIO (optional)
 - **C compiler**: Required for SUNDIALS (optional)
-- **Python** ≥ 3.6: For Python post-process (optional)
+- **Python** ≥ 3.10 and **SCons** ≥ 4.0: Required to build Cantera (optional). Cantera also needs the headers of
+  Boost 1.70 or newer: those installed on the machine, or else a copy that the configure downloads
 
 FLINT uses two public repositories, both hosted under [Marco Grossi](https://github.com/MarcoGrossi92), which CMake
 fetches at configure time (see [ORION and OSLO](#orion-and-oslo)):
@@ -34,7 +36,7 @@ Choose the installation method that best fits your needs:
 
 === "Manual CMake"
 
-    Build the Fortran library and command-line converter:
+    Build the Fortran library and the test programs, with Cantera support:
 
     ```bash
     git clone https://github.com/MarcoGrossi92/FLINT.git
@@ -94,8 +96,7 @@ Perform a complete build from scratch:
 | `--include-oslo` | path | Build a local OSLO checkout instead of a release |
 | `--update-deps` | — | Select again the newest releases of ORION and OSLO |
 
-!!! warning "SUNDIALS & Cantera"
-    To properly compile Cantera SUNDIALS is requested.
+`--use-cantera` turns `--use-sundials` on: Cantera is built on the SUNDIALS of OSLO.
 
 **Examples:**
 
@@ -107,27 +108,21 @@ Perform a complete build from scratch:
 ./install.sh build --compilers=intel --use-sundials --use-cantera --use-tecio
 ```
 
-**compile**
-
-Recompile using existing CMake configuration stored in `CMakePresets.json`:
-
-```bash
-./install.sh compile
-```
-
-Use this after modifying source code to avoid reconfiguring the build system.
+`install.sh build` writes `CMakePresets.json`; after a change to the sources, `cmake --build build` recompiles
+without configuring again.
 
 ## Cantera Support
 
-Cantera is an open-source suite of tools for problems involving chemical kinetics, thermodynamics, and transport processes. It is shipped with a Fortran 90 interface that can be linked to FLINT to fully employ Cantera capabilities.
+Cantera is an open-source suite of tools for problems involving chemical kinetics, thermodynamics, and transport processes. It ships a Fortran 90 interface, which FLINT links to compare its own results with Cantera's.
 
-Cantera will not rebuilt unless its folder `lib/cantera` is cleaned. 
+`--use-cantera` (`-DUSE_CANTERA=ON`) builds Cantera 3.2.0 from the submodule `lib/cantera` with SCons, at the first
+build. It needs a C++ compiler, Python 3.10 or newer and SCons 4.0 or newer; the Boost headers are downloaded when the
+machine has none. The next builds reuse it: the configure builds Cantera again only when its libraries or its Fortran
+module are missing from `lib/cantera/build` (`scons clean` in `lib/cantera` removes them).
 
-!!! note "C++ Compiler Required"
-    Cantera requires a C++ compiler. Ensure `g++` or Intel C++ compiler is available.
-
-!!! warning "Build Cantera"
-    Cantera compilation may be a little tricky. If you experiment some problems, try to build Cantera standalone before compiling it within FLINT framework.
+!!! tip "When the Cantera build fails"
+    The build log shows the SCons step that failed, and `lib/cantera/config.log` the details of Cantera's configure
+    checks.
 
 ## ORION and OSLO
 
@@ -219,6 +214,6 @@ FLINT does not install a CMake package: `find_package(FLINT)` is not supported.
 ## Next Steps
 
 - **[Quick Start Tutorial](quick-start.md)**: Learn FLINT basics with a hands-on example
-- **[User Guide](../user/index.md)**: Explore the converter and API capabilities
+- **[User Guide](../user/index.md)**: Embed FLINT in your code
 
 ---

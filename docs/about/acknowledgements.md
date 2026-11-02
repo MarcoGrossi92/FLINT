@@ -29,6 +29,24 @@ OSLO provides a state-of-the-art Fortran framework to solve ODE systems. FLINT u
 
 Developed by NASA, CEA is the reference code for chemical equilibrium computations.
 
+## Cantera
+
+**Chemical kinetics, thermodynamics and transport**
+
+- **Repository:** [github.com/Cantera/cantera](https://github.com/Cantera/cantera)
+- **License:** BSD-3-Clause
+
+Cantera is the reference against which FLINT's results are verified, through its Fortran interface (optional).
+
+## SUNDIALS
+
+**Suite of nonlinear and differential/algebraic equation solvers**
+
+- **Repository:** [github.com/LLNL/sundials](https://github.com/LLNL/sundials)
+- **License:** BSD-3-Clause
+
+OSLO builds SUNDIALS and offers its integrators (optional); Cantera is built on the same SUNDIALS.
+
 ## Documentation Tools
 
 ### MkDocs
@@ -62,9 +80,10 @@ While FLINT is an independent open-source project, it has benefited from:
 
 FLINT respects all licenses of dependencies and foundations:
 
-- **GPL v3.0** - FLINT's license, compatible with OFF
-- **BSD Licenses** - Lib_VTK_IO, NumPy, CMake
-- **MIT License** - Material for MkDocs
+- **GPL v3.0** - FLINT, ORION and OSLO
+- **Apache 2.0** - CEA
+- **BSD-3-Clause** - Cantera, SUNDIALS
+- **Boost Software License 1.0** - the Boost headers used to build Cantera
 - **Tecplot License** - TecIO library
 
 See the [License](license.md) page for FLINT's full license text.

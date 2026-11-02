@@ -74,6 +74,11 @@ FLINT uses several dependencies, each with its own license:
 | **CEA** | Apache 2.0 | ✅ Compatible |
 | **OSLO** | GPL v3.0 | ✅ Same license |
 | **ORION** | GPL v3.0 | ✅ Same license |
+| **SUNDIALS** (optional, built by OSLO) | BSD-3-Clause | ✅ Compatible |
+| **Cantera** (optional, `lib/cantera`) | BSD-3-Clause | ✅ Compatible |
+| **Boost** headers (to build Cantera) | Boost Software License 1.0 | ✅ Compatible |
+| **TecIO** (optional, built by ORION) | Tecplot TecIO license | Redistributable: see `tecio_license_agreement.txt` in its sources |
+| **BLAS/LAPACK** (from the system) | That of the installed implementation | — |
 
 See [Acknowledgements](acknowledgements.md) for full attribution.
 

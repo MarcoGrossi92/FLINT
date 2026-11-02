@@ -39,7 +39,6 @@ cmake/
 | `test/`                 | Test fixtures, references and outputs, per area     |
 | `bin/`                  | Compiled test executables (`bin/test/`)             |
 | `utils/`                | Mechanism generation tools                          |
-| `cmake/`                | Build configuration modules                         |
 | `docs/`                 | Documentation                                       |
 
 ---

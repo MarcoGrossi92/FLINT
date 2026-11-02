@@ -8,7 +8,7 @@ Welcome to the FLINT getting started guide! This section will help you install F
 
     ---
 
-    Build from source or install via pip
+    Build FLINT with the installer script or with CMake
 
     [:octicons-arrow-right-24: Install FLINT](installation.md)
 

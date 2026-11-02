@@ -1,6 +1,6 @@
 # About FLINT
 
-Learn more about the FLINT project, its history, contributors, and licensing.
+Learn more about the FLINT project: the projects it builds upon, and its license.
 
 ## Quick Navigation
 
@@ -32,16 +32,5 @@ which has a template for each. [Contributing](../development/contributing.md) de
 ## License
 
 This project is licensed under the GNU General Public License v3.0. See [License](license.md) for details.
-
-## Recognition
-
-FLINT builds upon the work of:
-
-- **ORION** contributors
-- **OSLO** contributors
-- **CEA** contributors
-- The broader Fortran and scientific computing community
-
-See [Acknowledgements](acknowledgements.md) for full credits.
 
 ---

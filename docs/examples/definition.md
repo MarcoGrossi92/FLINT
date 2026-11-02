@@ -10,7 +10,7 @@ The procedure relies on the following steps:
 
 - Load thermodynamic and chemistry data.
 - Definition of initial state.
-- Inizialization of the solver.
+- Initialization of the solver.
 - Run the solver.
 
 **Pseudo-code**
@@ -27,7 +27,7 @@ The procedure relies on the following steps:
   err = read_idealgas_thermo('mechanism-folder')
   err = read_chemistry( folder='mechanism-folder', mech_name=mech_name )
 
-  ! Initialize tollerances and state
+  ! Initialize tolerances and state
   ! ...
 
   ! Initialize ODE solver (OSLO)

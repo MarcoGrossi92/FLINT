@@ -15,7 +15,10 @@
 # release out there itself, since FetchContent would delete the folder and clone it again in each new build folder.
 # The folder is cloned if missing; at the release, it is used as it is, local changes included; at another release,
 # it is moved to the one selected if it is as SemVerDeps left it (a detached HEAD without changes), otherwise the
-# configure stops and leaves it alone. GIT_SUBMODULES selects the submodules to initialize, as for FetchContent.
+# configure stops and leaves it alone. GIT_SUBMODULES selects the submodules to initialize, as for FetchContent: those
+# not populated are initialized at each configure, and those populated keep their commit and their changes, except
+# when the checkout is moved. As for FetchContent, FETCHCONTENT_FULLY_DISCONNECTED forbids any clone or fetch, and
+# FETCHCONTENT_UPDATES_DISCONNECTED(_<NAME>) any in an existing checkout: the configure stops when one is needed.
 #
 # The first call for <name> in the build tree selects the release; a later call (from a nested project) checks it
 # against its own requirement and stops the configure when it is not satisfied. The release is, in order:
@@ -156,50 +159,99 @@ function(_semver_read_lock)
   endforeach()
 endfunction()
 
+# _semver_submodules(<dir> <out_all> <out_missing> <path>...): the submodules of the checkout <dir> among <path>... (all
+# of them without paths), and those of them not populated yet
+function(_semver_submodules dir out_all out_missing)
+  execute_process(COMMAND "${GIT_EXECUTABLE}" submodule status -- ${ARGN} WORKING_DIRECTORY "${dir}"
+                  OUTPUT_VARIABLE _status ERROR_QUIET)
+  set(_all "")
+  set(_missing "")
+  string(REPLACE "\n" ";" _lines "${_status}")
+  foreach(_line IN LISTS _lines)
+    # <state><commit> <path>[ (<describe>)]: state - for a submodule not populated
+    if(_line MATCHES "^(.)[0-9a-f]+ ([^ ]+)")
+      list(APPEND _all "${CMAKE_MATCH_2}")
+      if(CMAKE_MATCH_1 STREQUAL "-")
+        list(APPEND _missing "${CMAKE_MATCH_2}")
+      endif()
+    endif()
+  endforeach()
+  set(${out_all} "${_all}" PARENT_SCOPE)
+  set(${out_missing} "${_missing}" PARENT_SCOPE)
+endfunction()
+
 # _semver_checkout(<name> <dir> <url> <tag> <submodules_given> <submodule>...): the release <tag> of <url> in <dir>
 # (see SOURCE_DIR at the top)
 function(_semver_checkout name dir url tag submodules_given)
   if(NOT GIT_EXECUTABLE)
     message(FATAL_ERROR "SemVerDeps: git is needed to check out ${name} in ${dir}")
   endif()
+  string(TOUPPER "${name}" _N)
+  # The network, as FetchContent: no fetch in an existing checkout, of a tag or of submodules, with
+  # FETCHCONTENT_FULLY_DISCONNECTED or FETCHCONTENT_UPDATES_DISCONNECTED(_<NAME>), and no clone with the first one. A
+  # move to a tag that the checkout has needs none
+  set(_no_fetch "")
+  foreach(_switch FETCHCONTENT_FULLY_DISCONNECTED FETCHCONTENT_UPDATES_DISCONNECTED
+                  FETCHCONTENT_UPDATES_DISCONNECTED_${_N})
+    if(${_switch} AND NOT _no_fetch)
+      set(_no_fetch ${_switch})
+    endif()
+  endforeach()
+  # The submodules, as FetchContent: all of them, or those of GIT_SUBMODULES (none for GIT_SUBMODULES "")
+  set(_with_submodules TRUE)
+  if(submodules_given AND NOT ARGN)
+    set(_with_submodules FALSE)
+  endif()
   set(_git ${CMAKE_COMMAND} -E env GIT_TERMINAL_PROMPT=0 "${GIT_EXECUTABLE}" -c advice.detachedHead=false)
+  set(_moved FALSE)
   if(EXISTS "${dir}/.git")
     execute_process(COMMAND ${_git} rev-parse HEAD WORKING_DIRECTORY "${dir}"
                     OUTPUT_VARIABLE _head OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
     execute_process(COMMAND ${_git} rev-parse --verify --quiet "refs/tags/${tag}^{commit}" WORKING_DIRECTORY "${dir}"
                     OUTPUT_VARIABLE _wanted OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
-    if(_head AND _head STREQUAL _wanted)
-      return()
-    endif()
-    # At another commit: moved only from a detached HEAD without changes (symbolic-ref succeeds on a branch)
-    execute_process(COMMAND ${_git} symbolic-ref --quiet HEAD WORKING_DIRECTORY "${dir}"
-                    OUTPUT_QUIET ERROR_QUIET RESULT_VARIABLE _branch_rc)
-    execute_process(COMMAND ${_git} status --porcelain --untracked-files=no WORKING_DIRECTORY "${dir}"
-                    OUTPUT_VARIABLE _changes ERROR_QUIET)
-    if(_branch_rc EQUAL 0 OR _changes)
-      string(TOUPPER "${name}" _N)
-      message(FATAL_ERROR "SemVerDeps: ${dir} is not at ${name} ${tag}, the release selected, and it is on a branch or "
-                          "has changes, which the configure does not touch. Commit or stash them and check the tag "
-                          "out (git -C ${dir} checkout ${tag}), or build the folder as it is with\n"
-                          "  -DFETCHCONTENT_SOURCE_DIR_${_N}=${dir}")
-    endif()
-    message(STATUS "${name}: moving ${dir} to ${tag}")
-    if(NOT _wanted)
-      execute_process(COMMAND ${_git} fetch --quiet --depth 1 "${url}" tag "${tag}" WORKING_DIRECTORY "${dir}"
+    if(NOT (_head AND _head STREQUAL _wanted))
+      # At another commit: moved only from a detached HEAD without changes, those of its submodules included
+      # (symbolic-ref succeeds on a branch)
+      execute_process(COMMAND ${_git} symbolic-ref --quiet HEAD WORKING_DIRECTORY "${dir}"
+                      OUTPUT_QUIET ERROR_QUIET RESULT_VARIABLE _branch_rc)
+      execute_process(COMMAND ${_git} status --porcelain --untracked-files=no WORKING_DIRECTORY "${dir}"
+                      OUTPUT_VARIABLE _changes ERROR_QUIET)
+      if(_branch_rc EQUAL 0 OR _changes)
+        message(FATAL_ERROR "SemVerDeps: ${dir} is not at ${name} ${tag}, the release selected, and it is on a branch "
+                            "or has changes, which the configure does not touch. Commit or stash them and check the "
+                            "tag out (git -C ${dir} checkout ${tag}), or build the folder as it is with\n"
+                            "  -DFETCHCONTENT_SOURCE_DIR_${_N}=${dir}")
+      endif()
+      set(_all "")
+      if(_with_submodules)
+        _semver_submodules("${dir}" _all _missing ${ARGN})
+      endif()
+      if(_no_fetch AND (NOT _wanted OR _all))
+        message(FATAL_ERROR "SemVerDeps: ${dir} is not at ${name} ${tag}, the release selected, and moving it needs "
+                            "the remote (for the tag or the submodules), which ${_no_fetch} forbids")
+      endif()
+      message(STATUS "${name}: moving ${dir} to ${tag}")
+      if(NOT _wanted)
+        execute_process(COMMAND ${_git} fetch --quiet --depth 1 "${url}" tag "${tag}" WORKING_DIRECTORY "${dir}"
+                        RESULT_VARIABLE _rc ERROR_VARIABLE _err)
+        if(NOT _rc EQUAL 0)
+          message(FATAL_ERROR "SemVerDeps: cannot fetch ${name} ${tag} from ${url}:\n${_err}")
+        endif()
+      endif()
+      execute_process(COMMAND ${_git} checkout --quiet --detach "${tag}" WORKING_DIRECTORY "${dir}"
                       RESULT_VARIABLE _rc ERROR_VARIABLE _err)
       if(NOT _rc EQUAL 0)
-        message(FATAL_ERROR "SemVerDeps: cannot fetch ${name} ${tag} from ${url}:\n${_err}")
+        message(FATAL_ERROR "SemVerDeps: cannot check ${name} ${tag} out in ${dir}:\n${_err}")
       endif()
-    endif()
-    execute_process(COMMAND ${_git} checkout --quiet --detach "${tag}" WORKING_DIRECTORY "${dir}"
-                    RESULT_VARIABLE _rc ERROR_VARIABLE _err)
-    if(NOT _rc EQUAL 0)
-      message(FATAL_ERROR "SemVerDeps: cannot check ${name} ${tag} out in ${dir}:\n${_err}")
+      set(_moved TRUE)
     endif()
   else()
     file(GLOB _content "${dir}/*")
     if(_content)
       message(FATAL_ERROR "SemVerDeps: ${dir}, the folder of ${name}, is not empty and is not a git checkout")
+    endif()
+    if(FETCHCONTENT_FULLY_DISCONNECTED)
+      message(FATAL_ERROR "SemVerDeps: ${name} is not in ${dir}, and FETCHCONTENT_FULLY_DISCONNECTED forbids cloning it")
     endif()
     message(STATUS "${name}: cloning ${tag} in ${dir}")
     execute_process(COMMAND ${_git} clone --quiet --depth 1 --branch "${tag}" "${url}" "${dir}"
@@ -207,14 +259,33 @@ function(_semver_checkout name dir url tag submodules_given)
     if(NOT _rc EQUAL 0)
       message(FATAL_ERROR "SemVerDeps: cannot clone ${name} ${tag} from ${url}:\n${_err}")
     endif()
+    # The first clone takes its submodules too, as FetchContent's download
+    set(_moved TRUE)
+    set(_no_fetch "")
   endif()
-  # The submodules, as FetchContent: all of them, or those of GIT_SUBMODULES (none for GIT_SUBMODULES "")
-  if(NOT submodules_given OR ARGN)
-    execute_process(COMMAND ${_git} submodule update --quiet --init --recursive --depth 1 -- ${ARGN}
-                    WORKING_DIRECTORY "${dir}" RESULT_VARIABLE _rc ERROR_VARIABLE _err)
-    if(NOT _rc EQUAL 0)
-      message(FATAL_ERROR "SemVerDeps: cannot initialize the submodules of ${name} in ${dir}:\n${_err}")
-    endif()
+  if(NOT _with_submodules)
+    return()
+  endif()
+  # After a clone or a move, all the submodules at the commits of the release (those of a moved checkout had no
+  # changes); otherwise those not populated yet, at every configure, and the others keep their commit and changes
+  _semver_submodules("${dir}" _all _missing ${ARGN})
+  if(_moved)
+    set(_update "${_all}")
+  else()
+    set(_update "${_missing}")
+  endif()
+  if(NOT _update)
+    return()
+  endif()
+  if(_no_fetch)
+    list(JOIN _update ", " _shown)
+    message(FATAL_ERROR "SemVerDeps: the submodules ${_shown} of ${dir} are not populated, and ${_no_fetch} forbids "
+                        "cloning them")
+  endif()
+  execute_process(COMMAND ${_git} submodule update --quiet --init --recursive --depth 1 -- ${_update}
+                  WORKING_DIRECTORY "${dir}" RESULT_VARIABLE _rc ERROR_VARIABLE _err)
+  if(NOT _rc EQUAL 0)
+    message(FATAL_ERROR "SemVerDeps: cannot initialize the submodules of ${name} in ${dir}:\n${_err}")
   endif()
 endfunction()
 

@@ -138,6 +138,8 @@ uses them again, without the network. A minor or patch release of ORION or OSLO 
 - **Sources in `lib/`.** A checkout at the selected release is built as it is, local changes included. When another
   release is selected, the configure moves the checkout to it, but only if it is as the configure left it (a detached
   HEAD without changes); on a branch or with changes it stops, and the error tells how to go on.
+- **Offline.** As for FetchContent, `-DFETCHCONTENT_FULLY_DISCONNECTED=ON` forbids any clone or fetch, and
+  `-DFETCHCONTENT_UPDATES_DISCONNECTED=ON` any in an existing checkout: the configure stops when one is needed.
 
 - **Lock file.** The first configure writes the releases in `deps.lock`; the next configures, of any build folder of
   this checkout, use them without the network. FLINT does not commit it: in a larger build tree the top-level project

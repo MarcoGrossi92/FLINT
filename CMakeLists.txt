@@ -127,6 +127,11 @@ if (USE_CANTERA)
   add_library(FLINT_Cantera INTERFACE)
   target_link_libraries(FLINT_Cantera INTERFACE cantera_fortran cantera
                         SUNDIALS::cvodes SUNDIALS::idas SUNDIALS::nvecserial SUNDIALS::core)
+  if (APPLE)
+    target_link_libraries(FLINT_Cantera INTERFACE c++)
+  elseif (UNIX)
+    target_link_libraries(FLINT_Cantera INTERFACE stdc++)
+  endif()
 endif(USE_CANTERA)
 
 # -------- Fortran directories --------

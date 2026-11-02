@@ -33,7 +33,7 @@ cmake/
 | `src/lib/`              | Core library modules                                |
 | `src/lib/Lib_ChemMech/` | Mechanism-specific explicit routines                |
 | `src/test/`             | Test drivers, one folder per area                   |
-| `lib/`                  | External submodule (optional Cantera)               |
+| `lib/`                  | External sources: OSLO, ORION, Cantera (optional)   |
 | `cmake/`                | Build modules (flags, dependencies, `SemVerDeps`)   |
 | `database/`             | Raw chemical mechanism data (per-mechanism)          |
 | `test/`                 | Test fixtures, references and outputs, per area     |
@@ -228,8 +228,8 @@ development/chemistry_generation.md
 
 ## External Dependencies
 
-* **OSLO / ORION**: Numerical infrastructure. CMake fetches a release of each at configure time, the newest one that
-  satisfies the requirement in `CMakeLists.txt` (`cmake/SemVerDeps.cmake`; see
+* **OSLO / ORION**: Numerical infrastructure. CMake checks a release of each out in `lib/OSLO` and `lib/ORION` at
+  configure time, the newest one that satisfies the requirement in `CMakeLists.txt` (`cmake/SemVerDeps.cmake`; see
   [Installation](../getting-started/installation.md#orion-and-oslo)).
 * **Cantera**: Optional reference implementation, the Git submodule `lib/cantera`.
 

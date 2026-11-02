@@ -13,6 +13,14 @@ The User Guide describes how to configure and use FLINT in practical application
 
     [:octicons-arrow-right-24: Embed FLINT in your code](using.md)
 
+-   :material-flask-outline:{ .lg .middle } __Examples__
+
+    ---
+
+    A batch reactor and an equilibrium calculation, in pseudo-code.
+
+    [:octicons-arrow-right-24: Follow the examples](examples.md)
+
 -   :material-api:{ .lg .middle } __API Reference__
 
     ---
@@ -21,6 +29,14 @@ The User Guide describes how to configure and use FLINT in practical application
     units and return codes.
 
     [:octicons-arrow-right-24: Look up the API](api.md)
+
+-   :material-language-fortran:{ .lg .middle } __Using FLINT in a CMake Project__
+
+    ---
+
+    Fetch FLINT with CMake, and link the static library or compile the sources.
+
+    [:octicons-arrow-right-24: Build FLINT in your project](cmake.md)
 
 -   :material-file-document-outline:{ .lg .middle } __Input Format__
 
@@ -35,7 +51,7 @@ The User Guide describes how to configure and use FLINT in practical application
 
     ---
 
-    Available mechanisms and how to extend FLINT with new dedicated routines.
+    The mechanisms of the database, and how FLINT selects their dedicated routines or the general procedure.
 
     [:octicons-arrow-right-24: Explore mechanisms](database.md)
 
@@ -51,11 +67,12 @@ If you are new to FLINT, start from [Getting Started](../getting-started/index.m
 
 The User Guide covers:
 
-* API basics for all features
+* API basics for all features, with examples
+* Building FLINT in a CMake project
 * Input formats (YAML and native)
-* Available chemical mechanisms and how to generate optimized mechanism-specific routines
+* Available chemical mechanisms, and their dedicated routines
 
 It does not describe:
 
 * The mathematical background (see [Theoretical Guide](../theory/index.md))
-* Internal architecture (see [Developer Guide](../development/index.md))
+* Internal architecture, and how to generate the routine of a new mechanism (see [Developer Guide](../development/index.md))

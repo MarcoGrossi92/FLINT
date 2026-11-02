@@ -1,10 +1,11 @@
-# Chemistry Code Generation
+# Mechanism Routines
 
 FLINT computes the chemical source terms in one of two ways. The general procedure evaluates any mechanism from its
 input data (the species, the reactions and their rate tables, read at run time). A dedicated routine is a source file
 written for one mechanism, with its species, reactions and rate laws coded in it.
 
-Dedicated routines are much faster, which matters most in production runs.
+Dedicated routines are much faster, which matters most in production runs: [Performance](../verification/performance.md)
+compares them with the general procedure and with Cantera.
 
 A routine for a new mechanism is always recommended. It adds source files to FLINT, so it is a task for developers
 and advanced users: a Python program shipped with FLINT generates them from a Cantera YAML mechanism (see
@@ -12,27 +13,6 @@ and advanced users: a Python program shipped with FLINT generates them from a Ca
 
 !!! warning "Rebuild required"
     The generated source files are added to FLINT, and the library has to be rebuilt.
-
-## Performance Comparison
-
-A performance comparison among different methods of integration was performed by testing different chemical mechanisms on 0D batch reactor.
-
-The results clearly show how explicit (hard-coded) routines outperform the other alternatives for each tested mechanism.
-
-Benchmark environment:
-
-- MacBook Air (Apple M1, 8 cores: 4P + 4E)
-- 16 GB RAM
-- macOS
-- Homebrew GCC 15.2.0
-- Apple clang 17.0.0 (clang-1700.6.3.2)
-- Single-threaded execution
-
-<figure>
-  {% include "user/images/barplot.svg" %}
-  <figcaption>Normalized execution times</figcaption>
-</figure>
-
 
 ## Mechanism contract check
 

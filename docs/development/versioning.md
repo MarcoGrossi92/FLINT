@@ -109,7 +109,7 @@ FetchContent_MakeAvailable(FLINT)
 ```
 
 With `VERSION 2.0` it gets every 2.x release of FLINT from 2.0.0 on, and never a 3.0.0 that could break it.
-[Using FLINT in a CMake Project](../getting-started/installation.md#using-flint-in-a-cmake-project) describes the
+[Using FLINT in a CMake Project](../user/cmake.md) describes the
 targets and the flags.
 
 ## Making a release

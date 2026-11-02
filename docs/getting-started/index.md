@@ -16,7 +16,7 @@ Welcome to the FLINT getting started guide! This section will help you install F
 
     ---
 
-    Get up and running in minutes
+    Build and run a first program that uses FLINT
 
     [:octicons-arrow-right-24: Quick start tutorial](quick-start.md)
 
@@ -25,9 +25,10 @@ Welcome to the FLINT getting started guide! This section will help you install F
 This getting started guide covers:
 
 1. **Installation**
-   - Step-by-step build instructions
-   - Build options and customization
-   - Run testing suite
+   - Prerequisites
+   - Building with the installer script or with CMake, and the build options
+   - Verifying the build with the test suite
 
 2. **Quick Start**
-   - Basic API usage
+   - A first program that uses FLINT, built with CMake: loading a mechanism, mixture properties and chemical source
+     terms

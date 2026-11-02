@@ -223,7 +223,7 @@ Module `FLINT_Lib_Chemistry_rhs`. The state of an adiabatic constant-volume reac
 
 The rate coefficients of the tables are read by `f_kf`, `f_kb` (module `FLINT_Lib_Chemistry_data`), `f_k_troe` and
 `f_k_lindemann` (module `FLINT_Lib_Chemistry_falloff`), which the mechanism routines call; see
-[Generating New Mechanisms](chemistry_routines.md).
+[Mechanism Routines](chemistry_routines.md).
 
 ---
 

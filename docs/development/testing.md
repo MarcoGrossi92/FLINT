@@ -261,7 +261,7 @@ CVODE does not resolve the radicals that start at 0 (Gerlinger, 1200 K, does not
 
 ## Building with Cantera and regenerating the figures
 
-The figures of the [verification page](../examples/verification.md) need the Cantera branches: Cantera's own
+The figures of the [verification page](../verification/accuracy.md) need the Cantera branches: Cantera's own
 reactor and equilibrium (C++), and FLINT's integrator with the Cantera source terms (Fortran interface).
 A second build with Cantera (it needs SUNDIALS, built by OSLO) keeps its drivers apart from the default build:
 
@@ -273,11 +273,11 @@ cmake --build build-cantera -j8
 cd test/batch                                   # batch reactor: 4 datasets per case
 ../../bin/test-cantera/test-batchCXX verification     # Cantera            -> <case>/batch-CXX.dat
 ../../bin/test-cantera/test-batchF verification       # FLINT Cantera, FLINT Explicit, FLINT General
-python3 batch-verification.py                   # docs/examples/images/<case>.svg
+python3 batch-verification.py                   # docs/verification/images/<case>.svg
 
 cd ../equilibrium                               # equilibrium: FLINT against the references
 ../../bin/test-cantera/test-CEA
-python3 eq-verification.py                      # docs/examples/images/<mechanism>-eq.svg
+python3 eq-verification.py                      # docs/verification/images/<mechanism>-eq.svg
 ```
 
 ---

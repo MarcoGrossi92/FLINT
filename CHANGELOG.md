@@ -15,6 +15,13 @@ a major, a minor and a patch release of FLINT may change.
   (in maintenance mode, with end of life on 2027-05-05), from the same `mkdocs.yml`. The GitHub workflow builds it
   in strict mode on every pull request that changes it, with the versions of `requirements-docs.txt`, and
   publishes it from `main`.
+- The documentation is organized anew. A home page, in the navigation, says what FLINT is. Quick Start builds and runs
+  a first program that uses FLINT, fetched with CMake; the test suite moves to Installation (Verify the Build). The
+  User Guide holds the Examples and Using FLINT in a CMake Project, and its page on the dedicated routines is
+  Mechanism Routines. A Verification tab holds the comparisons with Cantera (Accuracy) and the timings
+  (Performance). Pages moved: `examples/definition/` is `user/examples/`, `examples/verification/` is
+  `verification/accuracy/`, and the section Using FLINT in a CMake Project of `getting-started/installation/` is
+  `user/cmake/`.
 
 ### Fixed
 
@@ -23,6 +30,9 @@ a major, a minor and a patch release of FLINT may change.
   needs to build: a C++ compiler, Python 3.10 and SCons 4.0 or newer, and the Boost headers, downloaded when the
   machine has none. The License page lists the licenses of Cantera, SUNDIALS, Boost, TecIO and BLAS/LAPACK, and the
   Acknowledgements no longer name projects that FLINT does not use.
+- The Examples call `CEA_solve` and OSLO's `run_odesolver` with their arguments: `CEA_solve(T, rhoi, T_out, rhoi_out,
+  [status])`, without the pressure that the example gave, and `run_odesolver` with the Jacobian `jac_native` and
+  `IJAC_chem`.
 
 ## [2.0.0] - 2026-11-02
 

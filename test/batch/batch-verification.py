@@ -21,7 +21,7 @@ plt.rcParams.update({
 
 # Root directory containing the folders
 root_dir = "./"  # Change this to your root folder path
-output_dir = "../../docs/examples/images/"
+output_dir = "../../docs/verification/images/"
 
 # The case folders of the batch reactor (first column of cases.txt); run from test/batch
 with open(os.path.join(root_dir, "cases.txt")) as f:

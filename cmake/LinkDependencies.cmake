@@ -18,8 +18,8 @@ function(link_FLINT_dependencies target_name)
 
   # Cantera
   if (USE_CANTERA)
-    # cantera_fortran before cantera, which it calls: GNU ld searches a static library only where it is on the line
-    target_link_libraries(${target_name} PRIVATE cantera_fortran cantera)
+    # Cantera and the SUNDIALS libraries it calls, in the order of the link line (see CMakeLists.txt)
+    target_link_libraries(${target_name} PRIVATE FLINT_Cantera)
     # After the Cantera build (cantera_world, when this configure builds Cantera): the target uses its Fortran modules
     # and libraries, which a parallel build would otherwise look for too early
     if (TARGET cantera_world)

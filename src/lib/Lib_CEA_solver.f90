@@ -3,18 +3,23 @@ module FLINT_CEA_solver
 contains
 
 
-      SUBROUTINE CEA_solve(T_in, rhoi_in, T_out, rhoi_out)
+      SUBROUTINE CEA_solve(T_in, rhoi_in, T_out, rhoi_out, status)
 !***********************************************************************
 ! CALCULATE EQUILIBRIUM COMPOSITION AND PROPERTIES.
+! rhoi_out: the equilibrium mass fractions. status (optional): 0 when the
+! iteration converged, 1 when it did not (T_out = T_in, and rhoi_out the
+! mass fractions of the input state).
 !***********************************************************************
       use FLINT_CEA_data
       use FLINT_CEA_setup, only: CEA_initialize_local, CEA_initialize_global
       use FLINT_Lib_Thermodynamic, only: COMP_THERMO_QUANTS, Tmin, Tmax
+      use, intrinsic :: iso_fortran_env, only: error_unit
       IMPLICIT NONE
       REAL*8, DIMENSION(:), INTENT(IN) :: rhoi_in
       REAL*8, INTENT(IN) :: T_in
       REAL*8, INTENT(OUT) :: T_out
       REAL*8, DIMENSION(:), INTENT(OUT) :: rhoi_out
+      INTEGER, INTENT(OUT), OPTIONAL :: status
 ! LOCAL VARIABLES
       CHARACTER*12 ae,cmp(MAXEL)
       LOGICAL cpcalc,i2many,newcom,reduce
@@ -32,6 +37,8 @@ contains
       REAL*8 Enln(MAXNGC), Enn, En(MAXNGC, NCOL), Ennl, Sumn, B0(MAXEL), G(MAXMAT, MAXMAT+1)
       REAL*8 Cp(MAXNGC), H0(MAXNGC), Mu(MAXNGC), S(MAXNGC)
       LOGICAL Convg, Gonly
+      LOGICAL converged
+      CHARACTER(LEN=256) msg
 
       DATA smalno/1.E-6/,smnol/ - 13.815511/
 
@@ -43,10 +50,16 @@ contains
         cea_thread_initialized = .true.
       end if
 
-      ! Safe defaults: if CEA fails to converge (any GOTO 1500 path),
-      ! return the input state unchanged instead of undefined values.
+      ! Defaults, which every GOTO 1500 path (no convergence) returns: the input
+      ! temperature and the mass fractions of the input state, so that rhoi_out
+      ! holds mass fractions in either case, and status 1. Label 1400, reached
+      ! only once the iteration has converged, sets the equilibrium and status 0.
+      ! (rhoi_out was rhoi_in, the partial densities, with no way to tell.)
+      rho = sum(rhoi_in)
       T_out    = T_in
-      rhoi_out = rhoi_in
+      rhoi_out = rhoi_in/rho
+      if (present(status)) status = 1
+      converged = .false.
 
       ! Reset module state that persists between calls
       Npt    = 1
@@ -61,7 +74,6 @@ contains
       Nspx   = Nspx_saved
       Nlm    = Nlm_saved
 
-      rho = sum(rhoi_in)
       Vv = 1d05/rho
       call CEA_initialize_local(T_in, rhoi_in/rho, B0p, Hsub0)
       B0 = B0p(:,2)
@@ -349,7 +361,6 @@ contains
           ENDIF
 ! TEST FOR CONVERGENCE
  560      IF ( numb.GT.maxitn ) THEN
-            WRITE (*,*) maxitn,Npt
             IF ( Nc.EQ.0.OR.i2many ) GOTO 1500
             i2many = .TRUE.
             IF ( .NOT.Hp.OR.Npt.NE.1.OR.Tt.GT.100. ) THEN
@@ -867,6 +878,8 @@ contains
       gasfrc = Enn/Totn(Npt)
       t_out = Tt
       rhoi_out = en(1:Nreac,1)*Mw(1:Nreac)
+      if (present(status)) status = 0
+      converged = .true.
       IF ( Trace.NE.0. ) THEN
         DO 1450 j = 1,Ng
           IF ( lelim.NE.0 ) THEN
@@ -881,6 +894,13 @@ contains
  1500 Tt = 0.
       Npt = Npt - 1
       !WRITE (IOOUT,99035) Npt
+      ! Once per failed call, built first so that OpenMP threads write whole lines
+      IF ( .NOT.converged ) THEN
+        WRITE (msg,'(A,ES11.4,A,ES11.4,A)') '[WARNING] FLINT CEA_solve: no equilibrium for T_in = ', T_in, &
+          ' K, rho = ', rho, ' kg/m3: returning T_in and the input mass fractions (status 1)'
+        WRITE (*,'(A)') trim(msg)
+        WRITE (error_unit,'(A)') trim(msg)
+      ENDIF
  1600 Lsave = Nlm
       Nlm = ls
       IF ( Npr.GT.0 ) Gonly = .FALSE.

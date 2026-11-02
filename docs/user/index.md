@@ -13,6 +13,14 @@ The User Guide describes how to configure and use FLINT in practical application
 
     [:octicons-arrow-right-24: Embed FLINT in your code](using.md)
 
+-   :material-api:{ .lg .middle } __API Reference__
+
+    ---
+
+    Every procedure and module variable, with its arguments,
+    units and return codes.
+
+    [:octicons-arrow-right-24: Look up the API](api.md)
 
 -   :material-file-document-outline:{ .lg .middle } __Input Format__
 

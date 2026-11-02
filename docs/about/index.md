@@ -24,6 +24,11 @@ Learn more about the FLINT project, its history, contributors, and licensing.
 
 </div>
 
+## Getting Help
+
+Ask questions, report bugs and request features on the [issue tracker](https://github.com/MarcoGrossi92/FLINT/issues),
+which has a template for each. [Contributing](../development/contributing.md) describes how to propose changes.
+
 ## License
 
 This project is licensed under the GNU General Public License v3.0. See [License](license.md) for details.

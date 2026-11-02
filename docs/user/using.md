@@ -7,7 +7,8 @@ This section describes the typical workflow for:
 * Finite-rate chemistry
 * Chemical equilibrium
 
-For more practical examples on how to use FLINT refers to the [Examples](../examples/definition.md).
+For more practical examples on how to use FLINT refers to the [Examples](../examples/definition.md). The
+[API Reference](api.md) lists every procedure with its arguments and return codes.
 
 ---
 
@@ -43,16 +44,16 @@ For single-component fluids at high pressure or near the critical point, FLINT p
 ```fortran
 integer :: err
 err = read_realfluid_thermo("folder")
-err = read_realgas_transport("folder") ! optional
+err = read_realfluid_transport("folder") ! optional
 ```
 
-`read_realfluid_thermo` reads the species name from `phase.txt` and populates a $(p, h)$ grid with density, temperature, entropy, speed of sound, $c_p$, and two partial derivatives. `read_realgas_transport` populates the matching viscosity and thermal conductivity grid.
+`read_realfluid_thermo` reads the species name from `phase.txt` and populates a $(p, h)$ grid with density, temperature, entropy, speed of sound, $c_p$, and two partial derivatives. `read_realfluid_transport` populates the matching viscosity and thermal conductivity grid.
 
 **Error codes**
 
 Both routines signal errors through their integer return value:
 
-| Code | `read_realfluid_thermo` | `read_realgas_transport` |
+| Code | `read_realfluid_thermo` | `read_realfluid_transport` |
 |------|------------------------|--------------------------|
 | 0 | No error | No error |
 | 1 | `phase.txt` not found | Transport file not found |
@@ -80,6 +81,7 @@ Available tables exposed by `FLINT_Lib_Thermodynamic`:
 | `rho_tab` | Density | kg/m³ |
 | `T_tab` | Temperature | K |
 | `dT_tab` | $(\partial\rho/\partial T)_p$ | kg/(m³·K) |
+| `rh_tab` | $(\partial\rho/\partial h)_p$ | kg²/(m³·J) |
 | `hT_tab` | $c_p = (\partial h/\partial T)_p$ | J/(kg·K) |
 | `s_tab2D` | Specific entropy | J/(kg·K) |
 | `rp_tab` | $(\partial\rho/\partial p)_h$ | kg/(m³·Pa) |
@@ -87,10 +89,12 @@ Available tables exposed by `FLINT_Lib_Thermodynamic`:
 | `mi_tab2D` | Dynamic viscosity | Pa·s |
 | `k_tab2D` | Thermal conductivity | W/(m·K) |
 
-To initialise from primitive variables $(p, T)$ rather than $(p, h)$, convert with `pT2h` before querying the tables:
+To initialise from primitive variables $(p, T)$ rather than $(p, h)$, build the inverse table once with `ph2pT` and
+convert with `pT2h` before querying the tables:
 
 ```fortran
 real(8) :: h_init
+err = ph2pT()            ! once, after read_realfluid_thermo
 h_init = pT2h(p, T)
 ```
 
@@ -129,17 +133,18 @@ This reads:
 
 **Computing Species Source Terms**
 
-To compute net production rates:
+To compute net production rates, select the procedure of the mechanism once, then call it:
 
 ```fortran
-call Chemistry_Source(T, rhoi, wdot)
+call Assign_Mechanism(mech_name)
+call chemistry_source(rhoi, T, wdot)
 ```
 
 where:
 
-* `T` = temperature
-* `rhoi` = species partial densities
-* `wdot` = species production rates
+* `rhoi` = species partial densities (kg/m³)
+* `T` = temperature (K)
+* `wdot` = species net mass production rates (kg/(m³·s))
 
 This subroutine is built upon an abstract interface and a pointer concretization. At runtime, the pointer procedure is assigned to one of the subroutine realizations. These are divided into:
 
@@ -159,13 +164,14 @@ Explicit routines are generated using the mechanism generation tool. See [Chemis
 
 **RHS Evaluation for ODE Integration**
 
-For batch reactor simulations:
+For batch reactor simulations, with the state `Z = (rhoi(1:ns), T)` and `nz = ns + 1`:
 
 ```fortran
-call Chemistry_RHS(...)
+call rhs_native(nz, time, Z, F)
 ```
 
-This routine computes the full time derivative vector composed of species and temperature evolution.
+This routine computes the full time derivative vector composed of species and temperature evolution, for an
+adiabatic constant-volume reactor.
 
 ### Source Files
 
@@ -195,6 +201,8 @@ Thermodynamic data must be loaded before using the equilibrium solver.
 ```fortran
 call CEA_initialize_global()
 ```
+
+`CEA_solve` also calls it, at its first call in each thread.
 
 **Solving Equilibrium**
 

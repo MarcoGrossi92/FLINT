@@ -88,6 +88,7 @@ nav:
   - User Guide:
     - user/index.md
     - Using FLINT: user/using.md
+    - API Reference: user/api.md
     - Input Format: 
       - user/input/index.md
       - YAML Format: user/input/yaml.md
@@ -112,6 +113,7 @@ nav:
     - Code Structure: development/structure.md
     - Generating New Mechanisms: development/chemistry_generation.md
     - Contributing: development/contributing.md
+    - Semantic Versioning: development/versioning.md
     - Testing: development/testing.md
 
   - About:

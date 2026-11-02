@@ -89,6 +89,9 @@ Use descriptive branch names:
    - Add docstrings to new functions
    - Update relevant .md files in `docs/`
    - Add examples if appropriate
+   - Preview the site, built with [Zensical](https://zensical.org): `pip install -r requirements-docs.txt`, then
+     `zensical serve` (http://localhost:8000). The GitHub workflow builds it in strict mode, where a broken link
+     fails the pull request
 
 5. **Add an entry to the changelog.** Every change that a user of FLINT sees goes under `[Unreleased]` in
    [CHANGELOG.md](https://github.com/MarcoGrossi92/FLINT/blob/main/CHANGELOG.md), in its section (Added, Changed,

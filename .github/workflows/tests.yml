@@ -4,7 +4,7 @@ name: Tests
 # demand with any label regex (Actions > Tests > Run workflow, labels: . for every test).
 on:
   pull_request:
-    paths-ignore: [ 'docs/**', 'mkdocs.yml', '**.md' ]
+    paths-ignore: [ 'docs/**', 'mkdocs.yml', '**.md', 'requirements-docs.txt', '.github/workflows/deploy.yml' ]
   workflow_dispatch:
     inputs:
       labels:

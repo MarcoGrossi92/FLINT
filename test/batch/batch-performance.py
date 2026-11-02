@@ -87,6 +87,6 @@ ax.legend(
 )
 
 plt.tight_layout()
-plt.savefig("../../docs/user/images/barplot.svg", format="svg", transparent=True)
+plt.savefig("../../docs/verification/images/barplot.svg", format="svg", transparent=True)
 plt.show()
 plt.close()

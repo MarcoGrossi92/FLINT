@@ -7,8 +7,9 @@ This section describes the typical workflow for:
 * Finite-rate chemistry
 * Chemical equilibrium
 
-For more practical examples on how to use FLINT refers to the [Examples](../examples/definition.md). The
-[API Reference](api.md) lists every procedure with its arguments and return codes.
+[Quick Start](../getting-started/quick-start.md) builds a first complete program, and [Examples](examples.md) outlines a
+batch reactor and an equilibrium calculation. The [API Reference](api.md) lists every procedure with its arguments and
+return codes.
 
 ---
 
@@ -49,18 +50,7 @@ err = read_realfluid_transport("folder") ! optional
 
 `read_realfluid_thermo` reads the species name from `phase.txt` and populates a $(p, h)$ grid with density, temperature, entropy, speed of sound, $c_p$, and two partial derivatives. `read_realfluid_transport` populates the matching viscosity and thermal conductivity grid.
 
-**Error codes**
-
-Both routines signal errors through their integer return value:
-
-| Code | `read_realfluid_thermo` | `read_realfluid_transport` |
-|------|------------------------|--------------------------|
-| 0 | No error | No error |
-| 1 | `phase.txt` not found | Transport file not found |
-| 2 | Error reading `phase.txt` | Error reading transport data |
-| 3 | Thermo file not found | More than one block |
-| 4 | Error reading thermo file | Mesh size mismatch with thermo |
-| 5 | More than one block in thermo | — |
+Both routines return 0 on success, and an error code otherwise: see [Real fluid](api.md#real-fluid) in the API Reference.
 
 **Property evaluation**
 
@@ -160,7 +150,7 @@ This subroutine is built upon an abstract interface and a pointer concretization
   - maximum performance  
   - recommended for production  
 
-Explicit routines are generated using the mechanism generation tool. See [Chemistry Database](database.md) and [Chemistry Generation](chemistry_routines.md) for more details.
+Explicit routines are generated using the mechanism generation tool. See [Available Mechanisms](database.md) and [Mechanism Routines](chemistry_routines.md) for more details.
 
 **RHS Evaluation for ODE Integration**
 

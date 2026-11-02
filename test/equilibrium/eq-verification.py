@@ -21,7 +21,7 @@ plt.rcParams.update({
 # Run from test/equilibrium, after test-CEA: reference/<mechanism>.dat (Cantera, test-equilCXX) against
 # <mechanism>/FLINT-CEA.txt (test-CEA)
 root_dir = "./"
-output_dir = "../../docs/examples/images/"
+output_dir = "../../docs/verification/images/"
 
 mechanisms = sorted(f[:-4] for f in os.listdir(os.path.join(root_dir, "reference")) if f.endswith(".dat"))
 

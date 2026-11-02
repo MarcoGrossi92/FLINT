@@ -1,6 +1,8 @@
-# Examples Definition
+# Examples
 
-This section provides procedural description and pseudo-code for several applications of FLINT. Only native routines are presented. 
+This page outlines, in pseudo-code, two applications of FLINT with its native routines. [Quick Start](../getting-started/quick-start.md)
+gives a complete program that you can build and run; the test drivers `src/test/batch/test-batchF.f90` and
+`src/test/equilibrium/test-CEA.f90` are complete programs for the two applications below.
 
 ## Batch Reactor Integration
 
@@ -10,7 +12,7 @@ The procedure relies on the following steps:
 
 - Load thermodynamic and chemistry data.
 - Definition of initial state.
-- Inizialization of the solver.
+- Initialization of the solver.
 - Run the solver.
 
 **Pseudo-code**
@@ -27,17 +29,18 @@ The procedure relies on the following steps:
   err = read_idealgas_thermo('mechanism-folder')
   err = read_chemistry( folder='mechanism-folder', mech_name=mech_name )
 
-  ! Initialize tollerances and state
+  ! Initialize tolerances and state
   ! ...
 
   ! Initialize ODE solver (OSLO)
   call setup_odesolver(N=neq,solver=solver,RT=RT,AT=AT,iopt=iopt)
 
-  ! Initialize chemical mechanism specific routine
+  ! Initialize chemical mechanism specific routine, and its analytical Jacobian if it has one
   call Assign_Mechanism(mech_name)
+  call set_analytical_jacobian(.true.)
 
   ! Run the solver (OSLO)
-  call run_odesolver(neq,timein,timeout,Y,rhs_native,err)
+  call run_odesolver(neq,timein,timeout,Y,rhs_native,jac_native,IJAC_chem,err)
 
   ! Output stored in Y (N species + temperature)
 
@@ -65,16 +68,16 @@ use FLINT_CEA_solver
 ! Load data
 err = read_idealgas_thermo('mechanism-folder')
 
-! Initialize solver
+! Initialize solver (CEA_solve also does it, at its first call)
 call CEA_initialize_global()
 
-! Initialize state values of p, T, rhoi
+! Initialize state values of T, rhoi
 ! ...
 
-! Run the solver
-call CEA_solve(p, T, rhoi, teq, y_eq)
+! Run the solver: equilibrium at the internal energy and volume of (T, rhoi)
+call CEA_solve(T, rhoi, teq, y_eq, status)
 
-! Output stored in N species (y_eq) plus temperature (teq)
+! Output: equilibrium temperature (teq) and mass fractions (y_eq); status = 0 if converged
 ```
 
 ---

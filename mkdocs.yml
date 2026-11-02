@@ -1,3 +1,5 @@
+# Built with Zensical (zensical build), which reads this file: see requirements-docs.txt. MkDocs with Material for
+# MkDocs builds it too
 site_name: FLINT Documentation
 site_url: https://MarcoGrossi92.github.io/FLINT/
 site_author: Marco Grossi
@@ -8,8 +10,6 @@ theme:
   name: material
   logo: flint-logo-icon-cropped.png
   favicon: flint-logo-icon-cropped.png
-  highlightjs: true
-  code_style: monokai
   font:
     text: Roboto
     code: Fira Code
@@ -36,8 +36,7 @@ theme:
     - search.suggest
     - search.highlight
     - content.tabs.link
-    - content.code.annotation
-    - content.code.copy
+    - content.code.annotate
   icon:
     repo: fontawesome/brands/github
 
@@ -48,7 +47,8 @@ markdown_extensions:
       line_spans: __span
       pygments_lang_class: true
   - pymdownx.inlinehilite
-  - pymdownx.snippets
+  - pymdownx.snippets:
+      check_paths: true        # a missing file (a figure, CONTRIBUTING.md) fails the build
   - pymdownx.superfences
   - pymdownx.tabbed:
       alternate_style: true
@@ -68,7 +68,6 @@ markdown_extensions:
 
 # Plugins
 plugins:
-  - macros
   - search:
       lang: en
 
@@ -80,29 +79,33 @@ extra_css:
   - stylesheets/extra.css
 
 nav:
-  - Getting Started: 
+  - Home: index.md
+
+  - Getting Started:
     - getting-started/index.md
     - Installation: getting-started/installation.md
     - Quick Start: getting-started/quick-start.md
 
   - User Guide:
     - user/index.md
-    - Using FLINT: user/using.md
+    - Using the Library: user/using.md
+    - Examples: user/examples.md
     - API Reference: user/api.md
-    - Input Format: 
+    - Using FLINT in a CMake Project: user/cmake.md
+    - Input Format:
       - user/input/index.md
       - YAML Format: user/input/yaml.md
       - Native Format: user/input/native.md
     - Chemistry Database:
       - Available Mechanisms: user/database.md
-      - Generating New Mechanisms: user/chemistry_routines.md
+      - Mechanism Routines: user/chemistry_routines.md
 
-  - Examples & Verification:
-    - examples/index.md
-    - Examples Definition: examples/definition.md
-    - Verification Outcomes: examples/verification.md
+  - Verification:
+    - verification/index.md
+    - Accuracy: verification/accuracy.md
+    - Performance: verification/performance.md
 
-  - Theoretical Guide: 
+  - Theoretical Guide:
     - theory/index.md
     - Thermodynamic and Transport Properties: theory/thermo.md
     - Finite-Rate Kinetics: theory/kinetics.md

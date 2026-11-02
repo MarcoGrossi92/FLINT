@@ -7,10 +7,12 @@ This guide covers the installation of FLINT.
 Before installing FLINT, ensure you have the required dependencies:
 
 - **CMake** ≥ 3.23
+- **Git**, and network access at the first configure
 - **Fortran compiler**: Intel (`ifort`/`ifx`) or GNU (`gfortran`)
 - **C++ compiler**: Required for Cantera and TecIO (optional)
 - **C compiler**: Required for SUNDIALS (optional)
-- **Python** ≥ 3.6: For Python post-process (optional)
+- **Python** ≥ 3.10 and **SCons** ≥ 4.0: Required to build Cantera (optional). Cantera also needs the headers of
+  Boost 1.70 or newer: those installed on the machine, or else a copy that the configure downloads
 
 FLINT uses two public repositories, both hosted under [Marco Grossi](https://github.com/MarcoGrossi92), which CMake
 fetches at configure time (see [ORION and OSLO](#orion-and-oslo)):
@@ -34,7 +36,7 @@ Choose the installation method that best fits your needs:
 
 === "Manual CMake"
 
-    Build the Fortran library and command-line converter:
+    Build the Fortran library and the test programs, with Cantera support:
 
     ```bash
     git clone https://github.com/MarcoGrossi92/FLINT.git
@@ -94,8 +96,7 @@ Perform a complete build from scratch:
 | `--include-oslo` | path | Build a local OSLO checkout instead of a release |
 | `--update-deps` | — | Select again the newest releases of ORION and OSLO |
 
-!!! warning "SUNDIALS & Cantera"
-    To properly compile Cantera SUNDIALS is requested.
+`--use-cantera` turns `--use-sundials` on: Cantera is built on the SUNDIALS of OSLO.
 
 **Examples:**
 
@@ -107,27 +108,21 @@ Perform a complete build from scratch:
 ./install.sh build --compilers=intel --use-sundials --use-cantera --use-tecio
 ```
 
-**compile**
-
-Recompile using existing CMake configuration stored in `CMakePresets.json`:
-
-```bash
-./install.sh compile
-```
-
-Use this after modifying source code to avoid reconfiguring the build system.
+`install.sh build` writes `CMakePresets.json`; after a change to the sources, `cmake --build build` recompiles
+without configuring again.
 
 ## Cantera Support
 
-Cantera is an open-source suite of tools for problems involving chemical kinetics, thermodynamics, and transport processes. It is shipped with a Fortran 90 interface that can be linked to FLINT to fully employ Cantera capabilities.
+Cantera is an open-source suite of tools for problems involving chemical kinetics, thermodynamics, and transport processes. It ships a Fortran 90 interface, which FLINT links to compare its own results with Cantera's.
 
-Cantera will not rebuilt unless its folder `lib/cantera` is cleaned. 
+`--use-cantera` (`-DUSE_CANTERA=ON`) builds Cantera 3.2.0 from the submodule `lib/cantera` with SCons, at the first
+build. It needs a C++ compiler, Python 3.10 or newer and SCons 4.0 or newer; the Boost headers are downloaded when the
+machine has none. The next builds reuse it: the configure builds Cantera again only when its libraries or its Fortran
+module are missing from `lib/cantera/build` (`scons clean` in `lib/cantera` removes them).
 
-!!! note "C++ Compiler Required"
-    Cantera requires a C++ compiler. Ensure `g++` or Intel C++ compiler is available.
-
-!!! warning "Build Cantera"
-    Cantera compilation may be a little tricky. If you experiment some problems, try to build Cantera standalone before compiling it within FLINT framework.
+!!! tip "When the Cantera build fails"
+    The build log shows the SCons step that failed, and `lib/cantera/config.log` the details of Cantera's configure
+    checks.
 
 ## ORION and OSLO
 
@@ -156,69 +151,35 @@ uses them again, without the network. A minor or patch release of ORION or OSLO 
 The rules are those of `cmake/SemVerDeps.cmake`, described at its top.
 
 
-## Using FLINT in a CMake Project
+## Verify the Build
 
-FLINT is built inside the tree of the code that uses it, fetched by CMake, not installed apart. The project requires a
-range of releases of FLINT with a copy of `cmake/SemVerDeps.cmake`, included by its path:
+After a build, the test programs are in `bin/test` and registered with CTest. From the root of the repository, run
+the quick tier of the suite (about 30 s):
 
-```cmake
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/SemVerDeps.cmake)
-semver_dependency(FLINT GIT_REPOSITORY https://github.com/MarcoGrossi92/FLINT.git VERSION 2.0
-                  GIT_SUBMODULES "")      # lib/cantera is cloned by FLINT, if USE_CANTERA is on
-FetchContent_MakeAvailable(FLINT)
+```bash
+ctest --test-dir build -L quick
 ```
 
-One copy of FLINT, ORION and OSLO serves the whole tree. The first `semver_dependency` of a library selects its
-release, and the others only check it: the top-level project requires all its libraries before it makes any of them
-available, so that it is the one that selects. When a project of the tree needs a release outside the requirement of
-another (ORION 1 for a solver, ORION 2 for FLINT), the configure stops and names both.
+or every test with `ctest --test-dir build -j8`. Each test prints its checks and a verdict, and exits with code 1 on
+failure; CTest summarizes them. A single test program can also be run by hand from its folder in `test/`, for
+example the real-fluid (p, h) tables and their inverse (p, T) -> h:
 
-A project uses FLINT in one of two ways, and every consumer in a build tree must use the same one: two ways in one
-tree compile FLINT's sources twice, into the same module files.
+```bash
+cd test/thermo
+../../bin/test/test-thermo-real
+```
 
-=== "Static library"
+Without Cantera, the tests compare FLINT with Cantera references stored in the repository. See
+[Testing](../development/testing.md) for the areas, the labels and the reference data.
 
-    The target `FLINT` (alias `FLINT::FLINT`) is visible from every directory of the tree and is compiled once
-    however many targets link it. It is built only for the targets that link it. It carries its dependencies (ORION,
-    OSLO, BLAS/LAPACK, and Cantera and OpenMP when enabled) and its module folder:
+## Using FLINT in Your Code
 
-    ```cmake
-    target_link_libraries(your_target PUBLIC FLINT)
-    ```
-
-    Link it `PUBLIC` when the modules of `your_target` use FLINT's: ifx reads FLINT's module files when it compiles a
-    user of those modules. This is the way for a tree where several projects use FLINT.
-
-=== "Source files"
-
-    The list `FLINT_SRC` holds FLINT's source files. The consumer compiles them in one of its own targets, and
-    `link_FLINT_dependencies` links what they need:
-
-    ```cmake
-    add_library(your_lib ${your_sources} ${FLINT_SRC})
-    link_FLINT_dependencies(your_lib)
-    ```
-
-    `FLINT_SRC` is set only in the directory that adds FLINT, so only one project of a tree can use it. FLINT's
-    directory-level definitions (`CANTERA`) and its OpenMP flag do not reach the consumer's target: the consumer has to
-    give them itself.
-
-The top-level project sets the flags before it adds FLINT: `CMAKE_Fortran_FLAGS_<CONFIG>`,
-`CMAKE_EXE_LINKER_FLAGS_<CONFIG>` and the options `USE_OPENMP`, `USE_MPI` and `USE_CANTERA` (OSLO's own defaults
-turn OpenMP and MPI on). FLINT's objects are compiled with them, the same as the top-level project's own.
-
-!!! warning "Intel IPO"
-    With interprocedural optimization (`-ipo`), FLINT's objects hold IR, not machine code. The link of each executable
-    then optimizes them together with the code that calls them, and FLINT's small thermodynamic functions are inlined
-    into the solver. This needs `-ipo` in the compile and link flags, and an archiver that indexes IR objects
-    (`llvm-ar` and `llvm-ranlib` as `CMAKE_AR` and `CMAKE_RANLIB`), all set before FLINT is added. A FLINT compiled
-    apart, or with other flags, is left out of that optimization: the solver runs slower, and nothing warns.
-
-FLINT does not install a CMake package: `find_package(FLINT)` is not supported.
+A project that uses FLINT fetches it with CMake and builds it in its own tree: see
+[Using FLINT in a CMake Project](../user/cmake.md), and [Quick Start](quick-start.md) for a first program.
 
 ## Next Steps
 
 - **[Quick Start Tutorial](quick-start.md)**: Learn FLINT basics with a hands-on example
-- **[User Guide](../user/index.md)**: Explore the converter and API capabilities
+- **[User Guide](../user/index.md)**: Embed FLINT in your code
 
 ---

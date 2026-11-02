@@ -1,4 +1,4 @@
-# Verification Outcomes
+# Accuracy
 
 This section presents verification results for FLINT obtained by comparing native implementations with reference solutions computed using Cantera.
 
@@ -22,62 +22,62 @@ Verification results for the different chemical mechanisms are presented in the 
 <div class="grid">
 
 <figure>
-  {% include "examples/images/WD.svg" %}
+  --8<-- "docs/verification/images/WD.svg"
   <figcaption>Westbrook-Dryer (no general procedure: its orders are not in chemistry-info.txt)</figcaption>
 </figure>
 
 <figure>
-  {% include "examples/images/Troyes.svg" %}
+  --8<-- "docs/verification/images/Troyes.svg"
   <figcaption>Troyes</figcaption>
 </figure>
 
 <figure>
-  {% include "examples/images/Ecker.svg" %}
+  --8<-- "docs/verification/images/Ecker.svg"
   <figcaption>Ecker</figcaption>
 </figure>
 
 <figure>
-  {% include "examples/images/Cross.svg" %}
+  --8<-- "docs/verification/images/Cross.svg"
   <figcaption>Cross</figcaption>
 </figure>
 
 <figure>
-  {% include "examples/images/Pelucchi.svg" %}
+  --8<-- "docs/verification/images/Pelucchi.svg"
   <figcaption>Pelucchi</figcaption>
 </figure>
 
 <figure>
-  {% include "examples/images/TSR-CDF-13.svg" %}
+  --8<-- "docs/verification/images/TSR-CDF-13.svg"
   <figcaption>TSR-CDF-13</figcaption>
 </figure>
 
 <figure>
-  {% include "examples/images/TSR-GP-24.svg" %}
+  --8<-- "docs/verification/images/TSR-GP-24.svg"
   <figcaption>TSR-GP-24</figcaption>
 </figure>
 
 <figure>
-  {% include "examples/images/TSR-Rich-31.svg" %}
+  --8<-- "docs/verification/images/TSR-Rich-31.svg"
   <figcaption>TSR-Rich-31</figcaption>
 </figure>
 
 <figure>
-  {% include "examples/images/Smooke.svg" %}
+  --8<-- "docs/verification/images/Smooke.svg"
   <figcaption>Smooke</figcaption>
 </figure>
 
 <figure>
-  {% include "examples/images/CORIA.svg" %}
+  --8<-- "docs/verification/images/CORIA.svg"
   <figcaption>CORIA-CNRS</figcaption>
 </figure>
 
 <figure>
-  {% include "examples/images/ZK.svg" %}
+  --8<-- "docs/verification/images/ZK.svg"
   <figcaption>Zhukov-Kong</figcaption>
 </figure>
 
 <figure>
-  {% include "examples/images/Gerlinger.svg" %}
+  --8<-- "docs/verification/images/Gerlinger.svg"
   <figcaption>Gerlinger</figcaption>
 </figure>
 
@@ -94,22 +94,22 @@ Verification results are presented in the figures below. As shown, the numerical
 <div class="grid">
 
 <figure>
-  {% include "examples/images/WD-eq.svg" %}
+  --8<-- "docs/verification/images/WD-eq.svg"
   <figcaption>Westbrook-Dryer</figcaption>
 </figure>
 
 <figure>
-  {% include "examples/images/ZK-eq.svg" %}
+  --8<-- "docs/verification/images/ZK-eq.svg"
   <figcaption>Zhukov-Kong</figcaption>
 </figure>
 
 <figure>
-  {% include "examples/images/TSR-GP-24-eq.svg" %}
+  --8<-- "docs/verification/images/TSR-GP-24-eq.svg"
   <figcaption>TSR-GP-24</figcaption>
 </figure>
 
 <figure>
-  {% include "examples/images/Ecker-eq.svg" %}
+  --8<-- "docs/verification/images/Ecker-eq.svg"
   <figcaption>Ecker (pressure sweep, 3000 K)</figcaption>
 </figure>
 
@@ -119,6 +119,12 @@ Verification results are presented in the figures below. As shown, the numerical
 
 ## Reproducibility
 
-All cases presented in this section are based on configurations included in the FLINT repository. Test programs and input data can be executed directly after installation.
+All cases presented in this section are included in the FLINT repository: the batch cases are listed in
+`test/batch/cases.txt`, and the equilibrium sweeps are run by `test-CEA`.
+
+- **Check them.** The test suite compares FLINT with stored Cantera references, without Cantera:
+  `ctest --test-dir build -L batch` and `ctest --test-dir build -L equilibrium`.
+- **Regenerate the figures.** They need a build with Cantera; [Testing](../development/testing.md#building-with-cantera-and-regenerating-the-figures)
+  gives the commands.
 
 For details on the testing infrastructure and framework, see the [Developer Guide](../development/testing.md) section.

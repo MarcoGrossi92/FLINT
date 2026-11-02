@@ -9,6 +9,13 @@ a major, a minor and a patch release of FLINT may change.
 
 ## [Unreleased]
 
+### Changed
+
+- The documentation site is built with [Zensical](https://zensical.org), the successor of Material for MkDocs
+  (in maintenance mode, with end of life on 2027-05-05), from the same `mkdocs.yml`. The GitHub workflow builds it
+  in strict mode on every pull request that changes it, with the versions of `requirements-docs.txt`, and
+  publishes it from `main`.
+
 ### Fixed
 
 - The documentation no longer gives `./install.sh compile`, which `install.sh` refuses, a command-line converter,

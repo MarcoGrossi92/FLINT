@@ -1,3 +1,5 @@
+# Built with Zensical (zensical build), which reads this file: see requirements-docs.txt. MkDocs with Material for
+# MkDocs builds it too
 site_name: FLINT Documentation
 site_url: https://MarcoGrossi92.github.io/FLINT/
 site_author: Marco Grossi
@@ -8,8 +10,6 @@ theme:
   name: material
   logo: flint-logo-icon-cropped.png
   favicon: flint-logo-icon-cropped.png
-  highlightjs: true
-  code_style: monokai
   font:
     text: Roboto
     code: Fira Code
@@ -36,8 +36,7 @@ theme:
     - search.suggest
     - search.highlight
     - content.tabs.link
-    - content.code.annotation
-    - content.code.copy
+    - content.code.annotate
   icon:
     repo: fontawesome/brands/github
 

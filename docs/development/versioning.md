@@ -86,7 +86,8 @@ The first `semver_dependency` of a library in a build tree selects its release; 
 inside the tree, only checks it, and the configure stops, naming both requirements, when it is not satisfied. The
 release is, in order:
 
-1. the local checkout given with `-DFETCHCONTENT_SOURCE_DIR_<NAME>=<folder>`, as it is;
+1. the local checkout given with `-DFETCHCONTENT_SOURCE_DIR_<NAME>=<folder>`, used as it is (its version is the highest
+   merged `vX.Y.Z` release tag; pre-release tags are ignored);
 2. the release in `deps.lock`, in the top-level source folder, if it satisfies the requirement;
 3. the newest release on GitHub that satisfies the requirement.
 

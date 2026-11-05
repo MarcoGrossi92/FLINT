@@ -142,7 +142,8 @@ uses them again, without the network. A minor or patch release of ORION or OSLO 
 - **Newer releases.** `cmake -DSEMVER_UPDATE=ALL <build>` (or `=ORION`, `=OSLO`), or `./install.sh build
   --update-deps`, selects the newest releases again and rewrites `deps.lock`.
 - **Local checkout.** `-DFETCHCONTENT_SOURCE_DIR_ORION=/path/to/ORION` (`--include-orion`) builds that folder as it
-  is, and the same for OSLO. The configure warns when its version, its newest tag, does not satisfy the requirement.
+  is, and the same for OSLO. Its version is the highest merged `vX.Y.Z` release tag; pre-release tags are ignored. The
+  configure warns when its version does not satisfy the requirement.
 - **TecIO and SUNDIALS.** ORION and OSLO build them in their copies, so a new build folder builds them again.
   `-DORION_TECIO_DIR=<folder>` and `-DOSLO_SUNDIALS_DIR=<folder>` keep them outside, for every
   build folder; OSLO rebuilds SUNDIALS when its stamp (the SUNDIALS commit, the compilers and the flags) does not match.

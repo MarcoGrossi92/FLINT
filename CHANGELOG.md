@@ -26,6 +26,9 @@ a major, a minor and a patch release of FLINT may change.
 
 ### Fixed
 
+- SemVerDeps 1.1.1: the version of a local checkout (`FETCHCONTENT_SOURCE_DIR_<NAME>`) is the newest `vX.Y.Z` tag
+  merged into its HEAD. It was the nearest tag, so a pre-release such as `v2.2.0-rc1` after a release left the
+  checkout without a version.
 - The documentation no longer gives `./install.sh compile`, which `install.sh` refuses, a command-line converter,
   which FLINT does not have, or an installation by pip. The installation guide and the README give what Cantera
   needs to build: a C++ compiler, Python 3.10 and SCons 4.0 or newer, and the Boost headers, downloaded when the

@@ -10,3 +10,9 @@ site
 deps.lock
 lib/OSLO
 lib/ORION
+
+# External mechanisms (database/external/README.md): kept out of the repository, except the README and the
+# submodule of the TSR mechanisms
+database/external/*
+!database/external/README.md
+!database/external/TSR-Family

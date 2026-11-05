@@ -8,6 +8,9 @@
 !                                       reference/<case>.dat (written once by test-batchCXX --reference):
 !                                       final temperature, time of half the temperature rise, mean deviation,
 !                                       and general = explicit. Needs no Cantera at run time. Exit code 1 on failure.
+!   test-batchF check <case> <folder>   the same, with the mechanism in <folder> in place of database/<case>/: an
+!                                       external mechanism (database/external/<family>/<case>/, see CMakeLists.txt)
+! The modes of every case skip a case whose mechanism is not in database/<case>/ (an external mechanism).
 ! Built with Cantera, the Cantera phase reads element-standard-entropies.yaml (the standard entropies of the
 ! elements) from the working directory, test/batch.
 program test
@@ -47,7 +50,7 @@ program test
   integer              :: neq, nstep, ncase, c, sim_type, nfail
   integer              :: iopt(3)
   character(32)        :: solver, mech_name
-  character(256)       :: mode, only
+  character(256)       :: mode, only, folder
   logical              :: check, found
 
 # if defined(SUNDIALS)
@@ -60,6 +63,7 @@ program test
 
   call get_command_argument(1, mode)
   call get_command_argument(2, only)
+  call get_command_argument(3, folder)
   if (mode == '') then
     write(*,*)'what kind of simulation do you want to run?'
     write(*,*)'1) verification'
@@ -95,6 +99,10 @@ program test
   do c = 1, ncase
     if (check .and. cases(c)%name /= only) cycle
     found = .true.
+    if (.not. check .and. .not. have_mechanism(cases(c)%name)) then
+      write(*,'(A)') '[SKIP] case '//trim(cases(c)%name)//': not in database/ (an external mechanism)'
+      cycle
+    endif
     call run_case(cases(c))
   enddo
 
@@ -110,13 +118,30 @@ program test
 
 contains
 
+  !> The folder of the mechanism of a case: database/<case>/, or the folder given to check
+  function mechanism_dir(name) result(dir)
+    character(*), intent(in)  :: name
+    character(:), allocatable :: dir
+    if (check .and. folder /= '') then
+      dir = trim(folder)
+      if (dir(len(dir):len(dir)) /= '/') dir = dir//'/'
+    else
+      dir = '../../database/'//trim(name)//'/'
+    endif
+  end function mechanism_dir
+
+  logical function have_mechanism(name)
+    character(*), intent(in) :: name
+    inquire(file=mechanism_dir(name)//'phase.txt', exist=have_mechanism)
+  end function have_mechanism
+
   subroutine run_case(cs)
     type(batch_case), intent(in) :: cs
     character(:), allocatable    :: dir
     real(8), allocatable         :: times(:), T_expl(:), T_gen(:)
     integer                      :: k, i, err
 
-    dir = '../../database/'//trim(cs%name)//'/'
+    dir = mechanism_dir(cs%name)
     call execute_command_line('mkdir -p '//trim(cs%name))
     err = read_idealgas_thermo(dir)
     ! ios = 5: no composition.txt, the elements of the species (CEA only)

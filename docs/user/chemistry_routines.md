@@ -150,7 +150,7 @@ row T of every table is the value at T kelvin and a rate table must not be read 
 row. The rate tables loaded by `read_chemistry` cover the thermo range (see the temperature grid of
 the tables; a wider rate table is accepted), so the second guard is a defence for tables set by
 another path. The tables of `database/WD` start at 1 K with a 1 K step; every table of
-`database/TSR-Rich-31` (thermo and rates) starts at 500 K.
+`database/external/TSR-Family/TSR-Rich-31` (thermo and rates) starts at 500 K.
 
 ## Analytical Jacobian availability
 

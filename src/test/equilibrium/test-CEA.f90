@@ -1,3 +1,5 @@
+! test-CEA [<folder>]: the equilibrium sweeps of WD, ZK, Ecker and, with <folder> (the folder of the external
+! mechanism TSR-GP-24, database/external/TSR-Family/TSR-GP-24/, passed by CMake when it is there), TSR-GP-24.
 program test_eq
   use FLINT_Lib_Thermodynamic
   use FLINT_Load_ThermoTransport
@@ -10,6 +12,10 @@ program test_eq
   character(len=16) :: verdict
   integer :: i, N, nfail = 0, status
   real(kind=8) :: of, press
+  character(len=256) :: tsr_dir
+
+  call get_command_argument(1, tsr_dir)
+  if (tsr_dir /= '' .and. tsr_dir(len_trim(tsr_dir):len_trim(tsr_dir)) /= '/') tsr_dir = trim(tsr_dir)//'/'
 
   T_ = 1000d0
   rho_ = 3.25d0
@@ -147,14 +153,18 @@ program test_eq
   deallocate(species_composition)
 
   !-------------------------------------------------------------------------------------------------
-  ! TSR-GP-24
+  ! TSR-GP-24: an external mechanism, with its folder as argument only
   !-------------------------------------------------------------------------------------------------
 
   write(*,*)
   write(*,*) 'TSR-GP-24'
 
+  if (tsr_dir == '') then
+    write(*,'(A)') ' [SKIP] TSR-GP-24: no folder given (an external mechanism, database/external/TSR-Family)'
+  else
+
   call execute_command_line('mkdir -p TSR-GP-24/')
-  err = read_idealgas_thermo('../../database/TSR-GP-24/')
+  err = read_idealgas_thermo(trim(tsr_dir))
   allocate(rhoi(ns))
   allocate(y_eq, mold=rhoi)
 
@@ -204,6 +214,8 @@ program test_eq
   deallocate(h_tab); deallocate(cp_tab); deallocate(dcpi_tab); deallocate(s_tab)
   deallocate(species_names); deallocate(elements_names)
   deallocate(species_composition)
+
+  endif   ! TSR-GP-24
 
   !-------------------------------------------------------------------------------------------------
   ! Ecker

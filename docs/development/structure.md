@@ -92,7 +92,7 @@ Contains dedicated Fortran source files such as:
 ```
 WD.f90
 ZK.f90
-TSR-GP-24.f90
+coria.f90
 ecker.f90
 ...
 ```

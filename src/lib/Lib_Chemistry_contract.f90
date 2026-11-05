@@ -14,12 +14,15 @@
 !  - the reaction counts per table type (Arrhenius, falloff-Troe, falloff-Lindemann) must match.
 ! The records are published in src/lib/Lib_ChemMech/mechanism_contract.json (format in
 ! docs/user/chemistry_routines.md): a table writer can check its files against them.
+! A name of none of these records is looked up in the records of the external mechanisms
+! (FLINT_Lib_Chemistry_external, database/external).
 module FLINT_Lib_Chemistry_contract
+  use FLINT_Lib_Chemistry_external, only: n_external_cases, external_expectation
   implicit none
   private
   public :: mechanism_expectation, check_mechanism_contract, canonical_composition
   integer, parameter, public :: contract_str_len = 32
-  integer, parameter, public :: n_contract_cases = 26
+  integer, parameter, public :: n_contract_cases = 23 + n_external_cases
 contains
 
   !> Expectation record of a hooked mechanism name; found = .false. for a name that falls back to general.
@@ -232,228 +235,6 @@ contains
         31.0340d0, &
         30.0700d0, &
         47.0330d0]
-    case ('TSR-CDF-13')
-      routine = 'TSRCDF13'; generated = .true.; ns_r = 13
-      nrc_r = [43, 3, 0]
-      sp_name = [character(contract_str_len) :: &
-        'OH', &
-        'HO2', &
-        'H2', &
-        'CO2', &
-        'CO', &
-        'H2O', &
-        'CH4', &
-        'H', &
-        'CH3', &
-        'O2', &
-        'CH2O', &
-        'HCO', &
-        'O']
-      sp_comp = [character(contract_str_len) :: &
-        'H1O1', &
-        'H1O2', &
-        'H2', &
-        'C1O2', &
-        'C1O1', &
-        'H2O1', &
-        'C1H4', &
-        'H1', &
-        'C1H3', &
-        'O2', &
-        'C1H2O1', &
-        'C1H1O1', &
-        'O1']
-      sp_wm = [real(8) :: &
-        17.0070d0, &
-        33.0060d0, &
-        2.0160d0, &
-        44.0090d0, &
-        28.0100d0, &
-        18.0150d0, &
-        16.0430d0, &
-        1.0080d0, &
-        15.0350d0, &
-        31.9980d0, &
-        30.0260d0, &
-        29.0180d0, &
-        15.9990d0]
-    case ('TSR-GP-24')
-      routine = 'TSRGP24'; generated = .true.; ns_r = 24
-      nrc_r = [102, 8, 0]
-      sp_name = [character(contract_str_len) :: &
-        'HO2', &
-        'H2O2', &
-        'CO', &
-        'OH', &
-        'H2', &
-        'HCO', &
-        'CH3O', &
-        'CH2(S)', &
-        'H', &
-        'O', &
-        'C3H2', &
-        'CH3', &
-        'C2H2', &
-        'CH2O', &
-        'C3H3', &
-        'C2H', &
-        'H2O', &
-        'CH3O2', &
-        'O2', &
-        'CH2', &
-        'C2H6', &
-        'CH4', &
-        'HCO2', &
-        'CO2']
-      sp_comp = [character(contract_str_len) :: &
-        'H1O2', &
-        'H2O2', &
-        'C1O1', &
-        'H1O1', &
-        'H2', &
-        'C1H1O1', &
-        'C1H3O1', &
-        'C1H2', &
-        'H1', &
-        'O1', &
-        'C3H2', &
-        'C1H3', &
-        'C2H2', &
-        'C1H2O1', &
-        'C3H3', &
-        'C2H1', &
-        'H2O1', &
-        'C1H3O2', &
-        'O2', &
-        'C1H2', &
-        'C2H6', &
-        'C1H4', &
-        'C1H1O2', &
-        'C1O2']
-      sp_wm = [real(8) :: &
-        33.0060d0, &
-        34.0140d0, &
-        28.0100d0, &
-        17.0070d0, &
-        2.0160d0, &
-        29.0180d0, &
-        31.0340d0, &
-        14.0270d0, &
-        1.0080d0, &
-        15.9990d0, &
-        38.0490d0, &
-        15.0350d0, &
-        26.0380d0, &
-        30.0260d0, &
-        39.0570d0, &
-        25.0300d0, &
-        18.0150d0, &
-        47.0330d0, &
-        31.9980d0, &
-        14.0270d0, &
-        30.0700d0, &
-        16.0430d0, &
-        45.0170d0, &
-        44.0090d0]
-    case ('TSR-Rich-31')
-      routine = 'TSRRich31'; generated = .true.; ns_r = 31
-      nrc_r = [185, 12, 0]
-      sp_name = [character(contract_str_len) :: &
-        'IC3H7CO', &
-        'CH2CHO', &
-        'H', &
-        'CH4', &
-        'C2H2', &
-        'C3H3', &
-        'C2H3', &
-        'O', &
-        'H2O2', &
-        'CO', &
-        'CH2O', &
-        'C2H6', &
-        'CH2CO', &
-        'IC3H7', &
-        'H2O', &
-        'O2', &
-        'CH2(S)', &
-        'HCO', &
-        'CH3', &
-        'H2', &
-        'CH3CO', &
-        'C3H6O1-3', &
-        'C2H4O1-2', &
-        'C2H3O1-2', &
-        'HO2', &
-        'C2H4', &
-        'CH', &
-        'OH', &
-        'C2H5', &
-        'CH2', &
-        'CO2']
-      sp_comp = [character(contract_str_len) :: &
-        'C4H7O1', &
-        'C2H3O1', &
-        'H1', &
-        'C1H4', &
-        'C2H2', &
-        'C3H3', &
-        'C2H3', &
-        'O1', &
-        'H2O2', &
-        'C1O1', &
-        'C1H2O1', &
-        'C2H6', &
-        'C2H2O1', &
-        'C3H7', &
-        'H2O1', &
-        'O2', &
-        'C1H2', &
-        'C1H1O1', &
-        'C1H3', &
-        'H2', &
-        'C2H3O1', &
-        'C3H6O1', &
-        'C2H4O1', &
-        'C2H3O1', &
-        'H1O2', &
-        'C2H4', &
-        'C1H1', &
-        'H1O1', &
-        'C2H5', &
-        'C1H2', &
-        'C1O2']
-      sp_wm = [real(8) :: &
-        71.0990d0, &
-        43.0450d0, &
-        1.0080d0, &
-        16.0430d0, &
-        26.0380d0, &
-        39.0570d0, &
-        27.0460d0, &
-        15.9990d0, &
-        34.0140d0, &
-        28.0100d0, &
-        30.0260d0, &
-        30.0700d0, &
-        42.0370d0, &
-        43.0890d0, &
-        18.0150d0, &
-        31.9980d0, &
-        14.0270d0, &
-        29.0180d0, &
-        15.0350d0, &
-        2.0160d0, &
-        43.0450d0, &
-        58.0800d0, &
-        44.0530d0, &
-        43.0450d0, &
-        33.0060d0, &
-        28.0540d0, &
-        13.0190d0, &
-        17.0070d0, &
-        29.0620d0, &
-        14.0270d0, &
-        44.0090d0]
     case ('ZK')
       routine = 'ZK'; generated = .true.; ns_r = 25
       nrc_r = [45, 6, 0]
@@ -1277,8 +1058,7 @@ contains
         33.0060d0, &
         34.0140d0]
     case default
-      found = .false.
-      allocate(sp_name(0), sp_comp(0), sp_wm(0))
+      call external_expectation(name, found, routine, generated, ns_r, nrc_r, sp_name, sp_comp, sp_wm)
     end select
   end subroutine mechanism_expectation
 

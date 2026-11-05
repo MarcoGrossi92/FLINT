@@ -12,6 +12,11 @@ species and reaction counts are those of the routine, as recorded in
 `src/lib/Lib_ChemMech/mechanism_contract.json`; the reactions are counted per table type
 (Arrhenius-type, including three-body, / falloff-Troe / falloff-Lindemann).
 
+!!! note "TSR mechanisms: available on request"
+    `TSR-CDF-13`, `TSR-GP-24` and `TSR-Rich-31` are available on request to the DIMA-THRUST group. They are
+    [external mechanisms](#external-mechanisms), in the private submodule `database/external/TSR-Family`, which a
+    clone leaves empty: without it, their names run the general procedure.
+
 | Mechanism name | Routine (file) | Type | Species | Reactions (Arrh. / Troe / Lind.) | Primary application | Reference |
 |----------------|----------------|------|---------|----------------------------------|---------------------|-----------|
 | `Frolov` | `Frolov` (`global-H2.f90`) | Global | 3 (+ inert) | 1 (rate hard-coded, tables ignored) | Hydrogen combustion (ultra-fast) | Frolov, Dubrovskii, Ivanov, *Progress in Propulsion Physics* 4 (2013) 467-488, doi:10.1051/eucass/201304467, Eq. (11) |
@@ -367,3 +372,21 @@ A detailed mechanism for HCl and Cl₂ chemistry at high temperatures.
 | **Detailed hydrocarbons** | SanDiego (FFCMy-12 as a reduced CH₄ alternative) | More comprehensive species set |
 
 ---
+
+## External Mechanisms
+
+Mechanisms that must not be published, for example because they are sensitive material, can be kept in
+`database/external/`, which git ignores. FLINT compiles them and hooks them in `Assign_Mechanism` like its own, with
+no change to its sources. Each family is a folder:
+
+```
+database/external/<family>/
+  <mechanism>/                     tables and Cantera file, as in database/<mechanism>/
+  FLINT/src/*.f90                  routines, as utils/YTF.py writes them
+  FLINT/mechanism_contract.json    their records of the mechanism contract (format of src/lib/Lib_ChemMech/mechanism_contract.json)
+```
+
+The configure compiles the routines of every family, and maps each mechanism name of the records to its routine. This
+step needs Python 3. `Assign_Mechanism` checks the loaded tables of an external mechanism against its record, as it
+does for FLINT's own. A name that FLINT hooks already cannot be an external mechanism. `-DFLINT_EXTERNAL_DIR=<path>`
+takes the families from another folder. `database/external/README.md` has the details.

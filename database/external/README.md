@@ -34,8 +34,7 @@ python3 utils/mechanism_contract.py --check
 ## TSR mechanisms
 
 `TSR-Family` is the private submodule of the TSR mechanisms (`TSR-CDF-13`, `TSR-GP-24`, `TSR-Rich-31`), available
-on request to the DIMA-THRUST group. A clone leaves it empty, so there is nothing to compile. With access, check it
-out once from the root of FLINT and configure again:
+on request. With access, check it out from the root of FLINT and configure:
 
 ```bash
 git submodule update --init --checkout database/external/TSR-Family

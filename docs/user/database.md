@@ -9,13 +9,15 @@ FLINT includes a curated collection of chemical reaction mechanisms for combusti
 The **mechanism name** is the name that `Assign_Mechanism` hooks: line 1 of `chemistry-info.txt` must
 hold it exactly for the compiled routine to be used (any other name runs the general procedure). The
 species and reaction counts are those of the routine, as recorded in
-`src/lib/Lib_ChemMech/mechanism_contract.json`; the reactions are counted per table type
+`src/lib/Lib_ChemMech/mechanism_contract.json` (for an external mechanism, in `FLINT/mechanism_contract.json` of
+its family); the reactions are counted per table type
 (Arrhenius-type, including three-body, / falloff-Troe / falloff-Lindemann).
 
 !!! note "TSR mechanisms: available on request"
     `TSR-CDF-13`, `TSR-GP-24` and `TSR-Rich-31` are available on request to the DIMA-THRUST group. They are
     [external mechanisms](#external-mechanisms), in the private submodule `database/external/TSR-Family`, which a
-    clone leaves empty: without it, their names run the general procedure.
+    clone leaves empty: without it, their names run the general procedure. Their routines are in `FLINT/src/` of
+    the family, not in `src/lib/Lib_ChemMech/`.
 
 | Mechanism name | Routine (file) | Type | Species | Reactions (Arrh. / Troe / Lind.) | Primary application | Reference |
 |----------------|----------------|------|---------|----------------------------------|---------------------|-----------|
@@ -33,9 +35,9 @@ species and reaction counts are those of the routine, as recorded in
 | `Smooke` | `smooke` (`smooke.f90`) | Reduced | 16 | 35 / 0 / 0 | CH₄ premixed flames | Smooke (ed.), Springer, 1991 |
 | `CORIA-CNRS` | `coria` (`coria.f90`) | Reduced | 17 | 40 / 4 / 0 | CH₄ high-pressure combustion | Monnier, Ribert, *Combust. Flame* 235 (2022) 111735 |
 | `ZK` | `ZK` (`ZK.f90`) | Skeletal | 25 | 45 / 6 / 0 | CH₄ rocket engines (high pressure) | Zhukov, Kong, *Prog. React. Kinet. Mech.* 43(1) (2018) 62-78, doi:10.3184/146867818X15066862094914 |
-| `TSR-CDF-13` | `TSRCDF13` (`TSR-CDF-13.f90`) | Skeletal | 13 | 43 / 3 / 0 | CH₄ diffusion flames | Liberatori et al., *J. Propul. Power* 40(2) (2024) 303-319, doi:10.2514/1.B39283 |
-| `TSR-GP-24` | `TSRGP24` (`TSR-GP-24.f90`) | Skeletal | 24 | 102 / 8 / 0 | CH₄ general purpose | Liberatori et al. 2024 (as above) |
-| `TSR-Rich-31` | `TSRRich31` (`TSR-Rich-31.f90`) | Skeletal | 31 | 185 / 12 / 0 | CH₄ rich combustion | Liberatori et al. 2024 (as above) |
+| `TSR-CDF-13` | `TSRCDF13` (`TSR-CDF-13.f90`, external) | Skeletal | 13 | 43 / 3 / 0 | CH₄ diffusion flames | Liberatori et al., *J. Propul. Power* 40(2) (2024) 303-319, doi:10.2514/1.B39283 |
+| `TSR-GP-24` | `TSRGP24` (`TSR-GP-24.f90`, external) | Skeletal | 24 | 102 / 8 / 0 | CH₄ general purpose | Liberatori et al. 2024 (as above) |
+| `TSR-Rich-31` | `TSRRich31` (`TSR-Rich-31.f90`, external) | Skeletal | 31 | 185 / 12 / 0 | CH₄ rich combustion | Liberatori et al. 2024 (as above) |
 | `FFCMy-12` | `FFCMy_12` (`FFCMy_12.f90`) | Reduced | 13 (12 + N₂) | 34 / 3 / 1 | CH₄ combustion | Xu et al., *Combust. Flame* 263 (2024) 113380, doi:10.1016/j.combustflame.2024.113380 |
 | `SanDiego` | `sandiego20161214` (`sandiego20161214.f90`) | Detailed | 57 | 245 / 23 / 0 | Hydrocarbon detailed mechanism | San Diego Mechanism, University of California at San Diego, version 2016-12-14 |
 | `CoronettiC4H6` | `Coronetti` (`coronetti.f90`) | Global | 9 | 6 / 0 / 0 | C₄H₆ HTPB hybrid rockets | Coronetti, Sirignano, *J. Propul. Power* 29(2) (2013) 371-384, doi:10.2514/1.B34760 |
@@ -199,7 +201,7 @@ A skeletal mechanism developed via Temperature-Sensitive-Reduction for counterfl
 - **Species / Reactions**: 13 / 46
 - **Application**: Counterflow diffusion flames, flame sheet models
 - **Accuracy**: Skeletal, optimize for diffusion flame chemistry
-- **File**: `TSR-CDF-13.f90`
+- **File**: `FLINT/src/TSR-CDF-13.f90` of the external family `database/external/TSR-Family` (on request)
 
 ---
 
@@ -212,7 +214,7 @@ A general-purpose skeletal mechanism for methane combustion across multiple flam
 - **Pressure range**: 1–40 bar
 - **Application**: General combustion simulation, good balance of accuracy and speed
 - **Accuracy**: Skeletal, versatile
-- **File**: `TSR-GP-24.f90`
+- **File**: `FLINT/src/TSR-GP-24.f90` of the external family `database/external/TSR-Family` (on request)
 
 ---
 
@@ -224,7 +226,7 @@ A skeletal mechanism optimized for rich methane combustion regimes.
 - **Species / Reactions**: 31 / 197
 - **Application**: Rich mixtures, fuel-lean combustion, NO formation
 - **Accuracy**: Skeletal, detailed intermediate chemistry
-- **File**: `TSR-Rich-31.f90`
+- **File**: `FLINT/src/TSR-Rich-31.f90` of the external family `database/external/TSR-Family` (on request)
 
 ---
 

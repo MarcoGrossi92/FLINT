@@ -15,7 +15,10 @@ program test_eq
   character(len=256) :: tsr_dir
 
   call get_command_argument(1, tsr_dir)
-  if (tsr_dir /= '' .and. tsr_dir(len_trim(tsr_dir):len_trim(tsr_dir)) /= '/') tsr_dir = trim(tsr_dir)//'/'
+  ! two ifs: .and. does not short-circuit, and the substring of an empty argument would be tsr_dir(0:0)
+  if (len_trim(tsr_dir) > 0) then
+    if (tsr_dir(len_trim(tsr_dir):len_trim(tsr_dir)) /= '/') tsr_dir = trim(tsr_dir)//'/'
+  endif
 
   T_ = 1000d0
   rho_ = 3.25d0

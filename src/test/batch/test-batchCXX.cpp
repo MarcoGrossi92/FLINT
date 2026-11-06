@@ -58,15 +58,20 @@ std::vector<BatchCase> readCases(const std::string& file)
     return cases;
 }
 
-// The folder of a mechanism: database/<name>/ or, for an external mechanism, database/external/<family>/<name>/;
+// The folder of the external mechanisms of the configure (-DFLINT_EXTERNAL_DIR, src/test/CMakeLists.txt)
+#ifndef FLINT_EXTERNAL_DIR
+#define FLINT_EXTERNAL_DIR "../../database/external"
+#endif
+
+// The folder of a mechanism: database/<name>/ or, for an external mechanism, <FLINT_EXTERNAL_DIR>/<family>/<name>/;
 // empty when it is in neither
 std::string mechanismDir(const std::string& name)
 {
     if (std::filesystem::exists("../../database/" + name + "/phase.txt")) {
         return "../../database/" + name + "/";
     }
-    if (std::filesystem::is_directory("../../database/external")) {
-        for (const auto& family : std::filesystem::directory_iterator("../../database/external")) {
+    if (std::filesystem::is_directory(FLINT_EXTERNAL_DIR)) {
+        for (const auto& family : std::filesystem::directory_iterator(FLINT_EXTERNAL_DIR)) {
             if (std::filesystem::exists(family.path() / name / "phase.txt")) {
                 return (family.path() / name).string() + "/";
             }
@@ -155,7 +160,7 @@ int main(int argc, char** argv)
                 continue;
             }
             if (mechanismDir(c.name).empty()) {
-                std::cout << "[SKIP] case " << c.name << ": not in database/ nor in database/external/\n";
+                std::cout << "[SKIP] case " << c.name << ": not in database/ nor in " FLINT_EXTERNAL_DIR "/\n";
                 continue;
             }
             double elapsed = 0;

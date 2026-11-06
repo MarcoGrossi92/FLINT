@@ -30,15 +30,20 @@ struct Sweep {
     bool pressure;   // false: mixture ratio of O2/CH4 at fixed density; true: pressure at fixed composition
 };
 
-// The folder of a mechanism: database/<name>/ or, for an external mechanism, database/external/<family>/<name>/;
+// The folder of the external mechanisms of the configure (-DFLINT_EXTERNAL_DIR, src/test/CMakeLists.txt)
+#ifndef FLINT_EXTERNAL_DIR
+#define FLINT_EXTERNAL_DIR "../../database/external"
+#endif
+
+// The folder of a mechanism: database/<name>/ or, for an external mechanism, <FLINT_EXTERNAL_DIR>/<family>/<name>/;
 // empty when it is in neither
 std::string mechanismDir(const std::string& name)
 {
     if (std::filesystem::exists("../../database/" + name + "/phase.txt")) {
         return "../../database/" + name + "/";
     }
-    if (std::filesystem::is_directory("../../database/external")) {
-        for (const auto& family : std::filesystem::directory_iterator("../../database/external")) {
+    if (std::filesystem::is_directory(FLINT_EXTERNAL_DIR)) {
+        for (const auto& family : std::filesystem::directory_iterator(FLINT_EXTERNAL_DIR)) {
             if (std::filesystem::exists(family.path() / name / "phase.txt")) {
                 return (family.path() / name).string() + "/";
             }
@@ -66,7 +71,7 @@ int main(int argc, char** argv)
             }
             std::string dir = mechanismDir(sw.name);
             if (dir.empty()) {
-                std::cout << "[SKIP] " << sw.name << ": not in database/ nor in database/external/\n";
+                std::cout << "[SKIP] " << sw.name << ": not in database/ nor in " FLINT_EXTERNAL_DIR "/\n";
                 continue;
             }
             auto sol = newSolution(dir + sw.yaml);

@@ -16,6 +16,9 @@ set(DRIVER_LIBS FLINT)
 if (USE_TECIO)
   list(APPEND DRIVER_LIBS ${LINKLIBS})
 endif()
+# the folder of the external mechanisms of this configure, for the drivers that look for them (test-wdot,
+# test-batchCXX, test-equilCXX): the macro FLINT_EXTERNAL_DIR, a string
+set(DRIVER_EXTERNAL_DIR "FLINT_EXTERNAL_DIR=\"${FLINT_EXTERNAL_DIR}\"")
 
 foreach(AREA ${TEST_AREAS})
   # the working directory of the tests of the area (git keeps it only while it holds fixtures)
@@ -29,6 +32,7 @@ foreach(AREA ${TEST_AREAS})
     set_target_properties(${EXE_NAME} PROPERTIES LINKER_LANGUAGE Fortran)
     # FLINT and its dependencies (see cmake/LinkDependencies.cmake): OSLO, ORION, TecIO and Cantera (optional)
     target_link_libraries(${EXE_NAME} PRIVATE ${DRIVER_LIBS})
+    target_compile_definitions(${EXE_NAME} PRIVATE ${DRIVER_EXTERNAL_DIR})
   endforeach()
 endforeach()
 
@@ -36,6 +40,7 @@ endforeach()
 if (USE_CANTERA)
   add_executable(test-batchCXX batch/test-batchCXX.cpp)
   set_target_properties(test-batchCXX PROPERTIES CXX_STANDARD 17)
+  target_compile_definitions(test-batchCXX PRIVATE ${DRIVER_EXTERNAL_DIR})
   # one SUNDIALS installation
   target_include_directories(test-batchCXX PRIVATE "${SUNDIALS_INSTALL_DIR}/include/"
                                                    "${canteraD}/include/")
@@ -53,6 +58,7 @@ if (USE_CANTERA)
   #   cmake --build . --target equilibrium-reference
   add_executable(test-equilCXX equilibrium/test-equilCXX.cpp)
   set_target_properties(test-equilCXX PROPERTIES CXX_STANDARD 17)
+  target_compile_definitions(test-equilCXX PRIVATE ${DRIVER_EXTERNAL_DIR})
   target_include_directories(test-equilCXX PRIVATE "${SUNDIALS_INSTALL_DIR}/include/"
                                                    "${canteraD}/include/")
   link_FLINT_dependencies(test-equilCXX)

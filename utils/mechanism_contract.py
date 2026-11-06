@@ -55,6 +55,37 @@ for fam, f, J in FAMILIES:
         if c.get('jacobian'):
             sys.exit('ERROR: %s: case %s: an external routine with an analytical Jacobian is not supported' % (f, name))
         E[name] = c
+
+def declarations(files):
+    """[(kind, name.lower(), file)] of the modules and subroutines that the files define"""
+    import re
+    out = []
+    for f in files:
+        for line in open(f, errors='replace'):
+            m = re.match(r"\s*(?:(?:pure|impure|elemental|recursive)\s+)*(module|subroutine)\s+(\w+)", line, re.I)
+            if m and not (m.group(1).lower() == 'module' and m.group(2).lower() == 'procedure'):
+                r = os.path.relpath(f, root)
+                out.append((m.group(1).lower(), m.group(2).lower(), f if r.startswith('..') else r))
+    return out
+
+# Name collisions, among FLINT's sources (those the configure compiles) and those of the families: a module defined
+# twice does not build, and a routine of a record defined twice would be fingerprinted (and hooked) from either
+if FAMILIES:
+    files = sorted(glob.glob(os.path.join(root, 'src', 'lib', '**', '*.f90'), recursive=True))
+    for fam, _, _ in FAMILIES:
+        files += sorted(glob.glob(os.path.join(fam, 'FLINT', 'src', '*.f90')))
+    where = collections.defaultdict(list)
+    for kind, name, f in declarations(files):
+        where[(kind, name)].append(f)
+    clashes = ['module %s: %s' % (n, ', '.join(fs)) for (k, n), fs in sorted(where.items()) if k == 'module' and len(fs) > 1]
+    for name, c in list(C['cases'].items()) + list(E.items()):
+        fs = where[('subroutine', c['routine'].lower())]
+        if len(fs) > 1:
+            clashes.append('routine %s of the case %s: %s' % (c['routine'], name, ', '.join(fs)))
+    if clashes:
+        sys.exit('ERROR: names defined more than once in the sources of FLINT and of the external families:\n  '
+                 + '\n  '.join(dict.fromkeys(clashes)))
+
 STR_LEN = 32   # contract_str_len: the length of the strings of a record, the same in both modules
 
 def symbol(el):

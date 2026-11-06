@@ -63,9 +63,6 @@ contains
     use JLRs_mod
     use smooke_mod
     use coria_mod
-    use TSRCDF13_mod
-    use TSRGP24_mod
-    use TSRRich31_mod
     use ZK_mod
     use coronetti_mod
     use singh_mod
@@ -78,6 +75,7 @@ contains
     use FFCMy_12_mod
     use Gerlinger9_mod
     use FLINT_Lib_Chemistry_contract, only: check_mechanism_contract
+    use FLINT_Lib_Chemistry_external, only: external_mechanism
     implicit none
     character(*), intent(in) :: mad_world
     logical :: hooked, ok, loaded
@@ -100,12 +98,6 @@ contains
       chemistry_source => smooke
     case('CORIA-CNRS')
       chemistry_source => coria
-    case('TSR-CDF-13')
-      chemistry_source => TSRCDF13
-    case('TSR-GP-24')
-      chemistry_source => TSRGP24
-    case('TSR-Rich-31')
-      chemistry_source => TSRRich31
     case('ZK')
       chemistry_source => ZK
     case('CoronettiC4H6')
@@ -146,20 +138,23 @@ contains
       chemistry_source => Gerlinger9
 
     case default
-      hooked = .false.
-      write(*,*) "[WARNING] Explicit procedure for "//trim(mad_world)//" not found, defaulting to the general procedure"
-      write(error_unit,'(A)') "[WARNING] FLINT Assign_Mechanism: explicit procedure for "//trim(mad_world)// &
-        " not found, defaulting to the general procedure"
-      if (strict_mechanism()) then
-        write(*,'(A)') "[ERROR] FLINT Assign_Mechanism: mechanism "//trim(mad_world)// &
-          " is not hooked and strict mode is on (FLINT_STRICT_MECHANISM / FLINT_strict_mechanism)"
-        write(error_unit,'(A)') "[ERROR] FLINT Assign_Mechanism: mechanism "//trim(mad_world)// &
-          " is not hooked and strict mode is on (FLINT_STRICT_MECHANISM / FLINT_strict_mechanism)"
-        error stop 1
+      ! an external mechanism (database/external, module FLINT_Lib_Chemistry_external), else the general procedure
+      call external_mechanism(mad_world, hooked, chemistry_source)
+      if (.not. hooked) then
+        write(*,*) "[WARNING] Explicit procedure for "//trim(mad_world)//" not found, defaulting to the general procedure"
+        write(error_unit,'(A)') "[WARNING] FLINT Assign_Mechanism: explicit procedure for "//trim(mad_world)// &
+          " not found, defaulting to the general procedure"
+        if (strict_mechanism()) then
+          write(*,'(A)') "[ERROR] FLINT Assign_Mechanism: mechanism "//trim(mad_world)// &
+            " is not hooked and strict mode is on (FLINT_STRICT_MECHANISM / FLINT_strict_mechanism)"
+          write(error_unit,'(A)') "[ERROR] FLINT Assign_Mechanism: mechanism "//trim(mad_world)// &
+            " is not hooked and strict mode is on (FLINT_STRICT_MECHANISM / FLINT_strict_mechanism)"
+          error stop 1
+        endif
+        chemistry_source => general
+        general_selected = .true.
+        if (allocated(ni1_arrh_tab) .and. .not. have_orders) call warn_no_orders_block()   ! tables already loaded
       endif
-      chemistry_source => general
-      general_selected = .true.
-      if (allocated(ni1_arrh_tab) .and. .not. have_orders) call warn_no_orders_block()   ! tables already loaded
     end select
 
     ! Mechanism contract: a hooked name selects a compiled routine whose species

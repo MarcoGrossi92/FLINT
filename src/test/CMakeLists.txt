@@ -16,6 +16,9 @@ set(DRIVER_LIBS FLINT)
 if (USE_TECIO)
   list(APPEND DRIVER_LIBS ${LINKLIBS})
 endif()
+# the folder of the external mechanisms of this configure, for the drivers that look for them (test-wdot,
+# test-batchCXX, test-equilCXX): the macro FLINT_EXTERNAL_DIR, a string
+set(DRIVER_EXTERNAL_DIR "FLINT_EXTERNAL_DIR=\"${FLINT_EXTERNAL_DIR}\"")
 
 foreach(AREA ${TEST_AREAS})
   # the working directory of the tests of the area (git keeps it only while it holds fixtures)
@@ -29,6 +32,7 @@ foreach(AREA ${TEST_AREAS})
     set_target_properties(${EXE_NAME} PROPERTIES LINKER_LANGUAGE Fortran)
     # FLINT and its dependencies (see cmake/LinkDependencies.cmake): OSLO, ORION, TecIO and Cantera (optional)
     target_link_libraries(${EXE_NAME} PRIVATE ${DRIVER_LIBS})
+    target_compile_definitions(${EXE_NAME} PRIVATE ${DRIVER_EXTERNAL_DIR})
   endforeach()
 endforeach()
 
@@ -36,6 +40,7 @@ endforeach()
 if (USE_CANTERA)
   add_executable(test-batchCXX batch/test-batchCXX.cpp)
   set_target_properties(test-batchCXX PROPERTIES CXX_STANDARD 17)
+  target_compile_definitions(test-batchCXX PRIVATE ${DRIVER_EXTERNAL_DIR})
   # one SUNDIALS installation
   target_include_directories(test-batchCXX PRIVATE "${SUNDIALS_INSTALL_DIR}/include/"
                                                    "${canteraD}/include/")
@@ -53,6 +58,7 @@ if (USE_CANTERA)
   #   cmake --build . --target equilibrium-reference
   add_executable(test-equilCXX equilibrium/test-equilCXX.cpp)
   set_target_properties(test-equilCXX PROPERTIES CXX_STANDARD 17)
+  target_compile_definitions(test-equilCXX PRIVATE ${DRIVER_EXTERNAL_DIR})
   target_include_directories(test-equilCXX PRIVATE "${SUNDIALS_INSTALL_DIR}/include/"
                                                    "${canteraD}/include/")
   link_FLINT_dependencies(test-equilCXX)
@@ -89,8 +95,16 @@ flint_add_test(chemistry   andersen     quick test-andersen)
 # both make orders/noblock
 set_tests_properties(chemistry/orders chemistry/orders-warn PROPERTIES RESOURCE_LOCK orders-noblock)
 
-# Equilibrium: CEA against Cantera values
-flint_add_test(equilibrium CEA          quick test-CEA)
+# Equilibrium: CEA against Cantera values. The sweep of TSR-GP-24, an external mechanism, runs when its folder is
+# there and TecIO reads its .szplt tables
+file(GLOB CEA_TSR "${FLINT_EXTERNAL_DIR}/*/TSR-GP-24/phase.txt")
+if (CEA_TSR AND USE_TECIO)
+  list(GET CEA_TSR 0 CEA_TSR)
+  get_filename_component(CEA_TSR "${CEA_TSR}" DIRECTORY)
+  flint_add_test(equilibrium CEA        quick test-CEA "${CEA_TSR}/")
+else()
+  flint_add_test(equilibrium CEA        quick test-CEA)
+endif()
 
 # Batch reactor: one test per case of test/batch/cases.txt, test-batchF check <case> against
 # test/batch/reference/<case>.dat. Quick cases: a global mechanism with orders (WD), tables in
@@ -98,18 +112,31 @@ flint_add_test(equilibrium CEA          quick test-CEA)
 set(BATCH_QUICK WD Troyes TSR-GP-24 Pelucchi Gerlinger)
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${FLINT_TEST_DIR}/batch/cases.txt")
 file(STRINGS "${FLINT_TEST_DIR}/batch/cases.txt" BATCH_LINES REGEX "^[^# \t]")
+# The mechanism of a case is in database/<case>/ or, for an external mechanism (the TSR mechanisms), in
+# ${FLINT_EXTERNAL_DIR}/<family>/<case>/, which test-batchF check takes as third argument; a case found in
+# neither is disabled.
 foreach(LINE ${BATCH_LINES})
   string(REGEX MATCH "^[^ \t]+" CASE "${LINE}")
+  set(TIER long)
   if (CASE IN_LIST BATCH_QUICK)
-    flint_add_test(batch ${CASE} quick test-batchF check ${CASE})
+    set(TIER quick)
+  endif()
+  file(GLOB EXTERNAL_CASE "${FLINT_EXTERNAL_DIR}/*/${CASE}/phase.txt")
+  if (EXISTS "${CMAKE_SOURCE_DIR}/database/${CASE}/phase.txt" OR NOT EXTERNAL_CASE)
+    flint_add_test(batch ${CASE} ${TIER} test-batchF check ${CASE})
+    if (NOT EXISTS "${CMAKE_SOURCE_DIR}/database/${CASE}/phase.txt")
+      set_tests_properties(batch/${CASE} PROPERTIES DISABLED TRUE)
+    endif()
   else()
-    flint_add_test(batch ${CASE} long  test-batchF check ${CASE})
+    list(GET EXTERNAL_CASE 0 EXTERNAL_CASE)
+    get_filename_component(EXTERNAL_CASE "${EXTERNAL_CASE}" DIRECTORY)
+    flint_add_test(batch ${CASE} ${TIER} test-batchF check ${CASE} "${EXTERNAL_CASE}/")
   endif()
 endforeach()
 
 # Tables in TecIO's .szplt (Troyes, TSR-GP-24, TSR-Rich-31) are read with TecIO only
 if (NOT USE_TECIO)
-  file(GLOB SZPLT_FILES "${CMAKE_SOURCE_DIR}/database/*/*.szplt")
+  file(GLOB SZPLT_FILES "${CMAKE_SOURCE_DIR}/database/*/*.szplt" "${FLINT_EXTERNAL_DIR}/*/*/*.szplt")
   foreach(FILE ${SZPLT_FILES})
     get_filename_component(DIR ${FILE} DIRECTORY)
     get_filename_component(CASE ${DIR} NAME)
@@ -117,5 +144,4 @@ if (NOT USE_TECIO)
       set_tests_properties(batch/${CASE} PROPERTIES DISABLED TRUE)
     endif()
   endforeach()
-  set_tests_properties(equilibrium/CEA PROPERTIES DISABLED TRUE)   # TSR-GP-24
 endif()

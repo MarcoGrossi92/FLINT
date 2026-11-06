@@ -1,4 +1,7 @@
 ! Test for wdot with thrid-body reactions
+#ifndef FLINT_EXTERNAL_DIR
+#define FLINT_EXTERNAL_DIR '../../database/external'
+#endif
 program test
   use FLINT_Lib_Thermodynamic
   use FLINT_Load_ThermoTransport
@@ -19,6 +22,10 @@ program test
   real(8) :: time1, time2
   integer :: i, j, err
   character(32) :: mech_name
+  logical :: have_tsr
+  ! the TSR mechanisms: the family TSR-Family of the external mechanisms of the configure (-DFLINT_EXTERNAL_DIR,
+  ! src/test/CMakeLists.txt)
+  character(*), parameter :: tsr_dir = FLINT_EXTERNAL_DIR//'/TSR-Family/'
 
   !-------------------------------------------------------------------------------------------------
   ! WD
@@ -488,14 +495,18 @@ program test
   call free_chemistry_data()
 
   !-------------------------------------------------------------------------------------------------
-  ! TSR-CDF-13
+  ! TSR-CDF-13: an external mechanism (database/external/TSR-Family), skipped without it
   !-------------------------------------------------------------------------------------------------
 
+  inquire(file=tsr_dir//'TSR-CDF-13/phase.txt', exist=have_tsr)
+  if (.not. have_tsr) write(*,'(A)') ' [SKIP] TSR-CDF-13: '//tsr_dir//' is empty'
+  if (have_tsr) then
+
   call execute_command_line('mkdir -p wdot/TSR-CDF-13')
-  err = read_idealgas_thermo('../../database/TSR-CDF-13/')
-  err = read_chemistry( folder='../../database/TSR-CDF-13/', mech_name=mech_name )
+  err = read_idealgas_thermo(tsr_dir//'TSR-CDF-13/')
+  err = read_chemistry( folder=tsr_dir//'TSR-CDF-13/', mech_name=mech_name )
 # if defined (CANTERA)
-  call load_phase(gas, '../../database/TSR-CDF-13/TSR-CDF-13.yaml')
+  call load_phase(gas, tsr_dir//'TSR-CDF-13/TSR-CDF-13.yaml')
 # endif
   call Assign_Mechanism(mech_name)
 
@@ -563,16 +574,21 @@ program test
   if (allocated(elements_names)) deallocate(elements_names)
   if (allocated(species_composition)) deallocate(species_composition)
   call free_chemistry_data()
+  endif   ! TSR-CDF-13
 
   !-------------------------------------------------------------------------------------------------
-  ! TSR-GP-24
+  ! TSR-GP-24: an external mechanism (database/external/TSR-Family), skipped without it
   !-------------------------------------------------------------------------------------------------
+
+  inquire(file=tsr_dir//'TSR-GP-24/phase.txt', exist=have_tsr)
+  if (.not. have_tsr) write(*,'(A)') ' [SKIP] TSR-GP-24: '//tsr_dir//' is empty'
+  if (have_tsr) then
 
   call execute_command_line('mkdir -p wdot/TSR-GP-24')
-  err = read_idealgas_thermo('../../database/TSR-GP-24/')
-  err = read_chemistry( folder='../../database/TSR-GP-24/', mech_name=mech_name )
+  err = read_idealgas_thermo(tsr_dir//'TSR-GP-24/')
+  err = read_chemistry( folder=tsr_dir//'TSR-GP-24/', mech_name=mech_name )
 # if defined (CANTERA)
-  call load_phase(gas, '../../database/TSR-GP-24/TSR-GP-24.yaml')
+  call load_phase(gas, tsr_dir//'TSR-GP-24/TSR-GP-24.yaml')
 # endif
   call Assign_Mechanism(mech_name)
 
@@ -640,16 +656,21 @@ program test
   if (allocated(elements_names)) deallocate(elements_names)
   if (allocated(species_composition)) deallocate(species_composition)
   call free_chemistry_data()
+  endif   ! TSR-GP-24
 
   !-------------------------------------------------------------------------------------------------
-  ! TSR-Rich-31
+  ! TSR-Rich-31: an external mechanism (database/external/TSR-Family), skipped without it
   !-------------------------------------------------------------------------------------------------
+
+  inquire(file=tsr_dir//'TSR-Rich-31/phase.txt', exist=have_tsr)
+  if (.not. have_tsr) write(*,'(A)') ' [SKIP] TSR-Rich-31: '//tsr_dir//' is empty'
+  if (have_tsr) then
 
   call execute_command_line('mkdir -p wdot/TSR-Rich-31')
-  err = read_idealgas_thermo('../../database/TSR-Rich-31/')
-  err = read_chemistry( folder='../../database/TSR-Rich-31/', mech_name=mech_name )
+  err = read_idealgas_thermo(tsr_dir//'TSR-Rich-31/')
+  err = read_chemistry( folder=tsr_dir//'TSR-Rich-31/', mech_name=mech_name )
 # if defined (CANTERA)
-  call load_phase(gas, '../../database/TSR-Rich-31/TSR-Rich-31.yaml')
+  call load_phase(gas, tsr_dir//'TSR-Rich-31/TSR-Rich-31.yaml')
 # endif
   call Assign_Mechanism(mech_name)
 
@@ -717,6 +738,7 @@ program test
   if (allocated(elements_names)) deallocate(elements_names)
   if (allocated(species_composition)) deallocate(species_composition)
   call free_chemistry_data()
+  endif   ! TSR-Rich-31
 
   !-------------------------------------------------------------------------------------------------
   ! Pelucchi

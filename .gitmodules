@@ -1,3 +1,8 @@
 [submodule "lib/cantera"]
 	path = lib/cantera
 	url = https://github.com/Cantera/cantera.git
+[submodule "TSR-Family"]
+	path = database/external/TSR-Family
+	url = https://github.com/DIMA-THRUST/TSR-Family.git
+	branch = main
+	update = none

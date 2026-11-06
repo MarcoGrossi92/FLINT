@@ -149,6 +149,36 @@ set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 #     CMAKE_AR/CMAKE_RANLIB (llvm-ar/llvm-ranlib). Its objects are then those a consumer would compile from FLINT_SRC,
 #     and with -ipo the link of each executable optimises them together with the consumer's own code
 file(GLOB LIBSRC CONFIGURE_DEPENDS src/lib/*.f90 src/lib/Lib_ChemMech/*.f90)
+
+# -------- External mechanisms --------
+# Mechanisms kept out of FLINT's repository, in the git-ignored folder
+# database/external (see its README.md), one folder per family. A family holds its mechanism folders (tables,
+# Cantera file) and FLINT/: its routines (FLINT/src/*.f90) and their records of the mechanism contract
+# (FLINT/mechanism_contract.json). The configure compiles the routines and writes the module
+# FLINT_Lib_Chemistry_external, to which Assign_Mechanism falls back for a name that FLINT does not hook
+# (utils/mechanism_contract.py, Python 3); without a family, the stub src/lib/external/Lib_Chemistry_external.f90
+# hooks none. The TSR mechanisms are the family database/external/TSR-Family, a private submodule
+set(FLINT_EXTERNAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/database/external" CACHE PATH "Folder of the external mechanisms")
+file(GLOB FLINT_EXTERNAL_CONTRACTS CONFIGURE_DEPENDS "${FLINT_EXTERNAL_DIR}/*/FLINT/mechanism_contract.json")
+if (FLINT_EXTERNAL_CONTRACTS)
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  set(FLINT_EXTERNAL_MODULE "${CMAKE_CURRENT_BINARY_DIR}/external/Lib_Chemistry_external.f90")
+  execute_process(COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/utils/mechanism_contract.py"
+                          --external-dir "${FLINT_EXTERNAL_DIR}" --external-module "${FLINT_EXTERNAL_MODULE}"
+                  RESULT_VARIABLE _flint_ext_result OUTPUT_VARIABLE _flint_ext_out ERROR_VARIABLE _flint_ext_out)
+  if (NOT _flint_ext_result EQUAL 0)
+    message(FATAL_ERROR "External mechanisms of ${FLINT_EXTERNAL_DIR}: ${_flint_ext_out}")
+  endif()
+  # a change to a record, or to the generator, configures again
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${FLINT_EXTERNAL_CONTRACTS}
+               "${CMAKE_CURRENT_SOURCE_DIR}/utils/mechanism_contract.py")
+  file(GLOB FLINT_EXTERNAL_SRC CONFIGURE_DEPENDS "${FLINT_EXTERNAL_DIR}/*/FLINT/src/*.f90")
+  list(APPEND LIBSRC ${FLINT_EXTERNAL_SRC} "${FLINT_EXTERNAL_MODULE}")
+  message(STATUS "External mechanisms: ${_flint_ext_out}")
+else()
+  list(APPEND LIBSRC "${CMAKE_CURRENT_SOURCE_DIR}/src/lib/external/Lib_Chemistry_external.f90")
+  message(STATUS "External mechanisms: none")
+endif()
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
   set(FLINT_SRC ${LIBSRC})
 else()

@@ -197,6 +197,9 @@ selects that routine, and its analytical Jacobian when it has one:
 `TSR-Rich-31`, `ZK`, `CoronettiC4H6`, `Singh`, `Singh-WC32`, `Frolov`, `Frolov_nopressure`, `Nassini`, `Troyes`,
 `Ecker`, `Cross`, `Pelucchi`, `OSK`, `ONERA-7`, `SanDiego`, `FFCMy-12`, `Gerlinger-9`.
 
+The TSR names, and the names of any other [external mechanism](database.md#external-mechanisms), are hooked only
+when their family is in `database/external/`.
+
 For these names the loaded species and rate tables must match the routine: `Assign_Mechanism` checks them and stops
 with the expected and the loaded lists when they differ. Called before the data are loaded, it checks them at the
 first call of `chemistry_source`. Any other name selects the general procedure, which evaluates the mechanism of

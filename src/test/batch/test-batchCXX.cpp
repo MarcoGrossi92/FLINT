@@ -58,11 +58,33 @@ std::vector<BatchCase> readCases(const std::string& file)
     return cases;
 }
 
+// The folder of the external mechanisms of the configure (-DFLINT_EXTERNAL_DIR, src/test/CMakeLists.txt)
+#ifndef FLINT_EXTERNAL_DIR
+#define FLINT_EXTERNAL_DIR "../../database/external"
+#endif
+
+// The folder of a mechanism: database/<name>/ or, for an external mechanism, <FLINT_EXTERNAL_DIR>/<family>/<name>/;
+// empty when it is in neither
+std::string mechanismDir(const std::string& name)
+{
+    if (std::filesystem::exists("../../database/" + name + "/phase.txt")) {
+        return "../../database/" + name + "/";
+    }
+    if (std::filesystem::is_directory(FLINT_EXTERNAL_DIR)) {
+        for (const auto& family : std::filesystem::directory_iterator(FLINT_EXTERNAL_DIR)) {
+            if (std::filesystem::exists(family.path() / name / "phase.txt")) {
+                return (family.path() / name).string() + "/";
+            }
+        }
+    }
+    return "";
+}
+
 // Integrates one case and returns (time, T) at nsteps equal steps up to tend, and the wall time.
 std::vector<std::pair<double, double>> runCase(const BatchCase& c, int nsteps, double rtol, double atol,
                                                double& elapsed)
 {
-    auto sol = newSolution("../../database/" + c.name + "/" + c.yaml);
+    auto sol = newSolution(mechanismDir(c.name) + c.yaml);
     sol->thermo()->setState_TPY(c.T, c.p, c.composition);
     auto reactor = newReactorBase("IdealGasReactor", sol);
     ReactorNet sim(reactor);
@@ -135,6 +157,10 @@ int main(int argc, char** argv)
 
         for (const auto& c : cases) {
             if (!only.empty() && std::find(only.begin(), only.end(), c.name) == only.end()) {
+                continue;
+            }
+            if (mechanismDir(c.name).empty()) {
+                std::cout << "[SKIP] case " << c.name << ": not in database/ nor in " FLINT_EXTERNAL_DIR "/\n";
                 continue;
             }
             double elapsed = 0;

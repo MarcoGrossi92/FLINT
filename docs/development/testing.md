@@ -88,8 +88,12 @@ ctest -L batch -LE long       # an area, quick tier only
 ctest -R batch/ZK -V          # one test, with its output
 ```
 
-Without `USE_TECIO`, the tests that read TecIO `.szplt` tables (batch Troyes, TSR-GP-24, TSR-Rich-31 and
-equilibrium/CEA) are disabled.
+Without `USE_TECIO`, the tests that read TecIO `.szplt` tables (batch Troyes, TSR-GP-24 and TSR-Rich-31) are
+disabled, and equilibrium/CEA skips its TSR-GP-24 sweep.
+
+The TSR mechanisms are external mechanisms, in the private submodule `database/external/TSR-Family`. Without it,
+the batch cases TSR-CDF-13, TSR-GP-24 and TSR-Rich-31 are disabled and equilibrium/CEA skips its TSR-GP-24 sweep.
+The GitHub workflow checks out no submodule, so it runs none of them.
 
 A driver can also be run by hand from its area folder, for example:
 

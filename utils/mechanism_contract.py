@@ -16,12 +16,77 @@ data does not match. Run from the repository root:
     python3 utils/mechanism_contract.py --fingerprints   # (re)write those fields into the JSON
 The Fortran text after the case records (canonical_composition, element_symbol,
 check_mechanism_contract) is kept here verbatim: change it here and regenerate.
+
+External mechanisms (kept out of FLINT's repository): a family in database/external/<family>/ holds
+its routines in FLINT/src/*.f90 and their records in FLINT/mechanism_contract.json (this format).
+The module FLINT_Lib_Chemistry_external hooks them: Assign_Mechanism and mechanism_expectation fall
+back to it for a name that FLINT does not hook. Without a family it is the committed stub
+src/lib/external/Lib_Chemistry_external.f90, which hooks none; with one, the configure writes it
+into the build folder:
+    python3 utils/mechanism_contract.py --external-module <file>   # the module of the families
+--external-dir <dir> (every mode) takes the families from <dir> in place of database/external.
+--fingerprints and --check treat the records of the families too.
 """
-import json, os, sys, difflib, collections
+import json, os, sys, difflib, collections, glob
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 src = os.path.join(root, 'src', 'lib', 'Lib_ChemMech', 'mechanism_contract.json')
 dst = os.path.join(root, 'src', 'lib', 'Lib_Chemistry_contract.f90')
+stub = os.path.join(root, 'src', 'lib', 'external', 'Lib_Chemistry_external.f90')
 C = json.load(open(src), object_pairs_hook=collections.OrderedDict)
+
+def option(name):
+    """the value of --name <value> on the command line, or None"""
+    if name in sys.argv[1:]:
+        i = sys.argv.index(name)
+        if i + 1 >= len(sys.argv): sys.exit('%s wants a value' % name)
+        return sys.argv[i + 1]
+    return None
+
+# the external families: (family folder, its JSON, its records), in name order
+ext_dir = os.path.abspath(option('--external-dir') or os.path.join(root, 'database', 'external'))
+FAMILIES = []
+for f in sorted(glob.glob(os.path.join(ext_dir, '*', 'FLINT', 'mechanism_contract.json'))):
+    FAMILIES.append((os.path.dirname(os.path.dirname(f)), f, json.load(open(f), object_pairs_hook=collections.OrderedDict)))
+E = collections.OrderedDict()   # the records of the families
+for fam, f, J in FAMILIES:
+    for name, c in J['cases'].items():
+        if name in C['cases'] or name in E:
+            sys.exit('ERROR: %s: the case %s is hooked already (by FLINT or by another family)' % (f, name))
+        if c.get('jacobian'):
+            sys.exit('ERROR: %s: case %s: an external routine with an analytical Jacobian is not supported' % (f, name))
+        E[name] = c
+
+def declarations(files):
+    """[(kind, name.lower(), file)] of the modules and subroutines that the files define"""
+    import re
+    out = []
+    for f in files:
+        for line in open(f, errors='replace'):
+            m = re.match(r"\s*(?:(?:pure|impure|elemental|recursive)\s+)*(module|subroutine)\s+(\w+)", line, re.I)
+            if m and not (m.group(1).lower() == 'module' and m.group(2).lower() == 'procedure'):
+                r = os.path.relpath(f, root)
+                out.append((m.group(1).lower(), m.group(2).lower(), f if r.startswith('..') else r))
+    return out
+
+# Name collisions, among FLINT's sources (those the configure compiles) and those of the families: a module defined
+# twice does not build, and a routine of a record defined twice would be fingerprinted (and hooked) from either
+if FAMILIES:
+    files = sorted(glob.glob(os.path.join(root, 'src', 'lib', '**', '*.f90'), recursive=True))
+    for fam, _, _ in FAMILIES:
+        files += sorted(glob.glob(os.path.join(fam, 'FLINT', 'src', '*.f90')))
+    where = collections.defaultdict(list)
+    for kind, name, f in declarations(files):
+        where[(kind, name)].append(f)
+    clashes = ['module %s: %s' % (n, ', '.join(fs)) for (k, n), fs in sorted(where.items()) if k == 'module' and len(fs) > 1]
+    for name, c in list(C['cases'].items()) + list(E.items()):
+        fs = where[('subroutine', c['routine'].lower())]
+        if len(fs) > 1:
+            clashes.append('routine %s of the case %s: %s' % (c['routine'], name, ', '.join(fs)))
+    if clashes:
+        sys.exit('ERROR: names defined more than once in the sources of FLINT and of the external families:\n  '
+                 + '\n  '.join(dict.fromkeys(clashes)))
+
+STR_LEN = 32   # contract_str_len: the length of the strings of a record, the same in both modules
 
 def symbol(el):
     """element symbol in standard case (CL -> Cl): composition.txt files may carry upper-case symbols"""
@@ -60,47 +125,55 @@ L.append('!    with the one of the expected composition (tolerance 0.05 kg/kmol)
 L.append('!  - the reaction counts per table type (Arrhenius, falloff-Troe, falloff-Lindemann) must match.')
 L.append('! The records are published in src/lib/Lib_ChemMech/mechanism_contract.json (format in')
 L.append('! docs/user/chemistry_routines.md): a table writer can check its files against them.')
+L.append('! A name of none of these records is looked up in the records of the external mechanisms')
+L.append('! (FLINT_Lib_Chemistry_external, database/external).')
 L.append('module FLINT_Lib_Chemistry_contract')
+L.append('  use FLINT_Lib_Chemistry_external, only: n_external_cases, external_expectation')
 L.append('  implicit none')
 L.append('  private')
 L.append('  public :: mechanism_expectation, check_mechanism_contract, canonical_composition')
-L.append('  integer, parameter, public :: contract_str_len = 32')
-L.append('  integer, parameter, public :: n_contract_cases = %d' % len(C['cases']))
+L.append('  integer, parameter, public :: contract_str_len = %d' % STR_LEN)
+L.append('  integer, parameter, public :: n_contract_cases = %d + n_external_cases' % len(C['cases']))
 L.append('contains')
 L.append('')
-L.append('  !> Expectation record of a hooked mechanism name; found = .false. for a name that falls back to general.')
-L.append('  subroutine mechanism_expectation(name, found, routine, generated, ns_r, nrc_r, sp_name, sp_comp, sp_wm)')
-L.append('    implicit none')
-L.append('    character(*), intent(in) :: name')
-L.append('    logical, intent(out) :: found, generated')
-L.append('    character(contract_str_len), intent(out) :: routine')
-L.append('    integer, intent(out) :: ns_r, nrc_r(3)   ! Arrhenius, falloff-Troe, falloff-Lindemann')
-L.append('    character(contract_str_len), allocatable, intent(out) :: sp_name(:), sp_comp(:)')
-L.append('    real(8), allocatable, intent(out) :: sp_wm(:)   ! molecular weight of each slot [kg/kmol]')
-L.append('')
-L.append('    found = .true.; generated = .false.; routine = \'\'; ns_r = 0; nrc_r = 0')
-L.append('    select case (name)')
-for name, c in C['cases'].items():
-    sp = c['species']
-    assert sp is not None and len(sp) == c['ns'], name
-    L.append('    case (%s)' % fstr(name))
-    L.append('      routine = %s; generated = %s; ns_r = %d' % (fstr(c['routine']), '.true.' if c['kind'] == 'generated' else '.false.', c['ns']))
-    L.append('      nrc_r = [%d, %d, %d]' % (c['nrc']['arrhenius'], c['nrc']['troe'], c['nrc']['lindemann']))
-    L.append('      sp_name = [character(contract_str_len) :: &')
-    for i, s in enumerate(sp):
-        L.append('        %s%s' % (fstr(s['name']), ', &' if i + 1 < len(sp) else ']'))
-    L.append('      sp_comp = [character(contract_str_len) :: &')
-    for i, s in enumerate(sp):
-        L.append('        %s%s' % (fstr(canonical(s['composition'])), ', &' if i + 1 < len(sp) else ']'))
-    L.append('      sp_wm = [real(8) :: &')
-    for i, s in enumerate(sp):
-        L.append('        %.4fd0%s' % (molw(s['composition']), ', &' if i + 1 < len(sp) else ']'))
-L.append('    case default')
-L.append('      found = .false.')
-L.append('      allocate(sp_name(0), sp_comp(0), sp_wm(0))')
-L.append('    end select')
-L.append('  end subroutine mechanism_expectation')
-L.append('')
+def expectation(L, routine_name, str_len, cases, fallback):
+    """the subroutine <routine_name> with the records of cases; fallback: the lines of its case default"""
+    L.append('  !> Expectation record of a hooked mechanism name; found = .false. for a name that falls back to general.')
+    L.append('  subroutine %s(name, found, routine, generated, ns_r, nrc_r, sp_name, sp_comp, sp_wm)' % routine_name)
+    L.append('    implicit none')
+    L.append('    character(*), intent(in) :: name')
+    L.append('    logical, intent(out) :: found, generated')
+    L.append('    character(%s), intent(out) :: routine' % str_len)
+    L.append('    integer, intent(out) :: ns_r, nrc_r(3)   ! Arrhenius, falloff-Troe, falloff-Lindemann')
+    L.append('    character(%s), allocatable, intent(out) :: sp_name(:), sp_comp(:)' % str_len)
+    L.append('    real(8), allocatable, intent(out) :: sp_wm(:)   ! molecular weight of each slot [kg/kmol]')
+    L.append('')
+    L.append('    found = .true.; generated = .false.; routine = \'\'; ns_r = 0; nrc_r = 0')
+    L.append('    select case (name)')
+    for name, c in cases.items():
+        sp = c['species']
+        assert sp is not None and len(sp) == c['ns'], name
+        L.append('    case (%s)' % fstr(name))
+        L.append('      routine = %s; generated = %s; ns_r = %d' % (fstr(c['routine']), '.true.' if c['kind'] == 'generated' else '.false.', c['ns']))
+        L.append('      nrc_r = [%d, %d, %d]' % (c['nrc']['arrhenius'], c['nrc']['troe'], c['nrc']['lindemann']))
+        L.append('      sp_name = [character(%s) :: &' % str_len)
+        for i, sl in enumerate(sp):
+            L.append('        %s%s' % (fstr(sl['name']), ', &' if i + 1 < len(sp) else ']'))
+        L.append('      sp_comp = [character(%s) :: &' % str_len)
+        for i, sl in enumerate(sp):
+            L.append('        %s%s' % (fstr(canonical(sl['composition'])), ', &' if i + 1 < len(sp) else ']'))
+        L.append('      sp_wm = [real(8) :: &')
+        for i, sl in enumerate(sp):
+            L.append('        %.4fd0%s' % (molw(sl['composition']), ', &' if i + 1 < len(sp) else ']'))
+    L.append('    case default')
+    L.extend(fallback)
+    L.append('    end select')
+    L.append('  end subroutine %s' % routine_name)
+    L.append('')
+
+NO_RECORD = ['      found = .false.', '      allocate(sp_name(0), sp_comp(0), sp_wm(0))']
+expectation(L, 'mechanism_expectation', 'contract_str_len', C['cases'],
+            ['      call external_expectation(name, found, routine, generated, ns_r, nrc_r, sp_name, sp_comp, sp_wm)'])
 L.append(r'''  !> Elemental composition as a string: element symbols in standard case (CL -> Cl) and ASCII
   !> order, each followed by its integer count (H2O -> 'H2O1', CH4 -> 'C1H4'); elements with a
   !> zero count are omitted.
@@ -282,6 +355,81 @@ L.append(r'''  !> Elemental composition as a string: element symbols in standard
 
 end module FLINT_Lib_Chemistry_contract''')
 text = '\n'.join(L) + '\n'
+
+def routine_modules(fdirs):
+    """routine name.lower() -> the module that holds it, in the sources of the folders"""
+    out = {}
+    for fdir in fdirs:
+        for f in sorted(glob.glob(os.path.join(fdir, '*.f90'))):
+            mod = None
+            for line in open(f, errors='replace'):
+                m = re.match(r"\s*module\s+(\w+)\s*$", line, re.I)
+                if m and m.group(1).lower() != 'procedure': mod = m.group(1); continue
+                m = re.match(r"\s*subroutine\s+(\w+)", line, re.I)
+                if m and mod: out[m.group(1).lower()] = mod
+    return out
+
+def external_module(cases, families):
+    """the module FLINT_Lib_Chemistry_external of the records cases, whose routines are in the families"""
+    mods = routine_modules([os.path.join(fam, 'FLINT', 'src') for fam in families])
+    uses = collections.OrderedDict()
+    for name, c in cases.items():
+        mod = mods.get(c['routine'].lower())
+        if mod is None:
+            sys.exit('ERROR: case %s: routine %s not found in FLINT/src of the external families' % (name, c['routine']))
+        uses.setdefault(mod, []).append(c['routine'])
+    M = []
+    M.append('! Generated by utils/mechanism_contract.py: DO NOT EDIT BY HAND.')
+    M.append('!')
+    M.append('! The external mechanisms: the routines and the records of the mechanism contract of the families')
+    M.append('! of database/external (<family>/FLINT/src and <family>/FLINT/mechanism_contract.json), to which')
+    M.append('! Assign_Mechanism and mechanism_expectation fall back for a name that FLINT does not hook.')
+    if not cases:
+        M.append('! No family: this module hooks no name.')
+    M.append('module FLINT_Lib_Chemistry_external')
+    for mod, rs in uses.items():
+        M.append('  use %s, only: %s' % (mod, ', '.join(dict.fromkeys(rs))))
+    M.append('  implicit none')
+    M.append('  private')
+    M.append('  public :: n_external_cases, external_mechanism, external_expectation')
+    M.append('  integer, parameter :: str_len = %d   ! contract_str_len of FLINT_Lib_Chemistry_contract' % STR_LEN)
+    M.append('  integer, parameter :: n_external_cases = %d' % len(cases))
+    M.append('')
+    M.append('  !> The interface of chemistry_source (FLINT_Lib_Chemistry_wdot)')
+    M.append('  abstract interface')
+    M.append('  subroutine source_if(roi, temp, omegadot)')
+    M.append('    use FLINT_Lib_Thermodynamic, only: ns')
+    M.append('    implicit none')
+    M.append('    real(8), intent(inout) :: roi(ns)')
+    M.append('    real(8), intent(in) :: temp')
+    M.append('    real(8), intent(out) :: omegadot(ns)')
+    M.append('  end subroutine source_if')
+    M.append('  end interface')
+    M.append('contains')
+    M.append('')
+    M.append('  !> The routine of an external mechanism name; found = .false. (source null) for any other name.')
+    M.append('  subroutine external_mechanism(name, found, source)')
+    M.append('    implicit none')
+    M.append('    character(*), intent(in) :: name')
+    M.append('    logical, intent(out) :: found')
+    M.append('    procedure(source_if), pointer, intent(out) :: source')
+    M.append('')
+    M.append('    found = .true.')
+    M.append('    source => null()')
+    M.append('    select case (name)')
+    for name, c in cases.items():
+        M.append('    case (%s)' % fstr(name))
+        M.append('      source => %s' % c['routine'])
+    M.append('    case default')
+    M.append('      found = .false.')
+    M.append('    end select')
+    M.append('  end subroutine external_mechanism')
+    M.append('')
+    expectation(M, 'external_expectation', 'str_len', cases, NO_RECORD)
+    M.append('end module FLINT_Lib_Chemistry_external')
+    return '\n'.join(M) + '\n'
+
+stub_text = None   # set below, after the imports of the fingerprint code (external_module uses re)
 # ------------------------------------------------------------------------------------------------
 # Reaction structure of the generated routines (format of utils/YTF.py: one '! reac n. <i>: <equation>'
 # comment per reaction), read from the sources of src/lib: per reaction the rate table (class and index),
@@ -396,12 +544,15 @@ reads = OrderedDict()    # case name -> the routine reads the rate tables (compu
 RATE_TABLES = re.compile(r"\bf_k(?:f|b|_troe|_lindemann)\s*\(|\b(?:kf|kb|kinf_troe|k0_troe|kc_troe|fcent|kinf_lind|k0_lind|kc_lind)_tab\b", re.I)
 
 def fingerprints():
-    """{case name: fingerprint} of the generated cases of the JSON, computed from src/lib; errors (list)"""
+    """{case name: fingerprint} of the generated cases of the JSON files (FLINT's and the families'), computed from
+    their sources (src/lib, <family>/FLINT/src); errors (list)"""
     lib = os.path.join(root, 'src', 'lib')
     dispatch = parse_dispatch(os.path.join(lib, 'Lib_Chemistry_wdot.f90'))
     routines, _ = load_routines(lib)
+    for fam, _, _ in FAMILIES:
+        routines.update(load_routines(os.path.join(fam, 'FLINT', 'src'))[0])
     out, errors = OrderedDict(), []
-    for name, c in C['cases'].items():
+    for name, c in list(C['cases'].items()) + list(E.items()):
         rb = routines.get(c['routine'].lower())
         if rb is not None:   # every case: does the routine zero omegadot before its assignments (trailing species stay 0)?
             code = '\n'.join(t.split('!')[0] for t in rb[2])
@@ -409,12 +560,12 @@ def fingerprints():
             reads[name] = bool(RATE_TABLES.search(code))   # and does it read the rate tables?
         if c.get('kind') != 'generated':
             continue
-        d = dispatch.get(name)
+        d = dispatch.get(name) if name in C['cases'] else {'routine': c['routine']}   # an external case: hooked by its record
         if d is None or d['routine'].lower() != c['routine'].lower():
             errors.append('case %s: Assign_Mechanism selects %s, the JSON records %s' % (name, d and d['routine'], c['routine'])); continue
         rname, rfile, body = routines.get(c['routine'].lower(), (None, None, None))
         if body is None:
-            errors.append('case %s: routine %s not found in src/lib' % (name, c['routine'])); continue
+            errors.append('case %s: routine %s not found in the sources' % (name, c['routine'])); continue
         try:
             R, om = parse_generated(body)
         except ValueError as e:
@@ -447,46 +598,69 @@ def dump_contract(c):
         t = t.replace('"@@FP:%s@@"' % name, f)
     return t + '\n'
 
+stub_text = external_module(OrderedDict(), [])
+rel = lambda p: os.path.relpath(p, root)
+
+def case(name):
+    """the record of a case name, in the JSON that holds it"""
+    return C['cases'][name] if name in C['cases'] else E[name]
+
+def write_if_changed(path, t):
+    """write t into path unless it holds t already (a build does not recompile an unchanged module)"""
+    if not (os.path.isfile(path) and open(path).read() == t):
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        open(path, 'w').write(t)
+
+out = option('--external-module')
+if out is not None:
+    write_if_changed(os.path.abspath(out), external_module(E, [fam for fam, _, _ in FAMILIES]))
+    print(', '.join('%s (%s)' % (n, os.path.basename(fam)) for fam, _, J in FAMILIES for n in J['cases']), end='')
+    sys.exit(0)
+
 if '--fingerprints' in sys.argv[1:]:
     fp, errs = fingerprints()
     if errs:
         print('\n'.join('ERROR: ' + e for e in errs)); sys.exit(1)
     for name, z in zeroes.items():
-        C['cases'][name]['zeroes_omegadot'] = z
+        case(name)['zeroes_omegadot'] = z
     for name, r in reads.items():
-        C['cases'][name]['tables_used'] = r
+        case(name)['tables_used'] = r
     for name, f in fp.items():
-        C['cases'][name]['n_reactions'] = len(f['reactions'])
-        C['cases'][name]['fingerprint'] = f
-    open(src, 'w').write(dump_contract(C))
-    print('fingerprints written for %d generated cases into %s' % (len(fp), os.path.relpath(src, root)))
+        case(name)['n_reactions'] = len(f['reactions'])
+        case(name)['fingerprint'] = f
+    for path, J in [(src, C)] + [(f, J) for _, f, J in FAMILIES]:
+        open(path, 'w').write(dump_contract(J))
+        print('fingerprints written for %d generated cases into %s' % (sum(1 for n in fp if n in J['cases']), path))
     sys.exit(0)
 
 if '--check' in sys.argv[1:]:
     # the recorded fingerprints must be the ones computed from the sources
     fp, errs = fingerprints()
     for name, f in fp.items():
-        if json.loads(json.dumps(C['cases'][name].get('fingerprint'))) != json.loads(json.dumps(f)):
+        if json.loads(json.dumps(case(name).get('fingerprint'))) != json.loads(json.dumps(f)):
             errs.append('case %s: the fingerprint in the JSON is not the one of the routine (run --fingerprints)' % name)
-        if C['cases'][name].get('n_reactions') != len(f['reactions']):
-            errs.append('case %s: n_reactions is %s in the JSON, the routine has %d reactions (run --fingerprints)' % (name, C['cases'][name].get('n_reactions'), len(f['reactions'])))
+        if case(name).get('n_reactions') != len(f['reactions']):
+            errs.append('case %s: n_reactions is %s in the JSON, the routine has %d reactions (run --fingerprints)' % (name, case(name).get('n_reactions'), len(f['reactions'])))
     for name, z in zeroes.items():
-        if C['cases'][name].get('zeroes_omegadot') != z:
-            errs.append('case %s: zeroes_omegadot is %s in the JSON, the routine %s omegadot (run --fingerprints)' % (name, C['cases'][name].get('zeroes_omegadot'), 'zeroes' if z else 'does not zero'))
+        if case(name).get('zeroes_omegadot') != z:
+            errs.append('case %s: zeroes_omegadot is %s in the JSON, the routine %s omegadot (run --fingerprints)' % (name, case(name).get('zeroes_omegadot'), 'zeroes' if z else 'does not zero'))
     for name, r in reads.items():
-        if C['cases'][name].get('tables_used') != r:
-            errs.append('case %s: tables_used is %s in the JSON, the routine %s the rate tables (run --fingerprints)' % (name, C['cases'][name].get('tables_used'), 'reads' if r else 'does not read'))
+        if case(name).get('tables_used') != r:
+            errs.append('case %s: tables_used is %s in the JSON, the routine %s the rate tables (run --fingerprints)' % (name, case(name).get('tables_used'), 'reads' if r else 'does not read'))
     if errs:
         print('\n'.join('MISMATCH: ' + e for e in errs)); sys.exit(1)
-    print('OK: the fingerprints of the %d generated cases are the ones of their routines' % len(fp))
-    # equality test: the committed module must be the output of this generator
-    cur = open(dst).read()
-    if cur != text:
-        sys.stdout.writelines(difflib.unified_diff(cur.splitlines(True), text.splitlines(True),
-                                                   'committed ' + os.path.relpath(dst, root), 'generated'))
-        print('MISMATCH: %s is not the output of utils/mechanism_contract.py' % os.path.relpath(dst, root))
-        sys.exit(1)
-    print('OK: %s is the output of utils/mechanism_contract.py (%d cases)' % (os.path.relpath(dst, root), len(C['cases'])))
+    print('OK: the fingerprints of the %d generated cases are the ones of their routines (%d external)' % (len(fp), sum(1 for n in fp if n in E)))
+    # equality test: the committed modules must be the output of this generator
+    for path, t in ((dst, text), (stub, stub_text)):
+        cur = open(path).read() if os.path.isfile(path) else ''
+        if cur != t:
+            sys.stdout.writelines(difflib.unified_diff(cur.splitlines(True), t.splitlines(True),
+                                                       'committed ' + rel(path), 'generated'))
+            print('MISMATCH: %s is not the output of utils/mechanism_contract.py' % rel(path))
+            sys.exit(1)
+        print('OK: %s is the output of utils/mechanism_contract.py' % rel(path))
     sys.exit(0)
-open(dst, 'w').write(text)
+write_if_changed(dst, text)
+write_if_changed(stub, stub_text)
 print('written', dst, 'cases', len(C['cases']))
+print('written', stub)

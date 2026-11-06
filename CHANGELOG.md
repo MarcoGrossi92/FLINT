@@ -9,6 +9,14 @@ a major, a minor and a patch release of FLINT may change.
 
 ## [Unreleased]
 
+### Added
+
+- External mechanisms: mechanisms kept out of the repository, in the git-ignored folder `database/external/` (`-DFLINT_EXTERNAL_DIR=<path>` for another one). Each family holds its mechanism
+  folders, its routines (`FLINT/src/*.f90`) and their records of the mechanism contract
+  (`FLINT/mechanism_contract.json`).
+
+- The TSR mechanisms (`TSR-CDF-13`, `TSR-GP-24`, `TSR-Rich-31`) are external mechanisms, in the private submodule `database/external/TSR-Family` (`update = none`: a clone leaves it empty).
+
 ### Changed
 
 - The documentation site is built with [Zensical](https://zensical.org), the successor of Material for MkDocs

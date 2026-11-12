@@ -76,9 +76,11 @@ function(flint_add_test AREA NAME TIER)
   set_tests_properties(${AREA}/${NAME} PROPERTIES LABELS "${AREA};${TIER}" TIMEOUT 600)
 endfunction()
 
-# Thermodynamics: the real-fluid (p, h) tables and the inverse (p, T) -> h
+# Thermodynamics: the real-fluid (p, h) tables and the inverse (p, T) -> h; the pyrolysis-gas tables y(p, T) of
+# FLINT_Lib_PyrolysisGas (reader, refusals, bilinear interpolation, clamping, mapping onto the solver's species)
 # (test-thermo-ideal: a Cantera benchmark, not a test)
 flint_add_test(thermo      thermo-real  quick test-thermo-real)
+flint_add_test(thermo      pyrolysis-gas quick test-pyrolysis-gas)
 
 # Chemistry: tables, mechanism contract, rate laws against Cantera references
 # (test-wdot: Cantera at run time, not a test)

@@ -2,13 +2,13 @@ cff-version: 1.2.0
 message: "If you use FLINT in your research, please cite it as below."
 type: software
 title: "FLINT"
-version: 2.0.0
+version: 2.1.0
 authors:
 - family-names: "Grossi"
   given-names: "Marco"
   affiliation: "Sapienza University of Rome"
   orcid: "https://orcid.org/0000-0002-8487-1932"
 license: "GPL-3.0"
-date-released: 2026-11-02
+date-released: 2026-11-13
 doi: "10.5281/zenodo.22272202"
 url: "https://github.com/MarcoGrossi92/FLINT"

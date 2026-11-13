@@ -38,7 +38,7 @@ test/<area>/                       its fixtures and references (committed), its 
 
 | Area | What it covers | Tests |
 |---|---|---|
-| `thermo` | real-fluid (p, h) tables; the ideal-gas Cantera benchmark `test-thermo-ideal` | `thermo-real` |
+| `thermo` | real-fluid (p, h) tables; pyrolysis-gas tables; the ideal-gas Cantera benchmark `test-thermo-ideal` | `thermo-real`, `pyrolysis-gas` |
 | `chemistry` | rate tables, mechanism contract, rate laws against Cantera references | `tables`, `ranges`, `rhs-range`, `contract`, `inert`, `falloff`, `orders`, `orders-warn`, `stoich`, `andersen` |
 | `equilibrium` | the CEA solver against Cantera values | `CEA` |
 | `batch` | constant-volume reactor against Cantera references, one test per case | `WD`, `Troyes`, `Ecker`, `Cross`, `Smooke`, `CORIA`, `TSR-CDF-13`, `Pelucchi`, `ZK`, `TSR-GP-24`, `TSR-Rich-31`, `Gerlinger` |
@@ -46,13 +46,14 @@ test/<area>/                       its fixtures and references (committed), its 
 ```
 src/test/
   CMakeLists.txt            the drivers and the registration of every test with its labels
-  thermo/                   test-thermo-real, test-thermo-ideal
+  thermo/                   test-thermo-real, test-pyrolysis-gas, test-thermo-ideal
   chemistry/                test-tables, test-ranges, test-rhs-range, test-contract, test-inert, test-falloff,
                             test-orders, test-orders-warn, test-stoich, test-andersen, test-wdot
   equilibrium/              test-CEA, test-equilCXX (Cantera C++, USE_CANTERA)
   batch/                    test-batchF, test-batchCXX (Cantera C++, USE_CANTERA)
 test/
   thermo/INPUT/             real-fluid tables
+  thermo/pyrolysis/         pyrolysis-gas tables, written by make_pyrolysis.py
   chemistry/tables/ ranges/ orders/ stoich/ andersen/ inert/
                             one fixture folder per topic, each with the make_*.py that wrote it
   equilibrium/              reference/<mechanism>.dat (the Cantera sweeps), eq-verification.py
@@ -129,6 +130,11 @@ TecIO, built by ORION at configure time, is cached for each ORION release.
 ```
 test-thermo-real  the (p, h) tables of test/thermo/INPUT: interpolation, and the inverse (p, T) -> h
                   of ph2pT, whose round trip T -> h -> T must stay within 0.5 K (0.16 K now)
+test-pyrolysis-gas  the pyrolysis-gas tables of test/thermo/pyrolysis: a bilinear function given back by the
+                  interpolation (exactly at dyadic points, within 4e-15 elsewhere), the value at the nearest boundary
+                  point outside the table, one pressure, the condensed fraction, the mapping by name onto a solver
+                  list with other species and another order, a missing file (code 1) and eleven files refused
+                  with their codes 3-11
 ```
 
 `test-thermo-ideal` (Cantera): specific heat of FLINT and of Cantera over 1..2000 K, times and relative difference.

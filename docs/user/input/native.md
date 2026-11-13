@@ -502,7 +502,48 @@ Only one of $(i,j)$ / $(j,i)$ is stored, since $\mathcal{D}_{ij} = \mathcal{D}_{
 
 ---
 
-### Complete Example: CORIA Mechanism
+### 7. `pyrolysis.dat` – Pyrolysis-Gas Composition Tables
+
+Optional, read only by a solver that calls `read_pyrolysis_tables` (MOSE with a boundary of type 506). One table per
+pyrolysing material: the mass fractions of the gas it blows through its char, at chemical equilibrium, on a grid of
+pressures and temperatures. ATLAS GPB writes it (`[GPB-Pyrolysis<n>]`, one table per section in ascending n).
+
+Plain text. A `#` at the start of a line or after a blank starts a comment, which ends with the line; blank lines are
+skipped; tokens are separated by blanks; a species name is one token and may hold commas (`C2H2,acetylene`).
+
+```
+format 1
+tables <ntables>
+table <name>
+treatment <gas-only|strip|condensed>
+elements <nel> <El1> <massf1> ... <Elnel> <massfnel>
+condensed <0|1>
+species <nsp>
+<name_1>
+...
+<name_nsp>
+pressures <np>
+<p_1> ... <p_np>
+temperatures <nT>
+<T_1> ... <T_nT>
+data
+<y_1> ... <y_nsp> [X_C]
+...
+end table
+```
+
+- The blocks `table` … `end table` follow one another, `ntables` of them, the keywords in this order.
+- `treatment`: `gas-only`, equilibrium without condensed phases (elements conserved); `strip`, condensed carbon allowed,
+  removed, the gas renormalised; `condensed`, condensed carbon allowed and kept as the last value of every row, `X_C`.
+  `gas-only` and `strip` have `condensed 0`, `condensed` has `condensed 1`.
+- `elements`: the elemental makeup of the material, mass fractions summing to 1 within 1e-8 (informational).
+- `pressures` in Pa, `temperatures` in K: positive and strictly ascending, `np >= 1`, `nT >= 2`; the values may run over
+  several lines. One pressure means no pressure dependence.
+- `data`: `np` blocks of `nT` rows, pressure-major (row `(ip-1) nT + iT` is pressure `ip`, temperature `iT`), one row
+  per line, `nsp` values (`nsp + 1` with `condensed 1`), summing to 1 within 1e-8. ATLAS writes `ES24.16`.
+- The species are those the table has data for; the reader maps them by name onto the solver's list.
+- No value of a row is negative, and every table of the file has its own name (a boundary condition names its table by
+  it: ATLAS BCB writes the position of the table of that name).
 
 **1. phase.txt:**
 

@@ -11,6 +11,14 @@ a major, a minor and a patch release of FLINT may change.
 
 ### Added
 
+- Pyrolysis-gas composition tables (module `FLINT_Lib_PyrolysisGas`, file `src/lib/Lib_PyrolysisGas.f90`): the
+  equilibrium composition y(p, T) of the gas that a pyrolysing material blows through its char, read from a plain-text
+  file (`INPUT/<prefix>pyrolysis.dat`, written by ATLAS GPB; format in Native Format) with one table per material,
+  mapped by name onto the species list of the solver, and interpolated bilinearly in (p, T), clamped to the table.
+  `read_pyrolysis_tables(filename, species_names)` (return codes 0-11), `pyrolysis_table_count()`,
+  `pyrolysis_table_info(id, ...)`, `pyrolysis_gas_composition(id, p, T, y [, x_condensed])` (pure). Test
+  `thermo/pyrolysis-gas` (quick). Nothing else changes.
+
 - External mechanisms: mechanisms kept out of the repository, in the git-ignored folder `database/external/` (`-DFLINT_EXTERNAL_DIR=<path>` for another one). Each family holds its mechanism
   folders, its routines (`FLINT/src/*.f90`) and their records of the mechanism contract
   (`FLINT/mechanism_contract.json`).

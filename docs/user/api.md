@@ -108,6 +108,40 @@ and, optionally, their reaction orders) and the rate tables `chemistry-Arrhenius
 `call free_chemistry_data()` (module `FLINT_Lib_Chemistry_data`) deallocates the chemistry tables, before loading
 another mechanism.
 
+### Pyrolysis-gas tables
+
+Module `FLINT_Lib_PyrolysisGas`, independent of the other modules. The file is described in
+[Native Format](input/native.md#7-pyrolysisdat-pyrolysis-gas-composition-tables).
+
+`err = read_pyrolysis_tables(filename, species_names)` reads every table of `filename` and maps its columns by name onto
+`species_names` (the species list of the solver, e.g. `species_names` of `FLINT_Lib_Thermodynamic`): a species of the
+list that a table lacks gets 0; a species of a table that the list lacks must have a column of zeros. Tables read before
+are dropped. On an error the message, with the line of the file, is printed on the standard output and on the error
+unit, and no table is loaded.
+
+| Code | Meaning |
+|---|---|
+| 0 | Success |
+| 1 | The file cannot be opened |
+| 2 | A read error, or the file ends inside a table |
+| 3 | The first line is not `format 1` |
+| 4 | A header line is not the one expected or holds a value out of range (counts, treatment, condensed flag against the treatment, elemental makeup not summing to 1 within 1e-8, a line after the last table) |
+| 5 | A species of a table twice, or absent from the list with a column that is not identically 0 |
+| 6 | Pressures or temperatures not positive and strictly ascending |
+| 7 | A row whose values do not sum to 1 within 1e-8 |
+| 8 | A data row without the number of values of its table |
+| 9 | No `end table` after the last data row of a table |
+| 10 | A data row with a negative value (a mass fraction, or `X_C`) |
+| 11 | A table with the name of a table before it |
+
+`n = pyrolysis_table_count()` is the number of tables loaded (0 before a successful read).
+`call pyrolysis_table_info(id, name, treatment, has_condensed, pmin, pmax, Tmin, Tmax)` returns the name, the treatment
+(`gas-only`, `strip` or `condensed`), whether the rows carry the condensed-carbon fraction, and the range of table `id`.
+`call pyrolysis_gas_composition(id, p, T, y [, x_condensed])` (pure) returns the composition at `p` [Pa] and `T` [K] on
+the order of `species_names` (`y` of its size), bilinear in $(p, T)$ on the cell of the grid that holds the point, and
+the condensed-carbon mass fraction (0 without that column). A point outside the table takes the value at the nearest
+point of its boundary. A table of one pressure is linear in $T$.
+
 ---
 
 ## Module variables

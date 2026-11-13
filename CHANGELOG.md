@@ -9,6 +9,8 @@ a major, a minor and a patch release of FLINT may change.
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-11-13
+
 ### Added
 
 - Pyrolysis-gas composition tables (module `FLINT_Lib_PyrolysisGas`, file `src/lib/Lib_PyrolysisGas.f90`): the

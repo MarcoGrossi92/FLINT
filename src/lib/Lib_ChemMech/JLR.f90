@@ -16,10 +16,8 @@ contains
     real(8) :: prod1,prod2,prod3,prod4,prod5,prod6,prod7
 
    do is = 1, ns
-     coi(is)=roi(is)/Wm_tab(is)  ! kmol/m^3
-     ! Loop done in order to avoid numerical issues in omegadot evaluation
-     ! Very low coi could produce finite prods
-     if (coi(is).lt.1d-10) coi(is) = 0.0d0
+     ! no cut-off: zeroing coi below 1e-10 made the rates jump there (see fpow)
+     coi(is)=max(roi(is),0d0)/Wm_tab(is)  ! kmol/m^3
    enddo
 
     T_i = int(temp)
@@ -28,7 +26,7 @@ contains
     Tint(2) = T_i + 1
 
     ! 0.5 CH4 + 1.25 O2 --> CO + 2 H2 - 0.5 CH4 + 0.75 O2
-    prod1 = f_kf(1,Tint,Tdiff)*(coi(2)**0.50)*(coi(1)**1.25)
+    prod1 = f_kf(1,Tint,Tdiff)*fpow(coi(2),0.50d0)*(coi(1)**1.25)
 
     ! CH4 + H2O --> CO + 3 H2
     prod2 = f_kf(2,Tint,Tdiff)*(coi(2)*coi(3))
@@ -38,12 +36,10 @@ contains
             f_kb(3,Tint,Tdiff)*coi(5)*coi(6)
 
     ! 1/4 H2 + 3/2 O2 <--> H2O + O2 - 3/4 H2
-    if (coi(6) < 1.d-10) then
-      prod4 = (f_kf(4,Tint,Tdiff)*(coi(6)**0.25)*(coi(1)**1.50))
-    else
-      prod4 = f_kf(4,Tint,Tdiff)*(coi(6)**0.25)*(coi(1)**1.50) - & 
-              f_kb(4,Tint,Tdiff)*(coi(3))*(coi(1))*(coi(6)**(-0.75))
-    endif
+    ! reverse term regularised continuously: an on/off switch at [H2]=1e-10
+    ! pins H2 at the switch and collapses the ODE step size
+    prod4 = f_kf(4,Tint,Tdiff)*fpow(coi(6),0.25d0)*(coi(1)**1.50) - &
+            f_kb(4,Tint,Tdiff)*(coi(3))*(coi(1))*(max(coi(6),1.d-10)**(-0.75))
 
     ! O2 <--> 2O
     prod5 = f_kf(5,Tint,Tdiff)*coi(1)-f_kb(5,Tint,Tdiff)*coi(8)**2
@@ -84,10 +80,8 @@ contains
     real(8) :: prod1,prod2,prod3,prod4,prod5,prod6
 
    do is = 1, ns
-     coi(is)=roi(is)/Wm_tab(is)  ! kmol/m^3
-     ! Loop done in order to avoid numerical issues in omegadot evaluation
-     ! Very low coi could produce finite prods
-     if (coi(is).lt.1d-10) coi(is) = 0.0d0
+     ! no cut-off: zeroing coi below 1e-10 made the rates jump there (see fpow)
+     coi(is)=max(roi(is),0d0)/Wm_tab(is)  ! kmol/m^3
    enddo
 
     T_i = int(temp)
@@ -96,7 +90,7 @@ contains
     Tint(2) = T_i + 1
 
     ! 0.5 CH4 + 1.25 O2 --> CO + 2 H2 - 0.5 CH4 + 0.75 O2
-    prod1 = f_kf(1,Tint,Tdiff)*(coi(2)**0.50)*(coi(1)**1.30)
+    prod1 = f_kf(1,Tint,Tdiff)*fpow(coi(2),0.50d0)*(coi(1)**1.30)
 
     ! CH4 + H2O --> CO + 3 H2
     prod2 = f_kf(2,Tint,Tdiff)*(coi(2)*coi(3))
@@ -106,12 +100,10 @@ contains
             f_kb(3,Tint,Tdiff)*coi(5)*coi(6)
 
     ! 1/4 H2 + 3/2 O2 <--> H2O + O2 - 3/4 H2
-    if (coi(6) < 1.d-10) then
-      prod4 = (f_kf(4,Tint,Tdiff)*(coi(6)**0.3)*(coi(1)**1.55))
-    else
-      prod4 = f_kf(4,Tint,Tdiff)*(coi(6)**0.3)*(coi(1)**1.55) - & 
-              f_kb(4,Tint,Tdiff)*(coi(3))*(coi(1))*(coi(6)**(-0.75))
-    endif
+    ! reverse term regularised continuously: an on/off switch at [H2]=1e-10
+    ! pins H2 at the switch and collapses the ODE step size
+    prod4 = f_kf(4,Tint,Tdiff)*fpow(coi(6),0.30d0)*(coi(1)**1.55) - &
+            f_kb(4,Tint,Tdiff)*(coi(3))*(coi(1))*(max(coi(6),1.d-10)**(-0.75))
 
     ! O2 <--> 2O
     prod5 = f_kf(5,Tint,Tdiff)*coi(1)-f_kb(5,Tint,Tdiff)*coi(8)**2
@@ -149,10 +141,8 @@ contains
     real(8) :: prod1, prod2, prod3, prod4, prod5, prod6, prod7, prod8
 
     do is = 1, ns
-      coi(is)=roi(is)/Wm_tab(is)  ! kmol/m^3
-      ! Loop done in order to avoid numerical issues in omegadot evaluation
-      ! Very low coi could produce finite prods
-      if (coi(is).lt.1d-10) coi(is) = 0.0d0
+      ! no cut-off: zeroing coi below 1e-10 made the rates jump there (see fpow)
+      coi(is)=max(roi(is),0d0)/Wm_tab(is)  ! kmol/m^3
     enddo
 
     ! Preliminary
@@ -162,7 +152,7 @@ contains
     Tint(2) = T_i + 1
 
     !> 0.5 C2H4 + 1.25 O2 --> 2 CO + 2 H2 - 0.5 C2H4 + 0.25 O2
-    prod1 = f_kf(1,Tint,Tdiff)*(coi(2)**0.50)*(coi(1)**1.25)
+    prod1 = f_kf(1,Tint,Tdiff)*fpow(coi(2),0.50d0)*(coi(1)**1.25)
 
     !> C2H4 + H2O --> 2 CO + 4 H2 - H2O
     prod2 = f_kf(2,Tint,Tdiff)*coi(2)*coi(3)
@@ -172,12 +162,10 @@ contains
             f_kb(3,Tint,Tdiff)*coi(5)*coi(6)
 
     !> 1/4 H2 + 3/2 O2 <--> H2O + O2 - 3/4 H2
-    if (coi(6) < 1.d-10) then
-      prod4 = f_kf(4,Tint,Tdiff)*(coi(6)**0.25)*(coi(1)**1.50)
-    else
-      prod4 = f_kf(4,Tint,Tdiff)*(coi(6)**0.25)*(coi(1)**1.50) - &
-              f_kb(4,Tint,Tdiff)*coi(3)*coi(1)*(coi(6)**(-0.75))
-    endif
+    ! reverse term regularised continuously: an on/off switch at [H2]=1e-10
+    ! pins H2 at the switch and collapses the ODE step size
+    prod4 = f_kf(4,Tint,Tdiff)*fpow(coi(6),0.25d0)*(coi(1)**1.50) - &
+            f_kb(4,Tint,Tdiff)*coi(3)*coi(1)*(max(coi(6),1.d-10)**(-0.75))
 
     !> O2 <--> 2O
     prod5 = f_kf(5,Tint,Tdiff)*coi(1)-f_kb(5,Tint,Tdiff)*coi(8)**2
@@ -206,5 +194,20 @@ contains
     omegadot(10)=Wm_tab(10)*(-prod8)                            !C12H24 [kg/(m3*s)]
     
   end subroutine CKJLR10sp
+
+
+  pure function fpow(c,a) result(f)
+    ! c**a for a fractional order 0<a<1, linear below c0. The plain power has an infinite slope at c=0,
+    ! and the former cut-off (coi set to 0 below 1e-10) made the rates jump at c0; either one pins a
+    ! trace species there and collapses the step size of the stiff ODE solvers (sdirk4b -6/-7)
+    real(8), intent(in) :: c, a
+    real(8) :: f
+    real(8), parameter :: c0 = 1d-10 ! kmol/m^3
+    if (c >= c0) then
+      f = c**a
+    else
+      f = c0**a*(c/c0)
+    end if
+  end function fpow
 
 end module JLRs_mod
